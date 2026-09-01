@@ -4,7 +4,41 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Vietnam Trail Network</title>
-<style>%s
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         color: #222; line-height: 1.5; }
+  a { color: #2980b9; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+  h1 { font-size: 24px; margin-bottom: 4px; }
+  .subtitle { color: #666; margin-bottom: 24px; font-size: 14px; }
+  h2 { font-size: 18px; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #eee; }
+  nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px;
+               align-items: center; flex-wrap: wrap; }
+  nav.topnav a { color: #ecf0f1; font-size: 14px; font-weight: 500; }
+  nav.topnav a:hover { color: white; text-decoration: none; }
+  nav.topnav .brand { font-weight: 700; font-size: 15px; margin-right: 12px; }
+  table.report { width: 100%; border-collapse: collapse; margin: 12px 0 24px; font-size: 13px; }
+  table.report th { text-align: left; padding: 8px 10px; background: #f7f7f7;
+                    border-bottom: 2px solid #ddd; font-size: 12px; color: #555;
+                    text-transform: uppercase; letter-spacing: 0.5px; }
+  table.report td { padding: 7px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+  table.report tr:hover { background: #fafafa; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 10px;
+         font-size: 11px; font-weight: 600; }
+  .tag-public { background: #d5f5e3; color: #1e8449; }
+  .tag-private { background: #fadbd8; color: #922b21; }
+  .tag-zone { color: white; padding: 2px 10px; border-radius: 10px;
+              font-size: 11px; font-weight: 600; }
+  .int-links { display: flex; flex-wrap: wrap; gap: 4px; }
+  .int-links a { display: inline-block; padding: 1px 6px; border-radius: 4px;
+                 font-size: 12px; font-weight: 600; background: #eee; color: #333; }
+  .int-links a:hover { background: #d5e8f7; text-decoration: none; }
+  .section-public { }
+  .section-private { margin-top: 32px; }
+
   .hero { text-align: center; padding: 48px 20px 32px; }
   .hero h1 { font-size: 32px; margin-bottom: 8px; }
   .hero .sub { color: #666; font-size: 16px; margin-bottom: 32px; }
@@ -26,11 +60,15 @@
   .stat { text-align: center; }
   .stat .num { font-size: 28px; font-weight: 700; color: #2c3e50; }
   .stat .lbl { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+  .zone-table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+  .zone-table th { text-align: left; padding: 8px 10px; background: #f7f7f7;
+                   border-bottom: 2px solid #ddd; font-size: 12px; color: #555;
+                   text-transform: uppercase; letter-spacing: 0.5px; }
+  .zone-table td { padding: 7px 10px; border-bottom: 1px solid #eee; }
 </style>
 </head>
 <body>
 <nav class="topnav">
-<a class="brand" href="index.html">Vietnam Trails</a>
 <a href="index.html" style="color:white;text-decoration:underline">Home</a>
 <a href="map.html" style="">Map</a>
 <a href="zones.html" style="">Zones</a>
@@ -68,9 +106,69 @@
 </div>
 <div class="about">
   <h2>About This Project</h2>
-  <p>The Vietnam Trail Network spans conservation land in Holliston, Milford, and
-  Hopkinton. This site documents every numbered trail intersection and identifies
-  the parcel owner for each, based on MassGIS assessor data and deed research.</p>
+  <p>This is a proposal to add wayfinding signs to trail intersections in the forest area
+  spanning several parcels across Holliston, Milford, and Hopkinton. The network is
+  commonly known as the "Vietnam Trail Network" or the "Upper Charles" trails.</p>
+
+  <h2>Zoning Philosophy</h2>
+  <p>The full area is divided into 6 regions spanning across three towns. The regions are
+  broken up by how they feel connected in the woods &mdash; they are loosely based on actual
+  parcels in the area, but not a 1-to-1 matchup. The regions do not adhere to town boundaries
+  either, so some regions span multiple towns. Every sign is in exactly one town and exactly one
+  region.</p>
+
+  <p>Several non-town organizations have overlapping concerns in the area, including
+  The Trustees of Reservations, New England Mountain Bike Association, and DCR.
+  Some zones have an associated organization:</p>
+
+  <table class="zone-table">
+    <thead><tr><th>Zone</th><th>Name</th><th>Organization</th><th>Towns</th></tr></thead>
+    <tbody>
+      <tr><td><a href="zones.html#zone-A" class="tag tag-zone" style="background:#e74c3c">A</a></td>
+          <td>Adams Town Forest</td><td>The Trustees of Reservations</td><td>Holliston</td></tr>
+      <tr><td><a href="zones.html#zone-B" class="tag tag-zone" style="background:#3498db">B</a></td>
+          <td>Beaver Brook Woods</td><td></td><td>Milford, Holliston</td></tr>
+      <tr><td><a href="zones.html#zone-C" class="tag tag-zone" style="background:#2ecc71">C</a></td>
+          <td>College Rock Park</td><td></td><td>Hopkinton, Holliston, Milford</td></tr>
+      <tr><td><a href="zones.html#zone-D" class="tag tag-zone" style="background:#f39c12">D</a></td>
+          <td>Rocky Woods</td><td></td><td>Holliston, Milford</td></tr>
+      <tr><td><a href="zones.html#zone-E" class="tag tag-zone" style="background:#9b59b6">E</a></td>
+          <td>NEMBA Land</td><td>New England Mountain Bike Association</td><td>Milford, Holliston</td></tr>
+      <tr><td><a href="zones.html#zone-F" class="tag tag-zone" style="background:#1abc9c">F</a></td>
+          <td>Fairbanks</td><td>The Trustees of Reservations / DCR</td><td>Holliston, Milford</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Sign Design</h2>
+  <p>Each intersection will have a sign with the following elements:</p>
+  <ul style="margin:8px 0 8px 20px">
+    <li>A letter-number combination that uniquely identifies the intersection (e.g. A1, C14).
+    The letter corresponds to the zone; lower numbers are generally closer to parking areas.</li>
+    <li>The name of the town the intersection is in</li>
+    <li>The name of the zone</li>
+    <li>The town seal</li>
+    <li>The logo of the non-town organization for the zone</li>
+  </ul>
+  <p style="margin-top:16px">Sample signs:</p>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0">
+    <img src="sign_sample_1.png" alt="Sample sign A1 — Holliston, Adams Town Forest" style="width:200px;border-radius:6px;border:1px solid #ddd">
+    <img src="sign_sample_2.png" alt="Sample sign E1 — Milford, NEMBA Land" style="width:200px;border-radius:6px;border:1px solid #ddd">
+    <img src="sign_sample_3.png" alt="Sample sign C1 — Hopkinton, College Rock Park" style="width:200px;border-radius:6px;border:1px solid #ddd">
+  </div>
+
+  <h2>Entry Kiosks</h2>
+  <p>Kiosks at major entry points will have a full map of the area, a description of the
+  signage system, and descriptions and logos for all towns and organizations represented.
+  Entry points include:</p>
+  <ul style="margin:8px 0 8px 20px">
+    <li>College Rock Park</li>
+    <li>Adams Street Parking Lot</li>
+    <li>Dunster Road Trailhead</li>
+    <li>The "Milford Byway" connection to the Milford Rail Trail</li>
+    <li>The "Chicken Run" connection to the Milford Rail Trail side path</li>
+  </ul>
+
+  <h2>Land Ownership</h2>
   <p>Holliston public land is classified into three categories based on deed records:</p>
   <ul style="margin:8px 0 8px 20px">
     <li><strong>Adams Town Forest</strong> &mdash; ~87 acres with a Conservation Restriction
@@ -79,8 +177,17 @@
     The Trustees and DCR</li>
     <li><strong>Town of Holliston</strong> &mdash; other town-owned conservation parcels</li>
   </ul>
-  <p>Data sources: OpenStreetMap (trails), MassGIS (parcels), Holliston assessor
-  records via Tyler/iasWorld (deed research).</p>
+  <p>See the <a href="owners.html">Owner Report</a> for the full breakdown of all public
+  and private parcels the trail network crosses.</p>
+
+  <h2>Contact</h2>
+  <p>This project is led by the Holliston Town Forest Committee. If you have questions or
+  comments, please email
+  <a href="mailto:townforest@holliston.k12.ma.us">townforest@holliston.k12.ma.us</a>.</p>
+
+  <h2>Data Sources</h2>
+  <p>OpenStreetMap (trails), MassGIS (parcels), Holliston assessor records via Tyler/iasWorld
+  (deed research).</p>
 </div>
 </body>
 </html>
