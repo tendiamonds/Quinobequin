@@ -9,10 +9,11 @@ All pages cross-link: intersection labels link to the map,
 owner names link to the owner page, zone badges link to the zone page.
 """
 
+import heapq
 import json
 import math
 import re
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 
 PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
 TOWNS = {136: "Holliston", 139: "Hopkinton", 185: "Milford"}
@@ -174,6 +175,84 @@ def classify_owner(parcel_feat):
 # Data loading & processing
 # ---------------------------------------------------------------------------
 
+def dist_m(lon1, lat1, lon2, lat2):
+    return math.sqrt(((lon1 - lon2) * 82000)**2 + ((lat1 - lat2) * 111000)**2)
+
+
+def build_trail_graph(ints, trails):
+    """Build adjacency graph from trail segments snapped to intersections."""
+    SNAP_DIST = 20
+    int_pts = {}
+    for feat in ints["features"]:
+        lon, lat = feat["geometry"]["coordinates"]
+        int_pts[id(feat)] = (lon, lat, feat)
+
+    def cumulative_distances(coords):
+        cum = [0.0]
+        for i in range(1, len(coords)):
+            cum.append(cum[-1] + dist_m(coords[i-1][0], coords[i-1][1],
+                                         coords[i][0], coords[i][1]))
+        return cum
+
+    graph = defaultdict(list)
+    for trail in trails["features"]:
+        geom = trail["geometry"]
+        if geom["type"] == "LineString":
+            coords = geom["coordinates"]
+        elif geom["type"] == "MultiLineString":
+            coords = []
+            for part in geom["coordinates"]:
+                coords.extend(part)
+        else:
+            continue
+        if len(coords) < 2:
+            continue
+
+        cum = cumulative_distances(coords)
+        hits = []
+        for fid, (ilon, ilat, feat) in int_pts.items():
+            best_d = float("inf")
+            best_cum = 0
+            for j, c in enumerate(coords):
+                d = dist_m(ilon, ilat, c[0], c[1])
+                if d < best_d:
+                    best_d = d
+                    best_cum = cum[j]
+            if best_d < SNAP_DIST:
+                hits.append((best_cum, fid))
+
+        hits.sort()
+        for i in range(len(hits) - 1):
+            cum1, fid1 = hits[i]
+            cum2, fid2 = hits[i+1]
+            if fid1 == fid2:
+                continue
+            seg_len = cum2 - cum1
+            if seg_len > 0:
+                graph[fid1].append((fid2, seg_len))
+                graph[fid2].append((fid1, seg_len))
+
+    return graph
+
+
+def dijkstra(graph, start_nodes):
+    dist = {}
+    pq = []
+    for s in start_nodes:
+        dist[s] = 0
+        heapq.heappush(pq, (0, s))
+    while pq:
+        d, u = heapq.heappop(pq)
+        if d > dist.get(u, float("inf")):
+            continue
+        for v, w in graph.get(u, []):
+            nd = d + w
+            if nd < dist.get(v, float("inf")):
+                dist[v] = nd
+                heapq.heappush(pq, (nd, v))
+    return dist
+
+
 def load_and_process():
     with open(rf"{PROJ}\parcels_all.geojson") as f:
         parcels = json.load(f)
@@ -182,23 +261,38 @@ def load_and_process():
     with open(rf"{PROJ}\trails_selected.geojson") as f:
         trails = json.load(f)
 
+    graph = build_trail_graph(ints, trails)
+
     by_zone = {}
+    feat_by_id = {}
     for feat in ints["features"]:
         z = feat["properties"]["zone"]
         by_zone.setdefault(z, []).append(feat)
+        feat_by_id[id(feat)] = feat
+
+    def order_subgroup(pts, ex, ey):
+        exit_feat = min(pts, key=lambda f: dist_m(
+            f["geometry"]["coordinates"][0], f["geometry"]["coordinates"][1], ex, ey))
+        dists = dijkstra(graph, [id(exit_feat)])
+        reachable = [(f, dists[id(f)]) for f in pts if id(f) in dists]
+        unreachable = [f for f in pts if id(f) not in dists]
+        reachable.sort(key=lambda pair: pair[1])
+        unreachable.sort(key=lambda f: dist_m(
+            f["geometry"]["coordinates"][0], f["geometry"]["coordinates"][1], ex, ey))
+        return [f for f, _ in reachable] + unreachable
 
     for z in "ABCDEF":
         pts = by_zone.get(z, [])
         ex, ey = EXIT_POINTS[z]
-        pts.sort(key=lambda f: math.sqrt(
-            ((f["geometry"]["coordinates"][0] - ex) * 82000) ** 2 +
-            ((f["geometry"]["coordinates"][1] - ey) * 111000) ** 2
-        ))
+
         if z == "F":
-            f_main = [f for f in pts if f["properties"]["number"] not in F_G_GROUP]
-            f_tail = [f for f in pts if f["properties"]["number"] in F_G_GROUP]
-            pts = f_main + f_tail
-        for i, feat in enumerate(pts, 1):
+            main_pts = [f for f in pts if f["properties"]["number"] not in F_G_GROUP]
+            tail_pts = [f for f in pts if f["properties"]["number"] in F_G_GROUP]
+            ordered = order_subgroup(main_pts, ex, ey) + order_subgroup(tail_pts, ex, ey)
+        else:
+            ordered = order_subgroup(pts, ex, ey)
+
+        for i, feat in enumerate(ordered, 1):
             feat["properties"]["label"] = "%s%d" % (z, i)
 
     rows = []
