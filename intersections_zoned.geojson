@@ -2798,6 +2798,21 @@
           42.16881
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 360,
+        "degree": 3,
+        "zone": "F"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.48770451545717,
+          42.17056858747848
+        ]
+      }
     }
   ]
 }
