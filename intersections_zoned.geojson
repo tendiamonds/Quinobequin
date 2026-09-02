@@ -2753,6 +2753,51 @@
           42.16745097309802
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 357,
+        "degree": 3,
+        "zone": "E"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50544464588167,
+          42.168114336306736
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 358,
+        "degree": 2,
+        "zone": "E"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.504165,
+          42.16762
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 359,
+        "degree": 2,
+        "zone": "E"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50403,
+          42.16881
+        ]
+      }
     }
   ]
 }
