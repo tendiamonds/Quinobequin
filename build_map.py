@@ -256,7 +256,7 @@ def dijkstra(graph, start_nodes):
 def load_and_process():
     with open(rf"{PROJ}\parcels_all.geojson") as f:
         parcels = json.load(f)
-    with open(r"C:\Users\jbreslau\Downloads\intersections_zoned.geojson") as f:
+    with open(rf"{PROJ}\intersections_zoned.geojson") as f:
         ints = json.load(f)
     with open(rf"{PROJ}\trails_selected.geojson") as f:
         trails = json.load(f)
@@ -490,23 +490,28 @@ NAV_PLACEHOLDER
 
   <p>Several non-town organizations have overlapping concerns in the area, including
   The Trustees of Reservations, New England Mountain Bike Association, and DCR.
-  Some zones have an associated organization:</p>
+  Signs that fall on an organization&rsquo;s parcel will carry that organization&rsquo;s
+  logo or name, so each sign accurately reflects who manages the land it stands on.</p>
+
+  <p>As we reach out to private parcel owners whose land the trail network crosses,
+  we will offer them the option to add a small image or logo to the corner of the
+  signs on their parcels.</p>
 
   <table class="zone-table">
-    <thead><tr><th>Zone</th><th>Name</th><th>Organization</th><th>Towns</th></tr></thead>
+    <thead><tr><th>Zone</th><th>Name</th><th>Towns</th></tr></thead>
     <tbody>
       <tr><td><a href="zones.html#zone-A" class="tag tag-zone" style="background:#e74c3c">A</a></td>
-          <td>Adams Town Forest</td><td>The Trustees of Reservations</td><td>Holliston</td></tr>
+          <td>Adams Town Forest</td><td>Holliston</td></tr>
       <tr><td><a href="zones.html#zone-B" class="tag tag-zone" style="background:#3498db">B</a></td>
-          <td>Beaver Brook Woods</td><td></td><td>Milford, Holliston</td></tr>
+          <td>Beaver Brook Woods</td><td>Milford, Holliston</td></tr>
       <tr><td><a href="zones.html#zone-C" class="tag tag-zone" style="background:#2ecc71">C</a></td>
-          <td>College Rock Park</td><td></td><td>Hopkinton, Holliston, Milford</td></tr>
+          <td>College Rock Park</td><td>Hopkinton, Holliston, Milford</td></tr>
       <tr><td><a href="zones.html#zone-D" class="tag tag-zone" style="background:#f39c12">D</a></td>
-          <td>Rocky Woods</td><td></td><td>Holliston, Milford</td></tr>
+          <td>Rocky Woods</td><td>Holliston, Milford</td></tr>
       <tr><td><a href="zones.html#zone-E" class="tag tag-zone" style="background:#9b59b6">E</a></td>
-          <td>NEMBA Land</td><td>New England Mountain Bike Association</td><td>Milford, Holliston</td></tr>
+          <td>NEMBA Land</td><td>Milford, Holliston</td></tr>
       <tr><td><a href="zones.html#zone-F" class="tag tag-zone" style="background:#1abc9c">F</a></td>
-          <td>Fairbanks</td><td>The Trustees of Reservations / DCR</td><td>Holliston, Milford</td></tr>
+          <td>Fairbanks</td><td>Holliston, Milford</td></tr>
     </tbody>
   </table>
 
