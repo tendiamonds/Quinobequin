@@ -696,7 +696,63 @@ def build_owners_page(rows):
     print("Wrote owners.html")
 
 
+def build_trail_int_map(ints, trails):
+    """Map each trail feature index to its intersections with distances."""
+    SNAP_DIST = 20
+    int_list = [(feat["properties"]["label"],
+                 feat["geometry"]["coordinates"][0],
+                 feat["geometry"]["coordinates"][1])
+                for feat in ints["features"]]
+
+    def cumulative_distances(coords):
+        cum = [0.0]
+        for i in range(1, len(coords)):
+            cum.append(cum[-1] + dist_m(coords[i-1][0], coords[i-1][1],
+                                         coords[i][0], coords[i][1]))
+        return cum
+
+    result = {}
+    for ti, trail in enumerate(trails["features"]):
+        geom = trail["geometry"]
+        if geom["type"] == "LineString":
+            coords = geom["coordinates"]
+        elif geom["type"] == "MultiLineString":
+            coords = []
+            for part in geom["coordinates"]:
+                coords.extend(part)
+        else:
+            continue
+        if len(coords) < 2:
+            continue
+
+        cum = cumulative_distances(coords)
+        total_length = cum[-1]
+
+        hits = []
+        for label, ilon, ilat in int_list:
+            best_d = float("inf")
+            best_cum = 0
+            for j, c in enumerate(coords):
+                d = dist_m(ilon, ilat, c[0], c[1])
+                if d < best_d:
+                    best_d = d
+                    best_cum = cum[j]
+            if best_d < SNAP_DIST:
+                hits.append((best_cum, label))
+
+        hits.sort()
+        result[ti] = {
+            "length": round(total_length),
+            "ints": [[label, round(d)] for d, label in hits]
+        }
+
+    return result
+
+
 def build_map_page(ints, trails, rows):
+    for i, f in enumerate(trails["features"]):
+        f["properties"]["_idx"] = i
+
     int_data = json.dumps(ints)
     trail_data = json.dumps(trails)
 
@@ -709,10 +765,14 @@ def build_map_page(ints, trails, rows):
             trail_names.add(name)
     n_names = len(trail_names)
 
+    trail_int_map = build_trail_int_map(ints, trails)
+    trail_int_json = json.dumps(trail_int_map)
+
     html = MAP_TEMPLATE
     html = html.replace("__NAV__", nav_html("map"))
     html = html.replace("__TRAIL_DATA__", trail_data)
     html = html.replace("__INT_DATA__", int_data)
+    html = html.replace("__TRAIL_INT_MAP__", trail_int_json)
     html = html.replace("__N_INTS__", str(n_ints))
     html = html.replace("__N_TRAILS__", str(n_trails))
     html = html.replace("__N_NAMES__", str(n_names))
@@ -812,6 +872,17 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
     0%, 100% { opacity: 0.7; }
     50% { opacity: 0.25; }
   }
+  .int-list { margin-top: 8px; }
+  .int-list .int-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
+  .int-list .int-link {
+    font-weight: 700; cursor: pointer; padding: 1px 6px; border-radius: 4px;
+    font-size: 12px; color: white; display: inline-block; min-width: 36px; text-align: center;
+  }
+  .int-list .int-link:hover { opacity: 0.8; text-decoration: none; }
+  .int-list .int-dist { color: #888; font-size: 11px; }
+  .int-list .seg-bar { color: #bbb; font-size: 10px; padding: 0 0 0 16px; }
+  .int-terminus { display: inline-block; width: 12px; height: 12px; background: #333;
+    border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,0.3); }
 
   @media (max-width: 640px) {
     .info-panel { width: calc(100vw - 20px); top: auto; bottom: 0; left: 0;
@@ -859,6 +930,7 @@ var ZONE_NAMES = {
 
 var trailData = __TRAIL_DATA__;
 var intData = __INT_DATA__;
+var trailIntMap = __TRAIL_INT_MAP__;
 
 var map = L.map("map", {zoomControl: false}).setView([42.178, -71.498], 14);
 L.control.zoom({position: "topright"}).addTo(map);
@@ -963,6 +1035,13 @@ function showIntInfo(feature, marker) {
   document.getElementById("infoContent").innerHTML = html;
 }
 
+function selectIntFromTrail(label) {
+  if (intMarkers[label] && intFeatures[label]) {
+    showIntInfo(intFeatures[label], intMarkers[label]);
+    map.panTo(intMarkers[label].getLatLng());
+  }
+}
+
 function showTrailInfo(feature, layer) {
   clearSelection();
 
@@ -970,27 +1049,81 @@ function showTrailInfo(feature, layer) {
   var name = p.pdf_name || p.name || "";
 
   highlightedSegments = [];
+  var segIndices = [];
   trailLayer.eachLayer(function(l) {
     var ln = l.feature.properties.pdf_name || l.feature.properties.name || "";
     if (ln === name && name !== "") {
       l.setStyle({color: "#e67e22", weight: 5, opacity: 1});
       highlightedSegments.push(l);
+      segIndices.push(l.feature.properties._idx);
     }
   });
   if (highlightedSegments.length === 0) {
     layer.setStyle({color: "#e67e22", weight: 5, opacity: 1});
     highlightedSegments.push(layer);
+    segIndices.push(feature.properties._idx);
   }
 
   var displayName = name || "Unnamed trail";
-  var segments = name ? (trailsByName[name] || []) : [feature];
+
+  var totalLength = 0;
+  var allInts = [];
+  var seen = {};
+  segIndices.forEach(function(si) {
+    var info = trailIntMap[si];
+    if (!info) return;
+    totalLength += info.length;
+    info.ints.forEach(function(pair) {
+      if (!seen[pair[0]]) {
+        seen[pair[0]] = true;
+        allInts.push({label: pair[0], dist: pair[1]});
+      }
+    });
+  });
 
   var html = '<table>' +
     '<tr><td>Trail</td><td><strong style="font-size:16px">' + displayName + '</strong></td></tr>';
+  var totalFt = Math.round(totalLength * 3.28084);
+  var totalMi = (totalLength * 0.000621371);
+  var lengthStr = totalMi >= 0.1 ? totalMi.toFixed(1) + ' mi (' + totalFt.toLocaleString() + ' ft)' : totalFt.toLocaleString() + ' ft';
+  if (totalLength > 0) html += '<tr><td>Length</td><td>' + lengthStr + '</td></tr>';
   if (p.surface) html += '<tr><td>Surface</td><td>' + p.surface + '</td></tr>';
   if (p.highway) html += '<tr><td>Type</td><td>' + p.highway + '</td></tr>';
-  if (segments.length > 1) html += '<tr><td>Segments</td><td>' + segments.length + '</td></tr>';
   html += '</table>';
+
+  var TERMINUS_MIN = 10;
+  html += '<div class="int-list"><strong style="font-size:12px;color:#555">Intersections</strong>';
+
+  if (allInts.length > 0) {
+    var startGap = Math.round(allInts[0].dist * 3.28084);
+    if (startGap > TERMINUS_MIN) {
+      html += '<div class="int-row"><span class="int-terminus">●</span></div>';
+      html += '<div class="seg-bar">↕ ' + startGap.toLocaleString() + ' ft</div>';
+    }
+    for (var i = 0; i < allInts.length; i++) {
+      var label = allInts[i].label;
+      var zone = label.replace(/[0-9]/g, "");
+      var bg = ZONE_COLORS[zone] || "#888";
+      html += '<div class="int-row">' +
+        '<a class="int-link" style="background:' + bg + '" onclick="selectIntFromTrail(\'' + label + '\')">' + label + '</a>' +
+        '</div>';
+      if (i < allInts.length - 1) {
+        var segFt = Math.round((allInts[i+1].dist - allInts[i].dist) * 3.28084);
+        if (segFt > 0) html += '<div class="seg-bar">↕ ' + segFt.toLocaleString() + ' ft</div>';
+      }
+    }
+    var endGap = Math.round((totalLength - allInts[allInts.length - 1].dist) * 3.28084);
+    if (endGap > TERMINUS_MIN) {
+      html += '<div class="seg-bar">↕ ' + endGap.toLocaleString() + ' ft</div>';
+      html += '<div class="int-row"><span class="int-terminus">●</span></div>';
+    }
+  } else if (totalLength > 0) {
+    html += '<div class="int-row"><span class="int-terminus">●</span></div>';
+    html += '<div class="seg-bar">↕ ' + totalFt.toLocaleString() + ' ft</div>';
+    html += '<div class="int-row"><span class="int-terminus">●</span></div>';
+  }
+
+  html += '</div>';
 
   document.getElementById("infoContent").innerHTML = html;
 }
