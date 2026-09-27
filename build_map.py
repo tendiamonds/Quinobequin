@@ -768,11 +768,42 @@ def build_map_page(ints, trails, rows):
     trail_int_map = build_trail_int_map(ints, trails)
     trail_int_json = json.dumps(trail_int_map)
 
+    int_trail_map = {}
+    for ti_str, info in trail_int_map.items():
+        ti = int(ti_str)
+        feat = trails["features"][ti]
+        name = feat["properties"].get("pdf_name") or feat["properties"].get("name") or ""
+        if not name:
+            name = "Unnamed"
+        total_length = info["length"]
+        ints_list = info["ints"]
+
+        for i, (label, cum_dist) in enumerate(ints_list):
+            if label not in int_trail_map:
+                int_trail_map[label] = []
+
+            if i > 0:
+                prev_label = ints_list[i - 1][0]
+                prev_dist = round(cum_dist - ints_list[i - 1][1])
+                int_trail_map[label].append([name, prev_label, prev_dist])
+            elif cum_dist > 3:
+                int_trail_map[label].append([name, None, round(cum_dist)])
+
+            if i < len(ints_list) - 1:
+                next_label = ints_list[i + 1][0]
+                next_dist = round(ints_list[i + 1][1] - cum_dist)
+                int_trail_map[label].append([name, next_label, next_dist])
+            elif total_length - cum_dist > 3:
+                int_trail_map[label].append([name, None, round(total_length - cum_dist)])
+
+    int_trail_json = json.dumps(int_trail_map)
+
     html = MAP_TEMPLATE
     html = html.replace("__NAV__", nav_html("map"))
     html = html.replace("__TRAIL_DATA__", trail_data)
     html = html.replace("__INT_DATA__", int_data)
     html = html.replace("__TRAIL_INT_MAP__", trail_int_json)
+    html = html.replace("__INT_TRAIL_MAP__", int_trail_json)
     html = html.replace("__N_INTS__", str(n_ints))
     html = html.replace("__N_TRAILS__", str(n_trails))
     html = html.replace("__N_NAMES__", str(n_names))
@@ -931,6 +962,7 @@ var ZONE_NAMES = {
 var trailData = __TRAIL_DATA__;
 var intData = __INT_DATA__;
 var trailIntMap = __TRAIL_INT_MAP__;
+var intTrailMap = __INT_TRAIL_MAP__;
 
 var map = L.map("map", {zoomControl: false}).setView([42.178, -71.498], 14);
 L.control.zoom({position: "topright"}).addTo(map);
@@ -1030,9 +1062,89 @@ function showIntInfo(feature, marker) {
     '<tr><td>Label</td><td><strong style="font-size:16px">' + p.label + '</strong> ' + zoneTag + '</td></tr>' +
     '<tr><td>Owner</td><td><a href="' + ownerHref + '">' + p.owner + '</a> ' + pubTag + '</td></tr>' +
     '<tr><td>Town</td><td>' + p.town + '</td></tr>' +
-    '<tr><td>Degree</td><td>' + p.degree + '-way intersection</td></tr>' +
     '</table>';
+
+  var connections = intTrailMap[p.label] || [];
+  if (connections.length > 0) {
+    var byTrail = {};
+    connections.forEach(function(c) {
+      var trail = c[0], neighbor = c[1], dist = c[2];
+      if (!byTrail[trail]) byTrail[trail] = [];
+      byTrail[trail].push({neighbor: neighbor, dist: dist});
+    });
+    html += '<div class="int-list"><strong style="font-size:12px;color:#555">Trails</strong>';
+    Object.keys(byTrail).forEach(function(trail) {
+      html += '<div style="margin-top:6px;font-weight:600;font-size:12px"><a href="#" onmouseover="hoverTrail(\'' + trail.replace(/'/g, "\\'") + '\')" onmouseout="unhover()" onclick="selectTrailByName(\'' + trail.replace(/'/g, "\\'") + '\');return false" style="color:#2c3e50">' + trail + '</a></div>';
+      byTrail[trail].forEach(function(seg) {
+        var distFt = Math.round(seg.dist * 3.28084);
+        if (seg.neighbor) {
+          var nZone = seg.neighbor.replace(/[0-9]/g, "");
+          var nBg = ZONE_COLORS[nZone] || "#888";
+          html += '<div class="int-row">' +
+            '<span class="seg-bar" style="padding:0">→</span> ' +
+            '<a class="int-link" style="background:' + nBg + '" onmouseover="hoverInt(\'' + seg.neighbor + '\')" onmouseout="unhover()" onclick="selectIntFromTrail(\'' + seg.neighbor + '\')">' + seg.neighbor + '</a>' +
+            '<span class="int-dist">' + distFt.toLocaleString() + ' ft</span>' +
+            '</div>';
+        } else {
+          html += '<div class="int-row">' +
+            '<span class="seg-bar" style="padding:0">→</span> ' +
+            '<span class="int-terminus">●</span>' +
+            '<span class="int-dist">' + distFt.toLocaleString() + ' ft</span>' +
+            '</div>';
+        }
+      });
+    });
+    html += '</div>';
+  }
+
   document.getElementById("infoContent").innerHTML = html;
+}
+
+var hoverMarker = null;
+var hoverTrailLayers = [];
+
+function hoverInt(label) {
+  unhover();
+  if (intMarkers[label]) {
+    intMarkers[label].setStyle({radius: 11, weight: 3, color: "#f1c40f", fillColor: "#f1c40f", fillOpacity: 1});
+    hoverMarker = label;
+  }
+}
+
+function hoverTrail(name) {
+  unhover();
+  trailLayer.eachLayer(function(l) {
+    var ln = l.feature.properties.pdf_name || l.feature.properties.name || "";
+    if (ln === name) {
+      l.setStyle({color: "#e67e22", weight: 5, opacity: 0.9});
+      hoverTrailLayers.push(l);
+    }
+  });
+}
+
+function unhover() {
+  if (hoverMarker && intMarkers[hoverMarker]) {
+    var z = intMarkers[hoverMarker]._zone;
+    if (!selectedMarker || selectedMarker !== intMarkers[hoverMarker]) {
+      intMarkers[hoverMarker].setStyle({radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[z], fillOpacity: 0.85});
+    }
+    hoverMarker = null;
+  }
+  hoverTrailLayers.forEach(function(l) {
+    if (highlightedSegments.indexOf(l) === -1) {
+      l.setStyle({color: "#2c3e50", weight: 3, opacity: 0.6});
+    }
+  });
+  hoverTrailLayers = [];
+}
+
+function selectTrailByName(name) {
+  var layer = null;
+  trailLayer.eachLayer(function(l) {
+    var ln = l.feature.properties.pdf_name || l.feature.properties.name || "";
+    if (ln === name && !layer) layer = l;
+  });
+  if (layer) showTrailInfo(layer.feature, layer);
 }
 
 function selectIntFromTrail(label) {
@@ -1105,7 +1217,7 @@ function showTrailInfo(feature, layer) {
       var zone = label.replace(/[0-9]/g, "");
       var bg = ZONE_COLORS[zone] || "#888";
       html += '<div class="int-row">' +
-        '<a class="int-link" style="background:' + bg + '" onclick="selectIntFromTrail(\'' + label + '\')">' + label + '</a>' +
+        '<a class="int-link" style="background:' + bg + '" onmouseover="hoverInt(\'' + label + '\')" onmouseout="unhover()" onclick="selectIntFromTrail(\'' + label + '\')">' + label + '</a>' +
         '</div>';
       if (i < allInts.length - 1) {
         var segFt = Math.round((allInts[i+1].dist - allInts[i].dist) * 3.28084);
