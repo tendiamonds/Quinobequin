@@ -915,6 +915,26 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .int-terminus { display: inline-block; width: 12px; height: 12px; background: #333;
     border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,0.3); }
 
+  #searchBadge {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 2000;
+    background: rgba(0,0,0,0.82); color: #fff; font: 600 22px/1 monospace;
+    padding: 8px 18px; border-radius: 8px; display: none;
+    pointer-events: none; letter-spacing: 2px;
+  }
+  .route-btn {
+    display: inline-block; margin-top: 8px; padding: 5px 14px; font-size: 12px;
+    font-weight: 600; color: #fff; background: #2980b9; border: none; border-radius: 4px;
+    cursor: pointer;
+  }
+  .route-btn:hover { background: #1a6da0; }
+  .route-msg {
+    margin-top: 8px; padding: 8px 12px; background: #eaf2f8; border-left: 3px solid #2980b9;
+    font-size: 12px; color: #2c3e50;
+  }
+  .route-step { display: flex; align-items: center; gap: 6px; margin: 4px 0; font-size: 12px; }
+  .route-arrow { color: #2980b9; font-weight: 700; }
+  .route-trail-name { color: #555; font-style: italic; }
+
   @media (max-width: 640px) {
     .info-panel { width: calc(100vw - 20px); top: auto; bottom: 0; left: 0;
       border-radius: 12px 12px 0 0; max-height: 45vh; }
@@ -926,6 +946,7 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
 <body>
 __NAV__
 <div id="map"></div>
+<div id="searchBadge"></div>
 
 <div class="info-panel" id="infoPanel">
   <h2>Vietnam Trail Network</h2>
@@ -963,6 +984,50 @@ var trailData = __TRAIL_DATA__;
 var intData = __INT_DATA__;
 var trailIntMap = __TRAIL_INT_MAP__;
 var intTrailMap = __INT_TRAIL_MAP__;
+
+// Build adjacency graph for routing
+var routeGraph = {};
+Object.keys(intTrailMap).forEach(function(label) {
+  if (!routeGraph[label]) routeGraph[label] = [];
+  (intTrailMap[label] || []).forEach(function(c) {
+    if (c[1]) routeGraph[label].push({to: c[1], dist: c[2], trail: c[0]});
+  });
+});
+
+function dijkstra(start, end) {
+  var dist = {}, prev = {}, via = {}, visited = {};
+  Object.keys(routeGraph).forEach(function(n) { dist[n] = Infinity; });
+  dist[start] = 0;
+  var queue = [{node: start, d: 0}];
+  while (queue.length > 0) {
+    queue.sort(function(a, b) { return a.d - b.d; });
+    var u = queue.shift();
+    if (visited[u.node]) continue;
+    visited[u.node] = true;
+    if (u.node === end) break;
+    (routeGraph[u.node] || []).forEach(function(edge) {
+      var alt = dist[u.node] + edge.dist;
+      if (alt < dist[edge.to]) {
+        dist[edge.to] = alt;
+        prev[edge.to] = u.node;
+        via[edge.to] = edge.trail;
+        queue.push({node: edge.to, d: alt});
+      }
+    });
+  }
+  if (dist[end] === Infinity) return null;
+  var path = [], node = end;
+  while (node) {
+    path.unshift({label: node, trail: via[node] || null});
+    node = prev[node];
+  }
+  return {path: path, totalDist: dist[end]};
+}
+
+var routeMode = false;
+var routeFrom = null;
+var routeLine = null;
+var routeMarkers = [];
 
 var map = L.map("map", {zoomControl: false}).setView([42.178, -71.498], 14);
 L.control.zoom({position: "topright"}).addTo(map);
@@ -1019,7 +1084,11 @@ intData.features.forEach(function(f) {
   }).addTo(map);
   marker.on("click", function(e) {
     L.DomEvent.stopPropagation(e);
-    showIntInfo(f, marker);
+    if (routeMode) {
+      completeRoute(f.properties.label);
+    } else {
+      showIntInfo(f, marker);
+    }
   });
   intMarkers[label] = marker;
   intFeatures[label] = f;
@@ -1060,7 +1129,7 @@ function showIntInfo(feature, marker) {
 
   var html = '<table>' +
     '<tr><td>Label</td><td><strong style="font-size:16px">' + p.label + '</strong> ' + zoneTag + '</td></tr>' +
-    '<tr><td>Owner</td><td><a href="' + ownerHref + '">' + p.owner + '</a> ' + pubTag + '</td></tr>' +
+    '<tr><td>Owner</td><td><a href="' + ownerHref + '" onmouseover="hoverOwner(\'' + p.owner.replace(/'/g, "\\'") + '\')" onmouseout="unhover()">' + p.owner + '</a> ' + pubTag + '</td></tr>' +
     '<tr><td>Town</td><td>' + p.town + '</td></tr>' +
     '</table>';
 
@@ -1097,11 +1166,130 @@ function showIntInfo(feature, marker) {
     html += '</div>';
   }
 
+  html += '<button class="route-btn" onclick="startRoute(\'' + p.label + '\')">Route from here</button>';
+
+  document.getElementById("infoContent").innerHTML = html;
+}
+
+function startRoute(label) {
+  routeFrom = label;
+  routeMode = true;
+  clearRouteDisplay();
+  document.getElementById("infoContent").innerHTML =
+    '<div class="route-msg">Routing from <strong>' + label + '</strong><br>' +
+    'Click a destination intersection.<br><br>' +
+    '<button class="route-btn" style="background:#888" onclick="cancelRoute()">Cancel</button></div>';
+}
+
+function cancelRoute() {
+  routeMode = false;
+  routeFrom = null;
+  clearRouteDisplay();
+  document.getElementById("infoContent").innerHTML = defaultInfo;
+}
+
+function clearRouteDisplay() {
+  if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
+  routeMarkers.forEach(function(m) { map.removeLayer(m); });
+  routeMarkers = [];
+}
+
+function completeRoute(destLabel) {
+  routeMode = false;
+  var startLabel = routeFrom;
+  routeFrom = null;
+  if (startLabel === destLabel) { cancelRoute(); return; }
+
+  var result = dijkstra(startLabel, destLabel);
+  if (!result) {
+    document.getElementById("infoContent").innerHTML =
+      '<div class="route-msg">No route found from <strong>' + startLabel + '</strong> to <strong>' + destLabel + '</strong>.<br><br>' +
+      '<button class="route-btn" style="background:#888" onclick="cancelRoute()">Close</button></div>';
+    return;
+  }
+
+  clearSelection();
+  clearRouteDisplay();
+
+  var latlngs = [];
+  result.path.forEach(function(step) {
+    var m = intMarkers[step.label];
+    if (m) latlngs.push(m.getLatLng());
+  });
+
+  routeLine = L.polyline(latlngs, {
+    color: "#2980b9", weight: 6, opacity: 0.8, dashArray: "10,6",
+    lineCap: "round", lineJoin: "round"
+  }).addTo(map);
+  routeLine.bringToFront();
+
+  result.path.forEach(function(step) {
+    var m = intMarkers[step.label];
+    if (m) {
+      var ring = L.circleMarker(m.getLatLng(), {
+        radius: 13, color: "#2980b9", weight: 3, fillOpacity: 0, opacity: 0.9
+      }).addTo(map);
+      routeMarkers.push(ring);
+    }
+  });
+
+  map.fitBounds(routeLine.getBounds().pad(0.1));
+
+  var totalFt = Math.round(result.totalDist * 3.28084);
+  var totalMi = (result.totalDist / 1609.344).toFixed(2);
+  var html = '<div style="margin-bottom:6px"><strong style="font-size:14px">Route: ' +
+    startLabel + ' → ' + destLabel + '</strong></div>' +
+    '<div style="font-size:13px;margin-bottom:8px"><strong>' +
+    totalFt.toLocaleString() + ' ft</strong> (' + totalMi + ' mi)</div>';
+
+  html += '<div class="int-list">';
+  for (var i = 0; i < result.path.length; i++) {
+    var step = result.path[i];
+    var zone = step.label.replace(/[0-9]/g, "");
+    var bg = ZONE_COLORS[zone] || "#888";
+    html += '<div class="route-step">' +
+      '<a class="int-link" style="background:' + bg + '" onclick="selectIntFromTrail(\'' + step.label + '\')">' + step.label + '</a>';
+    if (i < result.path.length - 1) {
+      var next = result.path[i + 1];
+      var segFt = Math.round(next.trail ? (function() {
+        var connections = intTrailMap[step.label] || [];
+        for (var j = 0; j < connections.length; j++) {
+          if (connections[j][0] === next.trail && connections[j][1] === next.label) return connections[j][2];
+        }
+        return 0;
+      })() * 3.28084 : 0);
+      html += '<span class="route-arrow">→</span>' +
+        '<span class="route-trail-name">' + next.trail + '</span>' +
+        '<span class="int-dist">' + segFt.toLocaleString() + ' ft</span>';
+    }
+    html += '</div>';
+  }
+  html += '</div>';
+
+  html += '<div style="margin-top:10px">' +
+    '<button class="route-btn" onclick="startRoute(\'' + startLabel + '\')">New route from ' + startLabel + '</button> ' +
+    '<button class="route-btn" onclick="startRoute(\'' + destLabel + '\')">New route from ' + destLabel + '</button> ' +
+    '<button class="route-btn" style="background:#888" onclick="cancelRoute()">Clear</button></div>';
+
   document.getElementById("infoContent").innerHTML = html;
 }
 
 var hoverMarker = null;
 var hoverTrailLayers = [];
+var hoverOwnerMarkers = [];
+
+function hoverOwner(ownerName) {
+  unhover();
+  Object.keys(intFeatures).forEach(function(label) {
+    var f = intFeatures[label];
+    var m = intMarkers[label];
+    if (f.properties.owner === ownerName && m && m !== selectedMarker) {
+      m.setStyle({radius: 11, weight: 3, color: "#e67e22", fillColor: "#e67e22", fillOpacity: 1});
+      m.bringToFront();
+      hoverOwnerMarkers.push(label);
+    }
+  });
+}
 
 function hoverInt(label) {
   unhover();
@@ -1130,6 +1318,14 @@ function unhover() {
     }
     hoverMarker = null;
   }
+  hoverOwnerMarkers.forEach(function(label) {
+    var m = intMarkers[label];
+    if (m && m !== selectedMarker) {
+      var z = m._zone;
+      m.setStyle({radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[z], fillOpacity: 0.85});
+    }
+  });
+  hoverOwnerMarkers = [];
   hoverTrailLayers.forEach(function(l) {
     if (highlightedSegments.indexOf(l) === -1) {
       l.setStyle({color: "#2c3e50", weight: 3, opacity: 0.6});
@@ -1254,6 +1450,9 @@ function clearSelection() {
     l.setStyle({color: "#2c3e50", weight: 3, opacity: 0.6});
   });
   highlightedSegments = [];
+  clearRouteDisplay();
+  routeMode = false;
+  routeFrom = null;
 }
 
 var defaultInfo = '<p style="color:#888">Click a trail or intersection marker for details.</p>' +
@@ -1315,6 +1514,105 @@ if (targetInt && intMarkers[targetInt]) {
 } else {
   map.fitBounds([[42.156, -71.518], [42.201, -71.483]]);
 }
+
+// Keyboard intersection search
+var searchBuf = "";
+var searchTimer = null;
+var searchHighlighted = [];
+var searchBadge = document.getElementById("searchBadge");
+
+function clearSearch() {
+  searchBuf = "";
+  searchBadge.style.display = "none";
+  searchHighlighted.forEach(function(label) {
+    var m = intMarkers[label];
+    if (m && m !== selectedMarker) {
+      var z = m._zone;
+      m.setStyle({radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[z], fillOpacity: 0.85});
+    }
+  });
+  searchHighlighted = [];
+}
+
+function applySearch() {
+  searchHighlighted.forEach(function(label) {
+    var m = intMarkers[label];
+    if (m && m !== selectedMarker) {
+      var z = m._zone;
+      m.setStyle({radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[z], fillOpacity: 0.85});
+    }
+  });
+  searchHighlighted = [];
+
+  var matches = Object.keys(intMarkers).filter(function(label) {
+    return label.toUpperCase().indexOf(searchBuf) === 0 && zoneVisible[label.replace(/[0-9]/g, "")];
+  });
+
+  if (matches.length === 0) {
+    searchBadge.textContent = searchBuf + " ?";
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(clearSearch, 1200);
+    return;
+  }
+
+  if (matches.length === 1) {
+    searchBadge.style.display = "none";
+    var label = matches[0];
+    if (routeMode) {
+      completeRoute(label);
+    } else if (intMarkers[label] && intFeatures[label]) {
+      showIntInfo(intFeatures[label], intMarkers[label]);
+      map.panTo(intMarkers[label].getLatLng());
+    }
+    searchBuf = "";
+    searchHighlighted = [];
+    return;
+  }
+
+  matches.forEach(function(label) {
+    var m = intMarkers[label];
+    if (m && m !== selectedMarker) {
+      m.setStyle({radius: 11, weight: 3, color: "#f1c40f", fillColor: "#f1c40f", fillOpacity: 1});
+      m.bringToFront();
+    }
+  });
+  searchHighlighted = matches;
+}
+
+document.addEventListener("keydown", function(e) {
+  if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+  var key = e.key.toUpperCase();
+
+  if (/^[A-F]$/.test(key)) {
+    clearSearch();
+    searchBuf = key;
+    searchBadge.textContent = searchBuf;
+    searchBadge.style.display = "block";
+    applySearch();
+    var zonePts = [];
+    Object.keys(intMarkers).forEach(function(label) {
+      if (label.replace(/[0-9]/g, "") === key) zonePts.push(intMarkers[label].getLatLng());
+    });
+    if (zonePts.length > 0) {
+      map.fitBounds(L.latLngBounds(zonePts).pad(0.15));
+    }
+  } else if (/^[0-9]$/.test(key) && searchBuf.length > 0) {
+    searchBuf += key;
+    searchBadge.textContent = searchBuf;
+    applySearch();
+  } else if (e.key === "Backspace" && searchBuf.length > 0) {
+    e.preventDefault();
+    searchBuf = searchBuf.slice(0, -1);
+    if (searchBuf.length === 0) {
+      clearSearch();
+    } else {
+      searchBadge.textContent = searchBuf;
+      applySearch();
+    }
+  } else if (e.key === "Escape") {
+    clearSearch();
+  }
+});
 </script>
 </body>
 </html>"""
