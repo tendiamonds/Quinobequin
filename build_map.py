@@ -932,13 +932,17 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
     font-size: 12px; color: #2c3e50;
   }
   .route-step { display: flex; align-items: center; gap: 6px; margin: 4px 0; font-size: 12px; }
-  .route-arrow { color: #2980b9; font-weight: 700; }
+  .route-arrow { color: #0d47a1; font-weight: 700; }
   .route-trail-name { color: #555; font-style: italic; }
+  .locate-ctl a { display: flex; align-items: center; justify-content: center; }
+  .locate-ctl a.active { color: #1e88e5; }
+  .you-badge { display: inline-block; padding: 1px 7px; border-radius: 10px; background: #1e88e5;
+    color: #fff; font-size: 11px; font-weight: 700; }
 
   @media (max-width: 640px) {
     .info-panel { width: calc(100vw - 20px); top: auto; bottom: 0; left: 0;
       border-radius: 12px 12px 0 0; max-height: 45vh; }
-    .zone-filter { top: 52px; right: 10px; }
+    .zone-filter { top: 52px; left: 10px; right: auto; }
     .legend-panel { display: none; }
   }
 </style>
@@ -965,7 +969,7 @@ __NAV__
 <div class="legend-panel">
   <h3>Legend</h3>
   <div class="legend-row"><div class="legend-line" style="background:#2c3e50"></div> Trail</div>
-  <div class="legend-row"><div class="legend-line" style="background:#e67e22;height:4px"></div> Trail (highlighted)</div>
+  <div class="legend-row"><div class="legend-line" style="background:#00b8d4;height:4px"></div> Trail (highlighted)</div>
   <div class="legend-row"><div class="legend-swatch" style="background:#888"></div> Intersection</div>
   <div class="legend-row"><div class="legend-swatch" style="background:#f1c40f;border-color:#222"></div> Selected</div>
 </div>
@@ -1028,6 +1032,8 @@ var routeMode = false;
 var routeFrom = null;
 var routeLine = null;
 var routeMarkers = [];
+var currentIntFeature = null;
+var userLatLng = null;
 
 var map = L.map("map", {zoomControl: false}).setView([42.178, -71.498], 14);
 L.control.zoom({position: "topright"}).addTo(map);
@@ -1167,8 +1173,12 @@ function showIntInfo(feature, marker) {
   }
 
   html += '<button class="route-btn" onclick="startRoute(\'' + p.label + '\')">Route from here</button>';
+  if (userLatLng) {
+    html += ' <button class="route-btn" style="background:#1e88e5" onclick="routeFromMe(\'' + p.label + '\')">Route here from my location</button>';
+  }
 
   document.getElementById("infoContent").innerHTML = html;
+  currentIntFeature = feature;
 }
 
 function startRoute(label) {
@@ -1207,27 +1217,32 @@ function completeRoute(destLabel) {
       '<button class="route-btn" style="background:#888" onclick="cancelRoute()">Close</button></div>';
     return;
   }
+  renderRoute(startLabel, destLabel, result, null);
+}
 
+// userLeg (optional): {dist, trail} for the walk from the user's position to the first intersection
+function renderRoute(startLabel, destLabel, result, userLeg) {
   clearSelection();
   clearRouteDisplay();
 
   var latlngs = [];
+  if (userLeg) latlngs.push(userLatLng);
   result.path.forEach(function(step) {
     var m = intMarkers[step.label];
     if (m) latlngs.push(m.getLatLng());
   });
 
-  routeLine = L.polyline(latlngs, {
-    color: "#2980b9", weight: 6, opacity: 0.8, dashArray: "10,6",
-    lineCap: "round", lineJoin: "round"
-  }).addTo(map);
+  routeLine = L.featureGroup([
+    L.polyline(latlngs, {color: "#fff", weight: 10, opacity: 0.9, lineCap: "round", lineJoin: "round"}),
+    L.polyline(latlngs, {color: "#0d47a1", weight: 6, opacity: 1, dashArray: "10,6", lineCap: "round", lineJoin: "round"})
+  ]).addTo(map);
   routeLine.bringToFront();
 
   result.path.forEach(function(step) {
     var m = intMarkers[step.label];
     if (m) {
       var ring = L.circleMarker(m.getLatLng(), {
-        radius: 13, color: "#2980b9", weight: 3, fillOpacity: 0, opacity: 0.9
+        radius: 13, color: "#0d47a1", weight: 3, fillOpacity: 0, opacity: 0.9
       }).addTo(map);
       routeMarkers.push(ring);
     }
@@ -1235,14 +1250,21 @@ function completeRoute(destLabel) {
 
   map.fitBounds(routeLine.getBounds().pad(0.1));
 
-  var totalFt = Math.round(result.totalDist * 3.28084);
-  var totalMi = (result.totalDist / 1609.344).toFixed(2);
+  var totalM = result.totalDist + (userLeg ? userLeg.dist : 0);
+  var totalFt = Math.round(totalM * 3.28084);
+  var totalMi = (totalM / 1609.344).toFixed(2);
   var html = '<div style="margin-bottom:6px"><strong style="font-size:14px">Route: ' +
-    startLabel + ' → ' + destLabel + '</strong></div>' +
+    (userLeg ? 'Your location' : startLabel) + ' → ' + destLabel + '</strong></div>' +
     '<div style="font-size:13px;margin-bottom:8px"><strong>' +
     totalFt.toLocaleString() + ' ft</strong> (' + totalMi + ' mi)</div>';
 
   html += '<div class="int-list">';
+  if (userLeg) {
+    html += '<div class="route-step"><span class="you-badge">You</span>' +
+      '<span class="route-arrow">→</span>' +
+      '<span class="route-trail-name">' + (userLeg.trail || 'off trail') + '</span>' +
+      '<span class="int-dist">' + Math.round(userLeg.dist * 3.28084).toLocaleString() + ' ft</span></div>';
+  }
   for (var i = 0; i < result.path.length; i++) {
     var step = result.path[i];
     var zone = step.label.replace(/[0-9]/g, "");
@@ -1267,7 +1289,7 @@ function completeRoute(destLabel) {
   html += '</div>';
 
   html += '<div style="margin-top:10px">' +
-    '<button class="route-btn" onclick="startRoute(\'' + startLabel + '\')">New route from ' + startLabel + '</button> ' +
+    (userLeg ? '' : '<button class="route-btn" onclick="startRoute(\'' + startLabel + '\')">New route from ' + startLabel + '</button> ') +
     '<button class="route-btn" onclick="startRoute(\'' + destLabel + '\')">New route from ' + destLabel + '</button> ' +
     '<button class="route-btn" style="background:#888" onclick="cancelRoute()">Clear</button></div>';
 
@@ -1284,7 +1306,7 @@ function hoverOwner(ownerName) {
     var f = intFeatures[label];
     var m = intMarkers[label];
     if (f.properties.owner === ownerName && m && m !== selectedMarker) {
-      m.setStyle({radius: 11, weight: 3, color: "#e67e22", fillColor: "#e67e22", fillOpacity: 1});
+      m.setStyle({radius: 11, weight: 4, color: "#111", fillColor: ZONE_COLORS[m._zone], fillOpacity: 1});
       m.bringToFront();
       hoverOwnerMarkers.push(label);
     }
@@ -1304,7 +1326,7 @@ function hoverTrail(name) {
   trailLayer.eachLayer(function(l) {
     var ln = l.feature.properties.pdf_name || l.feature.properties.name || "";
     if (ln === name) {
-      l.setStyle({color: "#e67e22", weight: 5, opacity: 0.9});
+      l.setStyle({color: "#00b8d4", weight: 6, opacity: 1});
       hoverTrailLayers.push(l);
     }
   });
@@ -1361,13 +1383,13 @@ function showTrailInfo(feature, layer) {
   trailLayer.eachLayer(function(l) {
     var ln = l.feature.properties.pdf_name || l.feature.properties.name || "";
     if (ln === name && name !== "") {
-      l.setStyle({color: "#e67e22", weight: 5, opacity: 1});
+      l.setStyle({color: "#00b8d4", weight: 6, opacity: 1});
       highlightedSegments.push(l);
       segIndices.push(l.feature.properties._idx);
     }
   });
   if (highlightedSegments.length === 0) {
-    layer.setStyle({color: "#e67e22", weight: 5, opacity: 1});
+    layer.setStyle({color: "#00b8d4", weight: 6, opacity: 1});
     highlightedSegments.push(layer);
     segIndices.push(feature.properties._idx);
   }
@@ -1453,6 +1475,7 @@ function clearSelection() {
   clearRouteDisplay();
   routeMode = false;
   routeFrom = null;
+  currentIntFeature = null;
 }
 
 var defaultInfo = '<p style="color:#888">Click a trail or intersection marker for details.</p>' +
@@ -1513,6 +1536,213 @@ if (targetInt && intMarkers[targetInt]) {
   setTimeout(function() { showIntInfo(f, m); }, 300);
 } else {
   map.fitBounds([[42.156, -71.518], [42.201, -71.483]]);
+}
+
+// Geolocation
+var userAccuracy = 0, userDot = null, userAccCircle = null, watchId = null;
+var locateRequested = false, locateBtn = null;
+var NETWORK_BOUNDS = L.latLngBounds([[42.156, -71.518], [42.201, -71.483]]);
+
+function approxDist(lon1, lat1, lon2, lat2) {
+  var dx = (lon1 - lon2) * 82000, dy = (lat1 - lat2) * 111000;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
+function flatCoords(geom) {
+  if (geom.type === "LineString") return geom.coordinates;
+  if (geom.type === "MultiLineString") return [].concat.apply([], geom.coordinates);
+  return [];
+}
+
+// Cumulative distances match build_trail_int_map so positions line up with trailIntMap
+var trailCum = trailData.features.map(function(f) {
+  var c = flatCoords(f.geometry), cum = [0];
+  for (var i = 1; i < c.length; i++) {
+    cum.push(cum[i - 1] + approxDist(c[i - 1][0], c[i - 1][1], c[i][0], c[i][1]));
+  }
+  return cum;
+});
+
+function formatDist(m) {
+  var ft = m * 3.28084;
+  return ft < 1000 ? (Math.round(ft / 10) * 10).toLocaleString() + " ft"
+                   : (m / 1609.344).toFixed(1) + " mi";
+}
+
+function showPanelMsg(text) {
+  clearSelection();
+  document.getElementById("infoContent").innerHTML = '<div class="route-msg" style="margin-top:0">' + text + '</div>';
+}
+
+function nearestInt(ll) {
+  var best = null, bestD = Infinity;
+  Object.keys(intMarkers).forEach(function(label) {
+    var d = ll.distanceTo(intMarkers[label].getLatLng());
+    if (d < bestD) { bestD = d; best = label; }
+  });
+  return {label: best, dist: bestD};
+}
+
+// Places the user can join the graph: intersections on either side along the nearest trail,
+// or the closest few by straight line when not near any trail
+function userAnchors(ll) {
+  var px = ll.lng * 82000, py = ll.lat * 111000, best = {d: Infinity};
+  trailData.features.forEach(function(f, ti) {
+    var c = flatCoords(f.geometry), cum = trailCum[ti];
+    for (var i = 0; i < c.length - 1; i++) {
+      var ax = c[i][0] * 82000, ay = c[i][1] * 111000;
+      var vx = c[i + 1][0] * 82000 - ax, vy = c[i + 1][1] * 111000 - ay;
+      var len2 = vx * vx + vy * vy;
+      var t = len2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / len2)) : 0;
+      var dx = px - (ax + t * vx), dy = py - (ay + t * vy);
+      var d = Math.sqrt(dx * dx + dy * dy);
+      if (d < best.d) best = {d: d, ti: ti, along: cum[i] + t * (cum[i + 1] - cum[i])};
+    }
+  });
+
+  var anchors = [];
+  var info = best.d < 60 ? trailIntMap[best.ti] : null;
+  if (info && info.ints.length > 0) {
+    var props = trailData.features[best.ti].properties;
+    var name = props.pdf_name || props.name || "Unnamed";
+    var before = null, after = null;
+    info.ints.forEach(function(e) {
+      if (e[1] <= best.along) before = e;
+      if (e[1] >= best.along && !after) after = e;
+    });
+    [before, after].forEach(function(e) {
+      if (e) anchors.push({label: e[0], dist: best.d + Math.abs(best.along - e[1]), trail: name});
+    });
+  }
+  if (anchors.length === 0) {
+    anchors = Object.keys(intMarkers).map(function(label) {
+      return {label: label, dist: ll.distanceTo(intMarkers[label].getLatLng()), trail: null};
+    }).sort(function(a, b) { return a.dist - b.dist; }).slice(0, 3);
+  }
+  return anchors;
+}
+
+function routeFromMe(destLabel) {
+  var best = null;
+  userAnchors(userLatLng).forEach(function(a) {
+    var r = dijkstra(a.label, destLabel);
+    if (r && (!best || a.dist + r.totalDist < best.total)) {
+      best = {anchor: a, result: r, total: a.dist + r.totalDist};
+    }
+  });
+  if (best) {
+    renderRoute(best.anchor.label, destLabel, best.result, {dist: best.anchor.dist, trail: best.anchor.trail});
+  } else {
+    showPanelMsg('No route found from your location to <strong>' + destLabel + '</strong>.');
+  }
+}
+
+function showLocateInfo() {
+  clearSelection();
+  var n = nearestInt(userLatLng);
+  var bg = ZONE_COLORS[n.label.replace(/[0-9]/g, "")] || "#888";
+  var html = '<div class="route-msg" style="margin-top:0;font-size:13px">You are about <strong>' +
+    formatDist(n.dist) + '</strong> from ' +
+    '<a class="int-link" style="background:' + bg + '" onmouseover="hoverInt(\'' + n.label + '\')" onmouseout="unhover()" onclick="selectIntFromTrail(\'' + n.label + '\')">' + n.label + '</a>';
+  if (userAccuracy > 30) {
+    html += '<br><span style="color:#777;font-size:11px">GPS accuracy ±' + formatDist(userAccuracy) + '</span>';
+  }
+  html += '</div>';
+  document.getElementById("infoContent").innerHTML = html;
+
+  if (n.dist < 3000) {
+    map.fitBounds(L.latLngBounds([userLatLng, intMarkers[n.label].getLatLng()]).pad(0.3), {maxZoom: 17});
+  } else {
+    map.setView(userLatLng, Math.max(map.getZoom(), 14));
+  }
+}
+
+function onLocation(pos) {
+  var first = !userLatLng;
+  userLatLng = L.latLng(pos.coords.latitude, pos.coords.longitude);
+  userAccuracy = pos.coords.accuracy;
+  if (!userDot) {
+    userAccCircle = L.circle(userLatLng, {
+      radius: userAccuracy, stroke: false, fillColor: "#1e88e5", fillOpacity: 0.12, interactive: false
+    }).addTo(map);
+    userDot = L.circleMarker(userLatLng, {
+      radius: 8, color: "#fff", weight: 3, fillColor: "#1e88e5", fillOpacity: 1
+    }).addTo(map);
+    userDot.on("click", function(e) { L.DomEvent.stopPropagation(e); showLocateInfo(); });
+  } else {
+    userAccCircle.setLatLng(userLatLng).setRadius(userAccuracy);
+    userDot.setLatLng(userLatLng);
+  }
+  userDot.bringToFront();
+  locateBtn.classList.add("active");
+
+  if (locateRequested) {
+    locateRequested = false;
+    showLocateInfo();
+  } else if (first) {
+    if (currentIntFeature && selectedMarker) showIntInfo(currentIntFeature, selectedMarker);
+    if (!targetInt && NETWORK_BOUNDS.contains(userLatLng)) map.setView(userLatLng, 16);
+  }
+}
+
+function onLocationError(err) {
+  if (err.code === 1 && watchId !== null) {
+    navigator.geolocation.clearWatch(watchId);
+    watchId = null;
+  }
+  if (locateRequested) {
+    locateRequested = false;
+    showPanelMsg(err.code === 1
+      ? "Location access is blocked for this site. You can allow it in your browser's site settings."
+      : "Couldn't get your location. Try again in a moment.");
+  }
+}
+
+function startWatch() {
+  if (watchId === null) {
+    watchId = navigator.geolocation.watchPosition(onLocation, onLocationError,
+      {enableHighAccuracy: true, maximumAge: 10000, timeout: 30000});
+  }
+}
+
+function locateMe() {
+  if (!navigator.geolocation) {
+    showPanelMsg("This browser can't share its location.");
+  } else {
+    startWatch();
+    if (userLatLng) {
+      showLocateInfo();
+    } else {
+      locateRequested = true;
+      showPanelMsg("Finding your location…");
+    }
+  }
+}
+
+var LocateControl = L.Control.extend({
+  options: {position: "topright"},
+  onAdd: function() {
+    var div = L.DomUtil.create("div", "leaflet-bar locate-ctl");
+    var a = L.DomUtil.create("a", "", div);
+    a.href = "#";
+    a.title = "Locate me";
+    a.setAttribute("role", "button");
+    a.setAttribute("aria-label", "Locate me");
+    a.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">' +
+      '<circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>';
+    L.DomEvent.disableClickPropagation(div);
+    L.DomEvent.on(a, "click", function(e) { L.DomEvent.preventDefault(e); locateMe(); });
+    locateBtn = a;
+    return div;
+  }
+});
+new LocateControl().addTo(map);
+
+// If permission was granted on an earlier visit, show the dot without prompting
+if (navigator.geolocation && navigator.permissions && navigator.permissions.query) {
+  navigator.permissions.query({name: "geolocation"}).then(function(r) {
+    if (r.state === "granted") startWatch();
+  }).catch(function() {});
 }
 
 // Keyboard intersection search
