@@ -371,6 +371,7 @@ var intMarkers = {};
 var intLabels = {};
 var intFeatureByIdx = {};
 var nextIntNumber = 0;
+var nextNewId = 0;   // ids for added intersections, never reused (undo can shrink the list)
 
 intData.features.forEach(function(f, idx) {
   var n = f.properties.number || 0;
@@ -432,8 +433,10 @@ function getActiveIntersections() {
     }
   });
   addedIntersections.forEach(function(a) {
-    var c = a.feature.geometry.coordinates;
-    active.push({lon: c[0], lat: c[1], idx: a.idx, zone: a.feature.properties.zone});
+    if (!deletedIntIndices[a.idx]) {
+      var c = a.feature.geometry.coordinates;
+      active.push({lon: c[0], lat: c[1], idx: a.idx, zone: intZone(a.feature, a.idx)});
+    }
   });
   return active;
 }
@@ -522,6 +525,12 @@ function showIntDefault() {
 }
 
 // --- Trail editing ---
+// Text from the data, made safe to put in HTML (some trail names contain quotes)
+function esc(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
 function selectTrail(feature, layer) {
   clearSelection();
   var fid = feature.properties.id;
@@ -534,12 +543,12 @@ function selectTrail(feature, layer) {
   var p = feature.properties;
   document.getElementById("panelContent").innerHTML =
     '<table>' +
-    '<tr><td>Trail</td><td><strong>' + (name || '<em style="color:#999">unnamed</em>') + '</strong></td></tr>' +
+    '<tr><td>Trail</td><td><strong>' + (name ? esc(name) : '<em style="color:#999">unnamed</em>') + '</strong></td></tr>' +
     '<tr><td>ID</td><td style="font-size:11px;color:#888">' + fid + '</td></tr>' +
-    (p.surface ? '<tr><td>Surface</td><td>' + p.surface + '</td></tr>' : '') +
-    (p.highway ? '<tr><td>Type</td><td>' + p.highway + '</td></tr>' : '') +
+    (p.surface ? '<tr><td>Surface</td><td>' + esc(p.surface) + '</td></tr>' : '') +
+    (p.highway ? '<tr><td>Type</td><td>' + esc(p.highway) + '</td></tr>' : '') +
     '</table>' +
-    '<input type="text" id="trailNameInput" placeholder="Enter trail name..." value="' + (name || '') + '">' +
+    '<input type="text" id="trailNameInput" placeholder="Enter trail name..." value="' + esc(name || '') + '">' +
     '<div class="btn-row">' +
     '<button class="btn btn-blue" onclick="saveTrailName(\'' + fid + '\')">Save Name</button>' +
     '<button class="btn btn-red" onclick="deleteTrail(\'' + fid + '\')">Delete Trail</button>' +
@@ -595,6 +604,8 @@ function selectIntersection(feature, idx, marker) {
 
   var zone = intZone(feature, idx);
   var p = feature.properties;
+  // idx is a number for loaded points and a string ("new_0") for added ones
+  var ia = JSON.stringify(idx).replace(/"/g, "&quot;");
   var zoneOptions = "";
   "ABCDEF".split("").forEach(function(z) {
     var sel = z === zone ? " selected" : "";
@@ -612,11 +623,17 @@ function selectIntersection(feature, idx, marker) {
     feature.geometry.coordinates[1].toFixed(6) + ', ' +
     feature.geometry.coordinates[0].toFixed(6) + '</td></tr>' +
     '</table>' +
+    '<label style="font-size:12px;font-weight:600;color:#555;margin-top:8px;display:block">' +
+    '<input type="checkbox"' + (p.entry ? ' checked' : '') + ' onchange="toggleFlag(' + ia + ', \'entry\', \'entry point\', this.checked)"> Entry point</label>' +
+    '<label style="font-size:12px;font-weight:600;color:#555;margin-top:4px;display:block">' +
+    '<input type="checkbox"' + (p.parking ? ' checked' : '') + ' onchange="toggleFlag(' + ia + ', \'parking\', \'parking\', this.checked)"> Parking</label>' +
+    '<label style="font-size:12px;font-weight:600;color:#555;margin-top:4px;display:block">Connects to: ' +
+    '<input type="text" style="width:150px;font-size:12px" placeholder="e.g. Upper Charles Rail Trail" value="' + (p.connects || '').replace(/"/g, '&quot;') + '" onchange="setConnects(' + ia + ', this.value)"></label>' +
     '<label style="font-size:12px;font-weight:600;color:#555;margin-top:8px;display:block">Change zone:</label>' +
     '<select id="zoneSelect">' + zoneOptions + '</select>' +
     '<div class="btn-row">' +
-    '<button class="btn btn-blue" onclick="saveIntZone(' + idx + ')">Save Zone</button>' +
-    '<button class="btn btn-red" onclick="deleteIntersection(' + idx + ')">Remove</button>' +
+    '<button class="btn btn-blue" onclick="saveIntZone(' + ia + ')">Save Zone</button>' +
+    '<button class="btn btn-red" onclick="deleteIntersection(' + ia + ')">Remove</button>' +
     '<button class="btn btn-gray" onclick="clearSelection()">Cancel</button>' +
     '</div>';
 }
@@ -637,6 +654,25 @@ function saveIntZone(idx) {
   clearSelection();
 }
 
+function setConnects(idx, value) {
+  var f = intFeatureByIdx[idx] || intData.features[idx];
+  var prev = f.properties.connects;
+  value = value.trim();
+  if (value) f.properties.connects = value; else delete f.properties.connects;
+  addChange("rezoned", "Intersection #" + (f.properties.number || "?") + ": connects to " + (value || "(none)"), idx, function() {
+    if (prev) f.properties.connects = prev; else delete f.properties.connects;
+  });
+}
+
+function toggleFlag(idx, key, desc, on) {
+  var f = intFeatureByIdx[idx] || intData.features[idx];
+  var prev = !!f.properties[key];
+  if (on) f.properties[key] = true; else delete f.properties[key];
+  addChange("rezoned", "Intersection #" + (f.properties.number || "?") + ": " + desc + " " + (on ? "on" : "off"), idx, function() {
+    if (prev) f.properties[key] = true; else delete f.properties[key];
+  });
+}
+
 function deleteIntersection(idx) {
   var f = intFeatureByIdx[idx] || intData.features[idx];
   deletedIntIndices[idx] = true;
@@ -644,16 +680,18 @@ function deleteIntersection(idx) {
   if (intLabels[idx]) { map.removeLayer(intLabels[idx]); delete intLabels[idx]; }
   addChange("removed", "Intersection #" + (f.properties.number || "?") + " (zone " + intZone(f, idx) + ")", idx, function() {
     delete deletedIntIndices[idx];
-    addIntMarker(f, idx);
+    refreshIntMarker(f, idx);
   });
   clearSelection();
   updateStats();
 }
 
+// Undos can run out of order, so only show points that still exist (an added point whose
+// "added" entry was undone is gone from intFeatureByIdx)
 function refreshIntMarker(f, idx) {
   if (intMarkers[idx]) map.removeLayer(intMarkers[idx]);
   if (intLabels[idx]) map.removeLayer(intLabels[idx]);
-  if (!deletedIntIndices[idx]) addIntMarker(f, idx);
+  if (!deletedIntIndices[idx] && intFeatureByIdx[idx]) addIntMarker(f, idx);
 }
 
 // --- Add intersection ---
@@ -718,7 +756,7 @@ function confirmAddIntersection(lat, lng) {
     properties: { number: num, degree: degree, zone: zone },
     geometry: { type: "Point", coordinates: [lng, lat] }
   };
-  var idx = "new_" + addedIntersections.length;
+  var idx = "new_" + (nextNewId++);
   intFeatureByIdx[idx] = feature;
   addedIntersections.push({feature: feature, idx: idx});
   addIntMarker(feature, idx);
@@ -733,6 +771,8 @@ function confirmAddIntersection(lat, lng) {
     delete intMarkers[idx];
     delete intLabels[idx];
     delete intFeatureByIdx[idx];
+    delete deletedIntIndices[idx];   // a later "removed" no longer counts against the total
+    delete intReZones[idx];
     addedIntersections = addedIntersections.filter(function(a) { return a.idx !== idx; });
   });
   showIntDefault();
@@ -847,12 +887,17 @@ function exportTrails() {
 
 function exportIntersections() {
   var out = JSON.parse(JSON.stringify(intData));
-  out.features = out.features.filter(function(f, idx) { return !deletedIntIndices[idx]; });
+  // Rezone by original index before removing anything, so indices still line up
   out.features.forEach(function(f, idx) {
     if (intReZones[idx] !== undefined) f.properties.zone = intReZones[idx];
   });
+  out.features = out.features.filter(function(f, idx) { return !deletedIntIndices[idx]; });
   addedIntersections.forEach(function(a) {
-    out.features.push(JSON.parse(JSON.stringify(a.feature)));
+    if (!deletedIntIndices[a.idx]) {
+      var f = JSON.parse(JSON.stringify(a.feature));
+      f.properties.zone = intZone(a.feature, a.idx);
+      out.features.push(f);
+    }
   });
   downloadJSON(out, "intersections_zoned.geojson");
 }

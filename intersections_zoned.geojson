@@ -407,7 +407,9 @@
         "number": 41,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "entry": true,
+        "parking": true
       },
       "geometry": {
         "type": "Point",
@@ -1063,7 +1065,9 @@
         "number": 127,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "entry": true,
+        "connects": "Upper Charles Rail Trail"
       },
       "geometry": {
         "type": "Point",
@@ -2157,6 +2161,21 @@
     {
       "type": "Feature",
       "properties": {
+        "number": 273,
+        "degree": 5,
+        "zone": "E"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5005725,
+          42.1680319
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "number": 274,
         "degree": 3,
         "zone": "E"
@@ -2196,6 +2215,36 @@
         "coordinates": [
           -71.4993798,
           42.1681959
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 282,
+        "degree": 2,
+        "zone": "E"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5000366,
+          42.167856
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 287,
+        "degree": 2,
+        "zone": "E"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4986437,
+          42.1678598
         ]
       }
     },
@@ -2331,6 +2380,36 @@
         "coordinates": [
           -71.4997133,
           42.1689557
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 312,
+        "degree": 2,
+        "zone": "E"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4995529,
+          42.1677471
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 313,
+        "degree": 2,
+        "zone": "E"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4982163,
+          42.167457
         ]
       }
     },
@@ -2517,6 +2596,21 @@
     {
       "type": "Feature",
       "properties": {
+        "number": 341,
+        "degree": 3,
+        "zone": "E"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49863719940187,
+          42.16738880693555
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "number": 344,
         "degree": 3,
         "zone": "E"
@@ -2526,6 +2620,21 @@
         "coordinates": [
           -71.499200463295,
           42.167901516789826
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 345,
+        "degree": 3,
+        "zone": "E"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49895906448366,
+          42.167559710682006
         ]
       }
     },
@@ -2571,6 +2680,21 @@
         "coordinates": [
           -71.50187194347383,
           42.18403747756375
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 352,
+        "degree": 3,
+        "zone": "E"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50053620338441,
+          42.16892920779402
         ]
       }
     },
@@ -2684,7 +2808,9 @@
       "properties": {
         "number": 360,
         "degree": 3,
-        "zone": "F"
+        "zone": "F",
+        "entry": true,
+        "parking": true
       },
       "geometry": {
         "type": "Point",
@@ -2699,13 +2825,15 @@
       "properties": {
         "number": 361,
         "degree": 3,
-        "zone": "E"
+        "zone": "A",
+        "entry": true,
+        "parking": true
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.4988946914673,
-          42.16739410713174
+          -71.48459315299989,
+          42.178272494739666
         ]
       }
     },
@@ -2714,13 +2842,15 @@
       "properties": {
         "number": 362,
         "degree": 3,
-        "zone": "E"
+        "zone": "C",
+        "entry": true,
+        "connects": "Upper Charles Rail Trail"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.50047183036806,
-          42.16902363555844
+          -71.50467753410341,
+          42.183922669267744
         ]
       }
     }
