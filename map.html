@@ -64,36 +64,10 @@
     width: 20px; height: 3px; margin-right: 8px; border-radius: 2px; flex-shrink: 0;
   }
 
-  .zone-filter {
-    position: absolute; top: 52px; right: 54px; z-index: 1000;
-    background: white; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.25);
-    padding: 10px 14px; font-size: 12px;
-  }
-  .zone-filter h3 { font-size: 13px; margin-bottom: 6px; }
-  .zone-btn {
-    display: inline-block; width: 32px; height: 28px; line-height: 28px;
-    text-align: center; border-radius: 4px; margin: 2px;
-    cursor: pointer; font-weight: 700; font-size: 13px;
-    color: white; border: 2px solid transparent; transition: opacity 0.15s;
-    user-select: none;
-  }
-  .zone-btn.off { opacity: 0.3; }
-  .zone-btn-all {
-    display: inline-block; height: 28px; line-height: 28px; padding: 0 10px;
-    text-align: center; border-radius: 4px; margin: 2px;
-    cursor: pointer; font-weight: 600; font-size: 11px;
-    background: #eee; color: #333; border: 1px solid #ccc; user-select: none;
-  }
-
   .marker-label {
     background: none !important; border: none !important; box-shadow: none !important;
     font-size: 10px; font-weight: bold; font-family: -apple-system, sans-serif;
     white-space: nowrap;
-  }
-  .pulse-ring { animation: pulse 1.5s ease-in-out infinite; }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.7; }
-    50% { opacity: 0.25; }
   }
   .int-list { margin-top: 8px; }
   .int-list .int-row { display: flex; align-items: center; gap: 6px; padding: 3px 0; }
@@ -146,8 +120,7 @@
   .user-arrow { width: 30px; height: 30px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.45)); }
   .user-arrow svg { display: block; }
   .live-tag { font-size: 10px; font-weight: 700; color: #fff; background: #c62828; border-radius: 3px;
-    padding: 1px 5px; vertical-align: middle; animation: live-pulse 2s ease-in-out infinite; }
-  @keyframes live-pulse { 50% { opacity: 0.55; } }
+    padding: 1px 5px; vertical-align: middle; }
   .crumb-clear { font-size: 11px; color: #1e88e5; cursor: pointer; }
   .seg-view { padding: 4px 2px 0; }
   .seg-row { display: flex; align-items: center; padding-top: 18px; }
@@ -190,7 +163,6 @@
   @media (max-width: 640px) {
     .info-panel { width: calc(100vw - 20px); top: auto; bottom: 0; left: 0;
       border-radius: 12px 12px 0 0; max-height: 45vh; }
-    .zone-filter { top: 52px; left: 10px; right: auto; }
     .legend-panel { display: none; }
   }
 </style>
@@ -213,11 +185,6 @@
     <p style="margin-top:8px;color:#888;font-size:11px">181 numbered intersections across 6 zones.<br>
     157 trail segments, 156 named trails.</p>
   </div>
-</div>
-
-<div class="zone-filter" id="zoneFilter">
-  <h3>Zones</h3>
-  <div id="zoneButtons"></div>
 </div>
 
 <div class="legend-panel">
@@ -339,7 +306,6 @@ var trailLayer = L.geoJSON(trailData, {
   }
 }).addTo(map);
 
-var zoneVisible = {A:true, B:true, C:true, D:true, E:true, F:true};
 var intMarkers = {};
 var labelMarkers = {};
 var selectedMarker = null;
@@ -412,7 +378,7 @@ function showIntInfo(feature, marker) {
   selectedMarker = marker;
   selectedRing = L.circleMarker(marker.getLatLng(), {
     radius: 20, color: "#f1c40f", weight: 2, fillOpacity: 0, opacity: 0.7,
-    dashArray: "4,4", className: "pulse-ring"
+    dashArray: "4,4"
   }).addTo(map);
 
   var p = feature.properties;
@@ -1099,44 +1065,6 @@ map.on("click", function() {
   }
 });
 
-var btnContainer = document.getElementById("zoneButtons");
-["A","B","C","D","E","F"].forEach(function(z) {
-  var btn = document.createElement("span");
-  btn.className = "zone-btn";
-  btn.style.background = ZONE_COLORS[z];
-  btn.textContent = z;
-  btn.title = z + ": " + ZONE_NAMES[z];
-  btn.onclick = function() { toggleZone(z, btn); };
-  btnContainer.appendChild(btn);
-});
-var allBtn = document.createElement("span");
-allBtn.className = "zone-btn-all";
-allBtn.textContent = "All";
-allBtn.onclick = function() {
-  Object.keys(zoneVisible).forEach(function(z) { zoneVisible[z] = true; });
-  updateZoneVisibility();
-  document.querySelectorAll(".zone-btn").forEach(function(b) { b.classList.remove("off"); });
-};
-btnContainer.appendChild(allBtn);
-
-function toggleZone(z, btn) {
-  zoneVisible[z] = !zoneVisible[z];
-  btn.classList.toggle("off");
-  updateZoneVisibility();
-}
-
-function updateZoneVisibility() {
-  Object.keys(intMarkers).forEach(function(label) {
-    var z = intMarkers[label]._zone;
-    var layers = [intMarkers[label], labelMarkers[label]];
-    if (entryMarkers[label]) layers.push(entryMarkers[label]);
-    layers.forEach(function(l) {
-      if (zoneVisible[z] && !map.hasLayer(l)) l.addTo(map);
-      if (!zoneVisible[z] && map.hasLayer(l)) map.removeLayer(l);
-    });
-  });
-}
-
 // Deep-link support: map.html?int=A1 zooms to that intersection
 var params = new URLSearchParams(window.location.search);
 var targetInt = params.get("int");
@@ -1475,6 +1403,9 @@ function nearEntry(ll, m) {
   return entryLabels().some(function(label) { return ll.distanceTo(intMarkers[label].getLatLng()) <= m; });
 }
 
+// Time since the fix before this one; a long one means the phone stopped reporting
+var fixGapMs = 0;
+
 // Called with each fix, before it is added as a crumb. The place rules only trust fixes
 // good enough to tell: a rough fix can land a kilometer off, or near an entry you aren't at.
 // Stopping near an exit only counts if you also come back near one (the same lot or
@@ -1482,6 +1413,7 @@ function nearEntry(ll, m) {
 function checkFreshStart(ll, acc) {
   var last = readLastFix();
   var gap = last ? Date.now() - last.t : Infinity;
+  fixGapMs = gap;
   var left = distFromNetwork(ll) - acc > FAR_FROM_NETWORK_M || gap >= NEW_DAY_GAP_MS ||
     (gap >= EXIT_GAP_MS && last.acc <= EXIT_NEAR_M && acc <= EXIT_NEAR_M &&
      nearEntry(L.latLng(last.lat, last.lng), EXIT_NEAR_M) && nearEntry(ll, EXIT_NEAR_M));
@@ -1498,25 +1430,87 @@ if (!lastFixOnLoad || Date.now() - lastFixOnLoad.t >= NEW_DAY_GAP_MS) {
   try { sessionStorage.removeItem(CRUMB_KEY); } catch (e) {}
 }
 
-var crumbLine = L.polyline(crumbs, {
+// The phone stops reporting while the screen is off, leaving gaps in the crumbs. Rather
+// than cut across the woods, fill a gap with the shortest way along the trails.
+var CRUMB_GAP_M = 30;   // farther apart than this counts as a gap
+// Only fill where the phone went quiet: GPS jitter while standing still can put a crumb
+// on a neighboring trail, and a filled route there would be a phantom loop
+var CRUMB_QUIET_MS = 20 * 1000;
+
+// Trail points from a to b along the shortest trail route, or null to draw a straight line
+function trailPathBetween(a, b) {
+  var sa = snapToTrail(a), sb = snapToTrail(b);
+  var best = null;
+  if (sa.d < SNAP_M && sb.d < SNAP_M) {
+    if (sa.ti === sb.ti) {
+      best = {len: Math.abs(sa.along - sb.along), pts: sliceTrail(sa.ti, sa.along, sb.along)};
+    }
+    var endsA = segmentEnds(sa), endsB = segmentEnds(sb);
+    [endsA.before, endsA.after].forEach(function(ea) {
+      [endsB.before, endsB.after].forEach(function(eb) {
+        var mid = ea && eb ? pathTree(ea[0]).dist[eb[0]] : Infinity;
+        var len = mid < Infinity ? Math.abs(sa.along - ea[1]) + mid + Math.abs(sb.along - eb[1]) : Infinity;
+        if (len < (best ? best.len : Infinity)) best = {len: len, ea: ea, eb: eb};
+      });
+    });
+    if (best && !best.pts) {
+      var pts = sliceTrail(sa.ti, sa.along, best.ea[1]);
+      var path = dijkstra(best.ea[0], best.eb[0]).path;
+      for (var k = 0; k < path.length - 1; k++) {
+        var e = routeEdge(path[k].label, path[k + 1].label, path[k + 1].trail);
+        pts = pts.concat(e ? sliceTrail(e.ti, e.a, e.b) : [intMarkers[path[k + 1].label].getLatLng()]);
+      }
+      best.pts = pts.concat(sliceTrail(sb.ti, best.eb[1], sb.along));
+    }
+    // A trail route far longer than the gap probably isn't what happened; cut across instead
+    var straight = a.distanceTo(b);
+    if (best && best.len > Math.max(3 * straight, straight + 400)) best = null;
+  }
+  return best ? best.pts : null;
+}
+
+// crumbFills[i]: trail points between crumbs[i - 1] and crumbs[i], or null.
+// A crumb's 4th element is 1 when the phone was quiet just before it.
+function crumbFill(i) {
+  var a = L.latLng(crumbs[i - 1][0], crumbs[i - 1][1]), b = L.latLng(crumbs[i][0], crumbs[i][1]);
+  return crumbs[i][3] && a.distanceTo(b) > CRUMB_GAP_M ? trailPathBetween(a, b) : null;
+}
+var crumbFills = crumbs.map(function(c, i) { return i > 0 ? crumbFill(i) : null; });
+
+function crumbLatLngs() {
+  var out = [];
+  crumbs.forEach(function(c, i) {
+    if (crumbFills[i]) out.push.apply(out, crumbFills[i]);
+    out.push([c[0], c[1]]);
+  });
+  return out;
+}
+
+var crumbLine = L.polyline(crumbLatLngs(), {
   color: "#1e88e5", weight: 4, opacity: 0.6, dashArray: "1,8", lineCap: "round", interactive: false
 }).addTo(map);
 
 function addCrumb(ll, acc) {
   var last = crumbs.length ? L.latLng(crumbs[crumbs.length - 1]) : null;
   if (acc <= 40 && (!last || last.distanceTo(ll) >= 5) && distFromNetwork(ll) <= FAR_FROM_NETWORK_M) {
-    crumbs.push([+ll.lat.toFixed(6), +ll.lng.toFixed(6), Date.now()]);
+    var crumb = [+ll.lat.toFixed(6), +ll.lng.toFixed(6), Date.now()];
+    if (fixGapMs >= CRUMB_QUIET_MS) crumb.push(1);
+    crumbs.push(crumb);
+    crumbFills.push(crumbs.length > 1 ? crumbFill(crumbs.length - 1) : null);
     if (crumbs.length > 5000) {
       crumbs.shift();
+      crumbFills.shift();
+      crumbFills[0] = null;
       if (entranceScanned > 0) entranceScanned--;
     }
-    crumbLine.setLatLngs(crumbs);
+    crumbLine.setLatLngs(crumbLatLngs());
     try { sessionStorage.setItem(CRUMB_KEY, JSON.stringify(crumbs)); } catch (e) {}
   }
 }
 
 function clearCrumbs() {
   crumbs = [];
+  crumbFills = [];
   entrance = null;
   entranceScanned = 0;
   crumbLine.setLatLngs([]);
@@ -1777,7 +1771,7 @@ function applySearch() {
   searchHighlighted = [];
 
   var matches = Object.keys(intMarkers).filter(function(label) {
-    return label.toUpperCase().indexOf(searchBuf) === 0 && zoneVisible[label.replace(/[0-9]/g, "")];
+    return label.toUpperCase().indexOf(searchBuf) === 0;
   });
 
   if (matches.length === 0) {
