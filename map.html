@@ -1214,11 +1214,54 @@ function pathToAnchors(start, anchors, avoid) {
 }
 
 function roundTripFromMe(label) {
-  if (userLatLng.distanceTo(intMarkers[label].getLatLng()) <= AT_INT_M) {
+  if (awayFromTrails()) {
+    pickEntrance(label, true);
+  } else if (userLatLng.distanceTo(intMarkers[label].getLatLng()) <= AT_INT_M) {
     showPanelMsg('You are already at ' + intPill(label));
   } else {
     startTrip(newTrip(null, [label], null), 'No round trip found from your location to <strong>' + intName(label) + '</strong>.');
   }
+}
+
+// --- Starting from an entrance
+
+// Away from the trails (at home, say), a route from where you are means nothing: you'll
+// drive to an entrance. So routes start from an entrance you pick instead.
+function awayFromTrails() { return snapToTrail(userLatLng).d > ON_TRAILS_M; }
+
+function pickEntrance(destLabel, roundTrip) {
+  var opts = entryLabels().filter(function(l) { return l !== destLabel; }).map(function(l) {
+    var t = pathTree(l);
+    return {label: l, len: t.len[destLabel], cost: t.dist[destLabel]};
+  }).filter(function(o) { return o.len !== undefined; }).sort(function(a, b) { return a.cost - b.cost; });
+  if (opts.length) {
+    clearSelection(true);
+    var html = '<div class="route-msg" style="margin-top:0">You\'re away from the trails. Start the ' +
+      (roundTrip ? 'round trip' : 'route') + ' to ' + intPill(destLabel) + ' from which entrance?</div><div class="exits">';
+    opts.forEach(function(o) {
+      var p = intFeatures[o.label].properties;
+      html += '<button class="exit-btn" onclick="routeFromEntrance(\'' + o.label + '\', \'' + destLabel + '\', ' + roundTrip + ')">' +
+        '<span class="int-link" style="background:' + ZONE_COLORS[p.zone] + '">' + o.label + '</span>' +
+        (p.parking ? '<span class="parking-tag" style="margin-left:0">P</span>' : '') +
+        '<span class="exit-dist">' + formatDist(roundTrip ? 2 * o.len : o.len) + '</span>' +
+        (p.connects ? '<span class="exit-note">from ' + esc(p.connects) + '</span>' : '') + '</button>';
+    });
+    document.getElementById("infoContent").innerHTML = html + '</div>' + backToRouteBtn();
+  } else {
+    showPanelMsg('You\'re away from the trails, and no entrance has a route to ' + intPill(destLabel) + '.');
+  }
+}
+
+// A planned route (or round trip) from an entrance. It's a plan, not live: you aren't
+// there yet. Once you are, Route here or Round trip follows you from where you stand.
+function routeFromEntrance(entry, destLabel, roundTrip) {
+  var trip = newTrip(entry, roundTrip ? [destLabel] : [], roundTrip ? null : destLabel);
+  if (roundTrip) {
+    trip.home = intMarkers[entry].getLatLng();
+    trip.homeAnchors = [{label: entry, dist: 0}];
+    trip.homeLabel = entry;
+  }
+  startTrip(trip, 'No ' + (roundTrip ? 'round trip' : 'route') + ' found from <strong>' + intName(entry) + '</strong> to <strong>' + intName(destLabel) + '</strong>.');
 }
 
 // --- Waypoints
@@ -1925,7 +1968,9 @@ function bestRouteFromMe(destLabel, anchors) {
 }
 
 function routeFromMe(destLabel) {
-  if (userLatLng.distanceTo(intMarkers[destLabel].getLatLng()) <= AT_INT_M) {
+  if (awayFromTrails()) {
+    pickEntrance(destLabel, false);
+  } else if (userLatLng.distanceTo(intMarkers[destLabel].getLatLng()) <= AT_INT_M) {
     showPanelMsg('You are already at ' + intPill(destLabel));
   } else {
     startTrip(newTrip(null, [], destLabel), 'No route found from your location to <strong>' + intName(destLabel) + '</strong>.');
@@ -2025,7 +2070,7 @@ function locateHtml(place) {
     html += '<div class="full-only" style="text-align:right;margin-top:4px"><a class="crumb-clear" onclick="clearCrumbs()">Clear breadcrumbs</a></div>';
   }
   if (plan) html += '<div style="margin-top:2px">' + backToRouteBtn() + '</div>';
-  else html += exitsHtml();
+  else if (!awayFromTrails()) html += exitsHtml();
   return '<div id="locateInfo">' + html + '</div>';
 }
 
@@ -2061,7 +2106,8 @@ function exitBtnHtml(e) {
     (p.connects ? '<span class="exit-note">to ' + esc(p.connects) + '</span>' : '') + '</button>';
 }
 
-// Large view only, when not navigating: quick routes out to the entry points
+// Large view only, when not navigating and out on the trails: quick routes out to the
+// entry points
 function exitsHtml() {
   var exits = [], anchors = userAnchors(userLatLng);
   entryLabels().forEach(function(label) {
