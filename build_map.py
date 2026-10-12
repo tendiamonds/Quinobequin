@@ -1,5 +1,5 @@
 """
-Build the Vietnam Trail Network website (4 pages):
+Build the Upper Charles Forest website (4 pages):
   index.html  — landing page
   map.html    — interactive Leaflet map
   zones.html  — zone-by-zone intersection report
@@ -261,11 +261,16 @@ def load_and_process():
     with open(rf"{PROJ}\trails_selected.geojson") as f:
         trails = json.load(f)
 
-    graph = build_trail_graph(ints, trails)
+    # Labels are printed on signs, so once given they never change: each sign's label is
+    # frozen in the data ("sign"), and only a new intersection without one is numbered,
+    # after the highest label in its zone. Signless intersections (a post with no sign
+    # like Post 4, or a landmark on a trail like Teetering Rock) aren't numbered at all.
+    signed = {"features": [f for f in ints["features"] if not f["properties"].get("no_sign")]}
+    graph = build_trail_graph(signed, trails)
 
     by_zone = {}
     feat_by_id = {}
-    for feat in ints["features"]:
+    for feat in signed["features"]:
         z = feat["properties"]["zone"]
         by_zone.setdefault(z, []).append(feat)
         feat_by_id[id(feat)] = feat
@@ -292,8 +297,17 @@ def load_and_process():
         else:
             ordered = order_subgroup(pts, ex, ey)
 
-        for i, feat in enumerate(ordered, 1):
-            feat["properties"]["label"] = "%s%d" % (z, i)
+        taken = [int(f["properties"]["sign"][1:]) for f in ordered if f["properties"].get("sign")]
+        n = max(taken, default=0)
+        for feat in ordered:
+            if feat["properties"].get("sign"):
+                feat["properties"]["label"] = feat["properties"]["sign"]
+            else:
+                n += 1
+                feat["properties"]["label"] = "%s%d" % (z, n)
+    for feat in ints["features"]:
+        if feat["properties"].get("no_sign"):
+            feat["properties"]["label"] = feat["properties"].get("code") or "P%d" % feat["properties"]["post"]
 
     rows = []
     for feat in ints["features"]:
@@ -303,6 +317,8 @@ def load_and_process():
         feat["properties"]["owner"] = owner
         feat["properties"]["town"] = town
         feat["properties"]["is_public"] = is_public
+        if feat["properties"].get("no_sign"):
+            continue   # the zone and owner pages list signs
         rows.append({
             "label": feat["properties"]["label"],
             "zone": feat["properties"]["zone"],
@@ -411,7 +427,9 @@ def build_landing(rows):
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Vietnam Trail Network</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2c3e50">
+<title>Upper Charles Forest</title>
 <style>PAGE_CSS
   .hero { text-align: center; padding: 48px 20px 32px; }
   .hero h1 { font-size: 32px; margin-bottom: 8px; }
@@ -444,7 +462,7 @@ def build_landing(rows):
 <body>
 NAV_PLACEHOLDER
 <div class="hero">
-  <h1>Vietnam Trail Network</h1>
+  <h1>Upper Charles Forest</h1>
   <p class="sub">Holliston, Hopkinton &amp; Milford, Massachusetts</p>
   <div class="stats">
     <div class="stat"><div class="num">TOTAL_COUNT</div><div class="lbl">Intersections</div></div>
@@ -476,9 +494,9 @@ NAV_PLACEHOLDER
 <div class="about">
   <h2>About This Project</h2>
   <p>The Holliston Town Forest Committee is developing a wayfinding sign system for
-  trail intersections in the forest area spanning Holliston, Milford, and Hopkinton.
-  The network is commonly known as the &ldquo;Vietnam Trail Network&rdquo; or the
-  &ldquo;Upper Charles&rdquo; trails.</p>
+  trail intersections in the forest area spanning Holliston, Milford, and Hopkinton,
+  near the headwaters of the Charles River. We call it the Upper Charles Forest; riders
+  have long known these trails as &ldquo;Vietnam.&rdquo;</p>
 
   <p>This project is a collaboration with the Holliston Conservation Commission,
   The Trustees of Reservations, the New England Mountain Bike Association,
@@ -592,7 +610,9 @@ def build_zones_page(rows):
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Zone Report — Vietnam Trail Network</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2c3e50">
+<title>Zone Report — Upper Charles Forest</title>
 <style>""", PAGE_CSS, """</style>
 </head>
 <body>""", nav_html("zones"), """
@@ -661,7 +681,9 @@ def build_owners_page(rows):
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Owner Report — Vietnam Trail Network</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2c3e50">
+<title>Owner Report — Upper Charles Forest</title>
 <style>""", PAGE_CSS, """</style>
 </head>
 <body>""", nav_html("owners"), """
@@ -706,11 +728,16 @@ def build_owners_page(rows):
 
 
 def build_trail_int_map(ints, trails):
-    """Map each trail feature index to its intersections with distances."""
+    """Map each trail feature index to its intersections with distances.
+    A trail passes an intersection if it has a point within SNAP_DIST of it. Unsigned
+    junctions are placed exactly where trails meet, so they use a tight JUNCTION_SNAP and
+    never catch a neighboring trail that only runs close by."""
     SNAP_DIST = 20
+    JUNCTION_SNAP = 6
     int_list = [(feat["properties"]["label"],
                  feat["geometry"]["coordinates"][0],
-                 feat["geometry"]["coordinates"][1])
+                 feat["geometry"]["coordinates"][1],
+                 JUNCTION_SNAP if feat["properties"].get("junction") else SNAP_DIST)
                 for feat in ints["features"]]
 
     def cumulative_distances(coords):
@@ -738,7 +765,7 @@ def build_trail_int_map(ints, trails):
         total_length = cum[-1]
 
         hits = []
-        for label, ilon, ilat in int_list:
+        for label, ilon, ilat, snap in int_list:
             best_d = float("inf")
             best_cum = 0
             for j, c in enumerate(coords):
@@ -746,7 +773,7 @@ def build_trail_int_map(ints, trails):
                 if d < best_d:
                     best_d = d
                     best_cum = cum[j]
-            if best_d < SNAP_DIST:
+            if best_d < snap:
                 hits.append((best_cum, label))
 
         hits.sort()
@@ -766,7 +793,7 @@ def build_map_page(ints, trails, rows):
     trail_data = json.dumps(trails)
 
     n_trails = len(trails["features"])
-    n_ints = len(ints["features"])
+    n_ints = len([f for f in ints["features"] if not f["properties"].get("no_sign")])
     trail_names = set()
     for f in trails["features"]:
         name = f["properties"].get("pdf_name") or f["properties"].get("name") or ""
@@ -834,7 +861,9 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon.ico" sizes="48x48">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>Map — Vietnam Trail Network</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2c3e50">
+<title>Map — Upper Charles Forest</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -904,6 +933,22 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
     font-size: 12px; color: white; display: inline-block; min-width: 36px; text-align: center;
   }
   .int-link:hover { opacity: 0.8; text-decoration: none; }
+  .rock-svg { display: inline-block; vertical-align: middle; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.35)); }
+  .int-link.rock-pill { white-space: nowrap; min-width: 0; padding: 0 2px; color: #333; }
+  .int-link.rock-pill .rock-svg { margin-top: -2px; }
+  .rock-name { margin-left: 5px; font-weight: 600; vertical-align: middle; }
+  /* Digits sit on the baseline with room below for descenders they don't have, so center
+     the box and lift them a pixel */
+  .post-badge { display: inline-flex; align-items: center; justify-content: center; padding-bottom: 1px;
+    width: 15px; height: 15px; box-sizing: border-box;
+    background: #9c7a4f; color: #ffd54f; font: 800 10px/1 sans-serif;
+    text-shadow: 0 0 1px #3e2a12, 0 0 1px #3e2a12;
+    border-radius: 3px; border: 1.5px solid #fff; box-shadow: 0 0 0 1px #5d4425, 0 1px 3px rgba(0,0,0,0.4);
+    vertical-align: middle; cursor: pointer; }
+  .junction-dot { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%;
+    background: #9e9e9e; border: 2px solid #fff; box-shadow: 0 0 0 1px #9e9e9e; vertical-align: middle; margin: 0 2px; }
+  .junction-dot.passed { opacity: 0.4; }
+  .int-link.post-pill { color: #ffd54f; text-shadow: 0 0 1px #3e2a12, 0 0 1px #3e2a12; }
   .int-list .int-dist { color: #888; font-size: 11px; }
   .int-list .seg-bar { color: #bbb; font-size: 10px; padding: 0 0 0 16px; }
   .int-terminus { display: inline-block; width: 12px; height: 12px; background: #333;
@@ -972,10 +1017,20 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .route-step.passed .int-dist { color: #bbb; }
   .route-compact-head { display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
     font-size: 13px; margin-bottom: 6px; }
+  .route-title { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+  .route-compact-head .live-tag, .route-title .live-tag { margin-left: auto; }
   .route-row { display: flex; align-items: center; overflow-x: auto; position: relative;
     padding: 5px 4px 7px; scrollbar-width: none; }
   .route-row::-webkit-scrollbar { display: none; }
   .route-row .int-link { flex: none; min-width: 30px; }
+  .route-next { white-space: nowrap; }
+  .start-chip { display: inline-block; padding: 0 7px; border-radius: 10px; border: 2px solid #0d47a1;
+    background: #fff; color: #0d47a1; font-size: 11px; font-weight: 700; line-height: 15px; flex: none; }
+  .plan-link { margin-top: 8px; font-size: 12px; }
+  .plan-link a { color: #777; text-decoration: underline; cursor: pointer; }
+  .seg-pick { padding: 6px 0 8px; margin-bottom: 8px; border-bottom: 1px solid #eee; font-size: 13px; }
+  .route-skipped { font-size: 12px; color: #777; margin: -2px 0 6px; }
+  .turn-tag { font-size: 10px; font-weight: 700; color: #0d47a1; text-transform: uppercase; letter-spacing: 0.3px; }
   .rr-link { flex: none; width: 14px; border-top: 3px dashed #0d47a1; margin: 0 3px; }
   .rr-link.passed { border-top-color: #bbb; }
   .route-row .seg-you { margin: 0 1px; }
@@ -1002,11 +1057,11 @@ __NAV__
 
 <div class="info-panel" id="infoPanel">
   <button class="panel-size" id="panelSize" onclick="togglePanelSize()"></button>
-  <h2>Vietnam Trail Network</h2>
-  <div class="content" id="infoContent">
+  <h2>Upper Charles Forest</h2>
+  <div class="content" id="infoContent"><div id="welcomeInfo">
     <p style="color:#888">Click a trail or intersection marker for details.</p>
     <p style="margin-top:8px;color:#888;font-size:11px">__N_INTS__ numbered intersections across 6 zones.<br>
-    __N_TRAILS__ trail segments, __N_NAMES__ named trails.</p>
+    __N_TRAILS__ trail segments, __N_NAMES__ named trails.</p></div>
   </div>
 </div>
 
@@ -1018,6 +1073,8 @@ __NAV__
   <div class="legend-row"><div class="legend-swatch" style="background:#f1c40f;border-color:#222"></div> Selected</div>
   <div class="legend-row"><div class="entry-diamond legend-diamond"></div> Entry point</div>
   <div class="legend-row"><div class="parking-badge">P</div> Parking</div>
+  <div class="legend-row"><span class="post-badge" style="margin:0 6px 0 1px;cursor:default">1</span> Numbered post</div>
+  <div class="legend-row"><span style="margin:0 4px 0 0;display:inline-flex"><svg width="22" height="18" viewBox="0 0 20 16"><path d="M2 14 L1 9 L4 4 L9 2 L14 3 L18 7 L19 12 L17 15 L5 15 Z" fill="#9e9e9e" stroke="#424242" stroke-width="1.3" stroke-linejoin="round"/></svg></span> Landmark</div>
 </div>
 
 <script>
@@ -1035,23 +1092,32 @@ var intData = __INT_DATA__;
 var trailIntMap = __TRAIL_INT_MAP__;
 var intTrailMap = __INT_TRAIL_MAP__;
 
-// Build adjacency graph for routing
+// Build adjacency graph for routing. Each edge has its true length (dist) and what it
+// costs to route along (cost): a trail can carry route_cost, a multiplier that makes
+// routing favor the main way over a side trail of about the same length.
+var trailRouteCost = {};
+trailData.features.forEach(function(f) {
+  var c = f.properties.route_cost;
+  if (c) trailRouteCost[f.properties.pdf_name || f.properties.name || "Unnamed"] = c;
+});
 var routeGraph = {};
 Object.keys(intTrailMap).forEach(function(label) {
   if (!routeGraph[label]) routeGraph[label] = [];
   (intTrailMap[label] || []).forEach(function(c) {
-    if (c[1]) routeGraph[label].push({to: c[1], dist: c[2], trail: c[0]});
+    if (c[1]) routeGraph[label].push({to: c[1], dist: c[2], cost: c[2] * (trailRouteCost[c[0]] || 1), trail: c[0]});
   });
 });
 
 // Shortest paths from start to everywhere. The graph never changes, so each start's
 // tree is worked out once and kept; a live locate panel asks for the same few often.
+// dist is the routing cost (see routeGraph), len the true length along the way.
 var pathTrees = {};
 function pathTree(start) {
   if (pathTrees[start]) return pathTrees[start];
-  var dist = {}, prev = {}, via = {}, visited = {};
+  var dist = {}, len = {}, prev = {}, via = {}, visited = {};
   Object.keys(routeGraph).forEach(function(n) { dist[n] = Infinity; });
   dist[start] = 0;
+  len[start] = 0;
   var queue = [{node: start, d: 0}];
   while (queue.length > 0) {
     queue.sort(function(a, b) { return a.d - b.d; });
@@ -1059,16 +1125,17 @@ function pathTree(start) {
     if (visited[u.node]) continue;
     visited[u.node] = true;
     (routeGraph[u.node] || []).forEach(function(edge) {
-      var alt = dist[u.node] + edge.dist;
+      var alt = dist[u.node] + edge.cost;
       if (alt < dist[edge.to]) {
         dist[edge.to] = alt;
+        len[edge.to] = len[u.node] + edge.dist;
         prev[edge.to] = u.node;
         via[edge.to] = edge.trail;
         queue.push({node: edge.to, d: alt});
       }
     });
   }
-  return (pathTrees[start] = {dist: dist, prev: prev, via: via});
+  return (pathTrees[start] = {dist: dist, len: len, prev: prev, via: via});
 }
 
 function dijkstra(start, end) {
@@ -1080,7 +1147,7 @@ function dijkstra(start, end) {
       path.unshift({label: node, trail: tree.via[node] || null});
       node = tree.prev[node];
     }
-    result = {path: path, totalDist: tree.dist[end]};
+    result = {path: path, totalDist: tree.len[end]};
   }
   return result;
 }
@@ -1116,7 +1183,7 @@ var trailLayer = L.geoJSON(trailData, {
   onEachFeature: function(feature, layer) {
     layer.on("click", function(e) {
       L.DomEvent.stopPropagation(e);
-      showTrailInfo(feature, layer);
+      showTrailInfo(feature, layer, e.latlng);
     });
     layer.on("mouseover", function() {
       if (highlightedSegments.indexOf(layer) === -1)
@@ -1137,6 +1204,53 @@ var intFeatures = {};
 var entryMarkers = {};
 map.createPane("entryPane").style.zIndex = 390;
 
+// Numbered posts stand at some intersections. A post with no sign (no_sign) is an
+// intersection of its own, labeled "P<n>" inside the code and "Post <n>" on screen.
+// Posts look like the real ones: wood, with the number painted yellow
+var POST_COLOR = "#9c7a4f", POST_SIZE = 15;
+
+function intName(label) {
+  var p = intFeatures[label].properties;
+  return p.junction ? "unmarked junction" : p.landmark || (p.no_sign ? "Post " + p.post : label);
+}
+
+// Unsigned junctions (junction: true) are where trails meet with no sign: routing points
+// only, invisible on the map, and a small grey dot in routes where you change trails
+function isJunction(label) { return !!intFeatures[label].properties.junction; }
+
+// A landmark on a trail (Teetering Rock) is a routing point like an intersection, so
+// routes along its trail pass through it
+function rockSvg(size) {
+  return '<svg class="rock-svg" width="' + size + '" height="' + Math.round(size * 0.8) + '" viewBox="0 0 20 16">' +
+    '<path d="M2 14 L1 9 L4 4 L9 2 L14 3 L18 7 L19 12 L17 15 L5 15 Z" fill="#9e9e9e" stroke="#424242" stroke-width="1.3" stroke-linejoin="round"/>' +
+    '<path d="M5 6 L9 4 L12 5" fill="none" stroke="#e0e0e0" stroke-width="1.2" stroke-linecap="round"/></svg>';
+}
+
+// A dot's resting look. Signless points (Post 4, Teetering Rock) hide their dot behind
+// their badge or icon; it still shows when selected or hovered.
+function restStyle(m) {
+  return {radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[m._zone],
+          fillOpacity: m._hidden ? 0 : 0.85, opacity: m._hidden ? 0 : 1};
+}
+
+// Badge icon anchor for a post on the given compass side (N, NE, ... or null for
+// centered): the badge's nearest edge or corner just clears the 8 px dot
+var POST_DIRS = {N: [0, -1], NE: [1, -1], E: [1, 0], SE: [1, 1], S: [0, 1], SW: [-1, 1], W: [-1, 0], NW: [-1, -1]};
+function postAnchor(dir) {
+  var half = POST_SIZE / 2, anchor = [half, half];
+  var v = POST_DIRS[dir];
+  if (v) {
+    var len = Math.hypot(v[0], v[1]), ux = v[0] / len, uy = v[1] / len;
+    var reach = 8 + 1 + half * (Math.abs(ux) + Math.abs(uy));
+    anchor = [half - ux * reach, half - uy * reach];
+  }
+  return anchor;
+}
+
+function postBadgeHtml(n) {
+  return '<span class="post-badge">' + n + '</span>';
+}
+
 intData.features.forEach(function(f) {
   var zone = f.properties.zone;
   var label = f.properties.label;
@@ -1154,21 +1268,40 @@ intData.features.forEach(function(f) {
     entryMarkers[label] = em;
   }
 
-  var marker = L.circleMarker(ll, {
-    radius: 7, fillColor: color, color: "#fff",
-    weight: 2, fillOpacity: 0.85
-  }).addTo(map);
-  marker.on("click", function(e) {
+  var marker = L.circleMarker(ll, {radius: 7, interactive: !f.properties.junction}).addTo(map);
+  marker._zone = zone;
+  marker._hidden = !!f.properties.no_sign;
+  marker.setStyle(restStyle(marker));
+  function onTap(e) {
     L.DomEvent.stopPropagation(e);
     if (routeMode) {
       completeRoute(f.properties.label);
     } else {
       showIntInfo(f, marker);
     }
-  });
+  }
+  marker.on("click", onTap);
   intMarkers[label] = marker;
   intFeatures[label] = f;
-  marker._zone = zone;
+
+  if (f.properties.landmark) {
+    var mark = f.properties.mark ? [f.properties.mark[1], f.properties.mark[0]] : ll;
+    L.marker(mark, {
+      icon: L.divIcon({className: "", html: rockSvg(22), iconSize: [22, 18], iconAnchor: [11, 9]}),
+      title: f.properties.landmark, keyboard: false
+    }).on("click", onTap).addTo(map);
+  }
+
+  // A post's badge sits against its intersection's dot on the side where the post
+  // stands (post_dir), or in place of the dot when there's no sign
+  if (f.properties.post) {
+    L.marker(ll, {
+      icon: L.divIcon({className: "", html: postBadgeHtml(f.properties.post), iconSize: [POST_SIZE, POST_SIZE],
+        iconAnchor: postAnchor(f.properties.no_sign ? null : f.properties.post_dir)}),
+      title: "Post " + f.properties.post, keyboard: false
+    }).on("click", onTap).addTo(map);
+  }
+  if (f.properties.no_sign) return;
 
   var lbl = L.marker(ll, {
     icon: L.divIcon({
@@ -1197,7 +1330,7 @@ function jsArg(s) { return esc(JSON.stringify(String(s))); }
 
 function showIntInfo(feature, marker) {
   clearSelection(true);
-  marker.setStyle({fillColor: "#f1c40f", radius: 11, weight: 3, color: "#222", fillOpacity: 1});
+  marker.setStyle({fillColor: "#f1c40f", radius: 11, weight: 3, color: "#222", fillOpacity: 1, opacity: 1});
   selectedMarker = marker;
   selectedRing = L.circleMarker(marker.getLatLng(), {
     radius: 20, color: "#f1c40f", weight: 2, fillOpacity: 0, opacity: 0.7,
@@ -1213,7 +1346,12 @@ function showIntInfo(feature, marker) {
   var ownerHref = 'owners.html#' + ownerSlug(p.owner);
 
   var html = '<table>' +
-    '<tr><td>Label</td><td><strong style="font-size:16px">' + p.label + '</strong> ' + zoneTag + '</td></tr>' +
+    (p.landmark
+      ? '<tr><td>Landmark</td><td>' + rockSvg(20) + ' <strong style="font-size:16px;vertical-align:middle">' + esc(p.landmark) + '</strong> ' + zoneTag + '</td></tr>'
+      : p.no_sign
+      ? '<tr><td>Post</td><td>' + postBadgeHtml(p.post) + ' ' + zoneTag + '<div class="connects-tag">No sign here</div></td></tr>'
+      : '<tr><td>Label</td><td><strong style="font-size:16px">' + p.label + '</strong> ' + zoneTag + '</td></tr>' +
+        (p.post ? '<tr><td>Post</td><td>' + postBadgeHtml(p.post) + '</td></tr>' : '')) +
     (p.entry ? '<tr><td>Access</td><td><span class="entry-tag">◆ Entry point</span>' +
       (p.parking ? '<span class="parking-tag">P Parking</span>' : '') +
       (p.connects ? '<div class="connects-tag">Connects to ' + esc(p.connects) + '</div>' : '') +
@@ -1236,11 +1374,8 @@ function showIntInfo(feature, marker) {
       byTrail[trail].forEach(function(seg) {
         var distFt = Math.round(seg.dist * 3.28084);
         if (seg.neighbor) {
-          var nZone = seg.neighbor.replace(/[0-9]/g, "");
-          var nBg = ZONE_COLORS[nZone] || "#888";
           html += '<div class="int-row">' +
-            '<span class="seg-bar" style="padding:0">→</span> ' +
-            '<a class="int-link" style="background:' + nBg + '" onmouseover="hoverInt(\'' + seg.neighbor + '\')" onmouseout="unhover()" onclick="selectIntFromTrail(\'' + seg.neighbor + '\')">' + seg.neighbor + '</a>' +
+            '<span class="seg-bar" style="padding:0">→</span> ' + intPill(seg.neighbor) +
             '<span class="int-dist">' + distFt.toLocaleString() + ' ft</span>' +
             '</div>';
         } else {
@@ -1255,13 +1390,30 @@ function showIntInfo(feature, marker) {
     html += '</div>';
   }
 
-  html += backToRouteBtn() + '<button class="route-btn" onclick="startRoute(\'' + p.label + '\')">Route from here</button>';
-  if (userLatLng) {
-    html += ' <button class="route-btn" style="background:#1e88e5" onclick="routeFromMe(\'' + p.label + '\')">Route here from my location</button>';
+  html += backToRouteBtn();
+  if (plan && plan.trip.to !== p.label) {
+    html += isPendingStop(p.label)
+      ? '<button class="route-btn" style="background:#0d47a1" onclick="removeWaypoint(\'' + p.label + '\')">Remove waypoint</button> '
+      : '<button class="route-btn" style="background:#0d47a1" onclick="addWaypoint(\'' + p.label + '\')">Add waypoint</button> ';
   }
+  if (userLatLng) {
+    html += '<button class="route-btn" style="background:#1e88e5" onclick="routeFromMe(\'' + p.label + '\')">Route here</button>' +
+      ' <button class="route-btn" style="background:#1e88e5" onclick="roundTripFromMe(\'' + p.label + '\')">Round trip</button>';
+  }
+  html += planFromHtml(p.label, 'Route from here');
 
   document.getElementById("infoContent").innerHTML = html;
   currentIntFeature = feature;
+}
+
+// Planning a route between two intersections. With your location on, routes from where
+// you are cover most needs, so this is a small link, in the large view only; without it,
+// it's the way to route.
+function planFromHtml(label, text) {
+  var go = 'onclick="startRoute(\'' + label + '\')"';
+  return userLatLng
+    ? '<div class="plan-link full-only"><a ' + go + '>' + text + '</a></div>'
+    : ' <button class="route-btn" ' + go + '>' + text + '</button>';
 }
 
 function startRoute(label) {
@@ -1269,14 +1421,14 @@ function startRoute(label) {
   routeMode = true;
   clearRouteDisplay();
   document.getElementById("infoContent").innerHTML =
-    '<div class="route-msg">Routing from <strong>' + label + '</strong><br>' +
+    '<div class="route-msg">Routing from <strong>' + intName(label) + '</strong><br>' +
     'Click a destination intersection.<br><br>' +
     '<button class="route-btn" style="background:#888" onclick="cancelRoute()">Cancel</button></div>';
 }
 
 function cancelRoute() {
   clearSelection();   // also drops the starting intersection's highlight
-  document.getElementById("infoContent").innerHTML = defaultInfo;
+  showHome();
 }
 
 function removeRouteLayers() {
@@ -1296,15 +1448,14 @@ function completeRoute(destLabel) {
   routeFrom = null;
   if (startLabel === destLabel) { cancelRoute(); return; }
 
-  var result = dijkstra(startLabel, destLabel);
-  if (!result) {
+  if (dijkstra(startLabel, destLabel)) {
+    startTrip(newTrip(startLabel, [], destLabel));
+  } else {
     clearSelection();   // so a first GPS fix doesn't reopen the start intersection over this
     document.getElementById("infoContent").innerHTML =
-      '<div class="route-msg">No route found from <strong>' + startLabel + '</strong> to <strong>' + destLabel + '</strong>.<br><br>' +
+      '<div class="route-msg">No route found from <strong>' + intName(startLabel) + '</strong> to <strong>' + intName(destLabel) + '</strong>.<br><br>' +
       '<button class="route-btn" style="background:#888" onclick="cancelRoute()">Close</button></div>';
-    return;
   }
-  renderRoute(startLabel, destLabel, result, null);
 }
 
 // Route edges indexed by "from|to|trail" -> {ti, a, b}: trail feature and the positions
@@ -1418,7 +1569,7 @@ function segPiece(seg, a, b) {
 // passed, here (within AT_INT_M of it), or ahead
 function stepState(i) {
   if (plan.progress === null) return "ahead";
-  if (plan.arrived) return i === plan.steps.length - 1 ? "here" : "passed";
+  if (plan.arrived) return i === plan.steps.length - 1 && plan.trip.to !== null ? "here" : "passed";
   var d = plan.steps[i].at - plan.progress;
   return d < -AT_INT_M ? "passed" : d <= AT_INT_M ? "here" : "ahead";
 }
@@ -1455,81 +1606,147 @@ function drawRoute() {
       radius: 13, color: past ? "#9e9e9e" : "#0d47a1", weight: 3, fillOpacity: 0, opacity: 0.9, interactive: false
     }).addTo(map));
   }
-  plan.hist.steps.forEach(function(s) { ring(s.label, true); });
-  plan.steps.forEach(function(s, i) { ring(s.label, stepState(i) === "passed"); });
+  plan.hist.steps.forEach(function(s) { if (!isJunction(s.label)) ring(s.label, true); });
+  plan.steps.forEach(function(s, i) { if (!isJunction(s.label)) ring(s.label, stepState(i) === "passed"); });
+  if (plan.trip.to === null) {
+    routeMarkers.push(L.circleMarker(plan.trip.home, {
+      radius: 6, color: "#0d47a1", weight: 3, fillColor: "#fff", fillOpacity: 1, interactive: false
+    }).addTo(map));
+  }
 }
 
 // Trimming is in pixels, so it has to be redone at each zoom level
 map.on("zoomend", function() { if (plan) drawRoute(); });
 
-function stepRowHtml(step, state) {
+// ft (optional): distance to the next step shown, if quiet steps are skipped in between
+function stepRowHtml(step, state, ft) {
   var html = '<div class="route-step' + (state === "passed" ? ' passed' : '') + '">' +
     (state === "here" ? '<span class="you-badge">You</span>' : '') + intPill(step.label, state);
   if (step.nextTrail) {
     html += '<span class="route-arrow">→</span>' +
       '<span class="route-trail-name">' + esc(step.nextTrail) + '</span>' +
-      '<span class="int-dist">' + formatDist(step.nextFt / 3.28084) + '</span>';
+      '<span class="int-dist">' + formatDist((ft === undefined ? step.nextFt : ft) / 3.28084) + '</span>';
   }
+  var stop = step.segStart || (step.stop && !step.stop.edge ? step.stop : null);
+  if (stop) html += '<span class="turn-tag">' + (isTurnaround(stop) ? 'turn around' : 'waypoint') + '</span>';
   return html + '</div>';
 }
 
+// An unsigned junction where the route stays on the same trail: nothing to look for or
+// do there, so routes don't show it
+function quietStep(step) {
+  return isJunction(step.label) && !!step.nextTrail && step.trail === step.nextTrail && !step.stop && !step.segStart;
+}
+
+// Each step's distance to the next step that's shown, adding up quiet steps between
+function shownFt(steps) {
+  var ft = steps.map(function(s) { return s.nextFt; });
+  for (var i = steps.length - 2; i >= 0; i--) {
+    if (quietStep(steps[i + 1])) ft[i] += ft[i + 1];
+  }
+  return ft;
+}
+
+// A round trip to one intersection turns around there
+function isTurnaround(stop) {
+  var trip = plan.trip;
+  return trip.to === null && trip.stops.length === 1 && !stop.edge;
+}
+
+// How a stop reads in titles: "A12", or "Challenger (C13–C34)" for a trail segment
+function stopName(stop) {
+  return stop.edge ? esc(stop.edge.trail) + ' (' + intName(stop.edge.a) + '–' + intName(stop.edge.b) + ')' : intName(stop.label);
+}
+
 function routePanelHtml() {
+  var trip = plan.trip;
   var states = plan.steps.map(function(s, i) { return stepState(i); });
   // You are either at a step ("here") or on the way to the first step still ahead
   var youBefore = -1;
   if (plan.live && !plan.arrived && states.indexOf("here") < 0) youBefore = states.indexOf("ahead");
   var toGo = plan.live ? Math.max(plan.total - plan.progress, 0) : plan.graphDist;
   var toGoStr = formatDist(toGo);
-  var dest = plan.steps[plan.steps.length - 1].label;
+  var dest = trip.to;
+  // A round trip ends where it began: at that intersection, if it began at one
+  var homePill = trip.homeLabel ? intPill(trip.homeLabel) : END_CHIP;
+  var destHtml = dest === null ? homePill : intPill(dest);
+  var arrivedHtml = dest === null
+    ? (trip.homeLabel ? "You're back at " + homePill : "You're back where you started")
+    : "You've arrived at " + intPill(dest);
+  // ...and the route's last pill is already that intersection, so no End chip after it
+  var endChip = dest === null && !(trip.homeLabel && plan.steps[plan.steps.length - 1].label === trip.homeLabel);
   var live = plan.live && !plan.arrived ? ' <span class="live-tag">LIVE</span>' : '';
+  // On a live route, also how far to the next pill (the one after it, if you're at one)
+  var next = plan.live && !plan.arrived
+    ? plan.steps.filter(function(s, i) { return states[i] === "ahead" && !quietStep(s); })[0] : null;
+  var nextStr = next && next.label !== dest
+    ? ' <span class="route-next">· <strong>' + formatDist(next.at - plan.progress) + '</strong> to ' + intPill(next.label) + '</span>'
+    : '';
+  // "0.4 mi to A12 · 160 ft to A2"
+  var distLine = '<span class="route-next"><strong>' + toGoStr + '</strong> to ' + destHtml + '</span>' + nextStr;
 
   // Small view: one row of pills
   var row = '';
   var link = function(past) { return '<span class="rr-link' + (past ? ' passed' : '') + '"></span>'; };
-  plan.hist.steps.forEach(function(s) { row += intPill(s.label, "passed") + link(true); });
-  plan.steps.forEach(function(s, i) {
-    if (i === youBefore) {
-      if (i > 0) row += link(true);
-      row += '<span class="seg-you rr-you"></span>' + link(false);
-    } else if (i > 0) {
-      row += link(states[i] !== "ahead");
-    }
-    row += intPill(s.label, states[i]);
+  plan.hist.steps.forEach(function(s) {
+    if (!quietStep(s)) row += (row ? link(true) : '') + intPill(s.label, "passed");
   });
+  plan.steps.forEach(function(s, i) {
+    if (i === youBefore) row += (row ? link(true) : '') + '<span class="seg-you rr-you"></span>';
+    if (!quietStep(s)) row += (row ? link(states[i] !== "ahead") : '') + intPill(s.label, states[i]);
+  });
+  if (endChip) row += link(plan.arrived) + homePill;
   var small = '<div class="compact-only">' +
     '<div class="route-compact-head">' + (plan.arrived
-      ? "You've arrived at " + intPill(dest)
-      : '<span class="route-arrow">→</span>' + intPill(dest) + ' <strong>' + toGoStr + '</strong>' + (plan.live ? ' to go' : '') + live) +
+      ? arrivedHtml
+      : distLine + live) +
     '</div><div class="route-row">' + row + '</div></div>';
 
   // Large view: the step list
-  var html = '<div style="margin-bottom:6px"><strong style="font-size:14px">' + (plan.arrived
-      ? "You've arrived at " + intPill(dest)
-      : 'Route: ' + (plan.live ? 'Your location' : plan.start) + ' → ' + dest) + '</strong>' + live + '</div>';
+  // Stops in the order the route reaches them
+  var inOrder = [];
+  plan.hist.steps.concat(plan.steps).forEach(function(st) { if (st.stop && inOrder.indexOf(st.stop) < 0) inOrder.push(st.stop); });
+  trip.stops.forEach(function(s) { if (!s.skipped && inOrder.indexOf(s) < 0) inOrder.push(s); });
+  var names = inOrder.filter(function(s) { return !s.skipped; }).map(stopName);
+  var title = dest === null
+    ? (names.length === 1 ? 'Round trip: out to ' + names[0] + ' and back' : 'Round trip via ' + names.join(', '))
+    : 'Route: ' + (plan.live ? 'Your location' : intName(trip.from)) + ' → ' + intName(dest) + (names.length ? ' via ' + names.join(', ') : '');
+  var html = '<div class="route-title"><strong style="font-size:14px">' + (plan.arrived ? arrivedHtml : title) + '</strong>' + live + '</div>';
+  var skipped = trip.stops.filter(function(s) { return s.skipped; });
+  if (skipped.length) {
+    html += '<div class="route-skipped">Skipped ' + skipped.map(function(s) { return s.edge ? stopName(s) : intPill(s.label, "passed"); }).join(', ') + '</div>';
+  }
   if (!plan.arrived) {
-    html += '<div style="font-size:13px;margin-bottom:8px"><strong>' + toGoStr + '</strong>' +
-      (plan.live ? ' to go' : '') + '</div>';
+    html += '<div style="font-size:13px;margin-bottom:8px">' + distLine + '</div>';
   }
   html += '<div class="int-list">';
-  plan.hist.steps.forEach(function(s) { html += stepRowHtml(s, "passed"); });
+  var histFt = shownFt(plan.hist.steps), stepFt = shownFt(plan.steps);
+  plan.hist.steps.forEach(function(s, i) { if (!quietStep(s)) html += stepRowHtml(s, "passed", histFt[i]); });
   plan.steps.forEach(function(s, i) {
     if (i === youBefore) {
       var trail = i === 0 ? plan.legTrail : s.trail;
+      var upTo = plan.steps.filter(function(t, j) { return j >= i && !quietStep(t); })[0] || s;
       html += '<div class="route-step"><span class="you-badge">You</span>' +
         '<span class="route-arrow">→</span>' +
         '<span class="route-trail-name">' + esc(trail) + '</span>' +
-        '<span class="int-dist">' + formatDist(s.at - plan.progress) + '</span></div>';
+        '<span class="int-dist">' + formatDist(upTo.at - plan.progress) + '</span></div>';
     }
-    html += stepRowHtml(s, states[i]);
+    if (!quietStep(s)) html += stepRowHtml(s, states[i], stepFt[i]);
   });
+  if (endChip) html += '<div class="route-step">' + homePill + '</div>';
   html += '</div>';
-  html += '<div style="margin-top:10px">' +
-    (plan.live ? '' : '<button class="route-btn" onclick="startRoute(\'' + plan.start + '\')">New route from ' + plan.start + '</button> ') +
-    '<button class="route-btn" onclick="startRoute(\'' + dest + '\')">New route from ' + dest + '</button> ' +
-    '<button class="route-btn" style="background:#888" onclick="cancelRoute()">Clear</button></div>';
+  // Planning links go under the buttons; without your location they're buttons, before Clear
+  var planning = (plan.live ? '' : planFromHtml(trip.from, 'New route from ' + intName(trip.from))) +
+    (dest !== null ? planFromHtml(dest, 'New route from ' + intName(dest)) : '');
+  html += '<div style="margin-top:10px">' + (userLatLng ? '' : planning) +
+    (canReverseLoop() ? ' <button class="route-btn" onclick="reverseLoopNow()">Reverse loop</button>' : '') +
+    ' <button class="route-btn" style="background:#888" onclick="cancelRoute()">Clear</button></div>' +
+    (userLatLng ? planning : '');
 
   return '<div id="routeInfo">' + small + '<div class="full-only">' + html + '</div></div>';
 }
+
+var END_CHIP = '<span class="start-chip">End</span>';
 
 function showRoutePanel() {
   document.getElementById("infoContent").innerHTML = routePanelHtml();
@@ -1539,16 +1756,208 @@ function showRoutePanel() {
   if (you) rowEl.scrollLeft = Math.max(0, you.offsetLeft - rowEl.clientWidth / 3);
 }
 
+// Every route is a trip: from your location (from null) or an intersection, through
+// stops (waypoints, which can be added along the way), to an intersection, or back
+// where you started (to null) for a round trip:
+//   {from, stops: [stop], to, home, homeAnchors, homeLabel, origin}
+// A stop is an intersection {label} or a stretch of trail between two neighboring
+// intersections {edge: {a, b, trail}}, walked whichever way suits; each has done and
+// skipped. Stops are kept in the order that makes the shortest trip (optimizeStops).
+// origin is where the trip began; homeLabel, the intersection a round trip began at, if any.
+function newTrip(from, stopLabels, to) {
+  var here = userLatLng && L.latLng(userLatLng.lat, userLatLng.lng);
+  var at = to === null ? nearestInt(here) : null;
+  return {from: from, to: to, homeLabel: at && at.dist <= AT_INT_M ? at.label : null,
+          stops: stopLabels.map(function(l) { return {label: l, done: false, skipped: false}; }),
+          home: to === null ? here : null, homeAnchors: to === null ? userAnchors(here) : null,
+          origin: from === null ? here : intMarkers[from].getLatLng()};
+}
+
+function pendingStops(trip) { return trip.stops.filter(function(s) { return !s.done; }); }
+
+// The edges a path uses, both ways, as keys for pathToAnchors' avoid
+function edgeSet(path) {
+  var set = {};
+  for (var k = 1; k < path.length; k++) {
+    set[path[k - 1].label + "|" + path[k].label + "|" + path[k].trail] = true;
+    set[path[k].label + "|" + path[k - 1].label + "|" + path[k].trail] = true;
+  }
+  return set;
+}
+
+// Length of a segment stop's trail, along its chain of intersections
+function edgeLen(edge) {
+  var len = 0;
+  for (var k = 1; k < edge.chain.length; k++) {
+    var piece = Infinity;
+    (intTrailMap[edge.chain[k - 1]] || []).forEach(function(c) { if (c[0] === edge.trail && c[1] === edge.chain[k]) piece = c[2]; });
+    len += piece;
+  }
+  return len;
+}
+
+// A stop's ways in: [entry, exit, chain walked] ; a segment can be walked either way
+function stopWays(stop) {
+  return stop.edge
+    ? [[stop.edge.a, stop.edge.b, stop.edge.chain], [stop.edge.b, stop.edge.a, stop.edge.chain.slice().reverse()]]
+    : [[stop.label, stop.label, null]];
+}
+
+// The shortest trip through stops in this order: {cost, ways}, where ways picks each
+// stop's way in. Distances are plain trail distances, remembered in memo.
+function planStops(trip, stops, memo) {
+  var dist = function(a, b) {
+    var key = a + "|" + b;
+    if (!(key in memo)) memo[key] = tripLegDist(trip, a, b);
+    return memo[key];
+  };
+  var states = [{exit: trip.from, cost: 0, ways: []}];
+  stops.forEach(function(st) {
+    states = stopWays(st).map(function(way, wi) {
+      var best = null;
+      states.forEach(function(s) {
+        var c = s.cost + dist(s.exit, way[0]) + (st.edge ? edgeLen(st.edge) : 0);
+        if (!best || c < best.cost) best = {exit: way[1], cost: c, ways: s.ways.concat([wi])};
+      });
+      return best;
+    });
+  });
+  var end = trip.to === null ? "home" : trip.to, best = null;
+  states.forEach(function(s) {
+    var c = s.cost + dist(s.exit, end);
+    if (!best || c < best.cost) best = {cost: c, ways: s.ways};
+  });
+  return best;
+}
+
+// Put the stops still ahead in the order that makes the shortest trip: every order for a
+// few stops, or adding them one at a time where each fits best for more
+function optimizeStops(trip) {
+  var pending = pendingStops(trip), memo = {}, best = null;
+  var tryOrder = function(order) {
+    var c = planStops(trip, order, memo).cost;
+    if (!best || c < best.cost) best = {cost: c, order: order};
+  };
+  var permute = function(done, rest) {
+    if (!rest.length) tryOrder(done);
+    rest.forEach(function(s, i) { permute(done.concat([s]), rest.slice(0, i).concat(rest.slice(i + 1))); });
+  };
+  if (pending.length <= 6) {
+    permute([], pending);
+  } else {
+    var order = [];
+    pending.forEach(function(s) {
+      best = null;
+      for (var k = 0; k <= order.length; k++) tryOrder(order.slice(0, k).concat([s], order.slice(k)));
+      order = best.order;
+    });
+  }
+  if (best) trip.stops = trip.stops.filter(function(s) { return s.done; }).concat(best.order);
+}
+
+// The route for what's left of a trip, from where you are (or the trip's start). Returns
+// {start, result: {path, totalDist}, userLeg, info: {trip, tail, stopAt}} or null.
+// stopAt maps a path index to its stop. Each leg after a stop avoids the trails the
+// previous leg arrived on, so a route goes through a waypoint instead of touching it and
+// turning back (unless it's a dead end). A round trip's way home avoids the trails used
+// on the way out (they cost LOOP_REUSE_COST times their length), if that's at most
+// LOOP_BACK_RATIO times as long as retracing your steps.
+// A route that passes an intersection stop on the way to another counts it there, rather
+// than coming back to it later.
+function compileTrip(trip) {
+  var passed = [], args = buildTrip(trip, passed), more = !!args;
+  while (more) {
+    var early = pendingStops(trip).filter(function(st) {
+      return !st.edge && passed.indexOf(st) < 0 && firstAt(args.result.path, st.label) < stopIndex(args, st);
+    })[0];
+    var next = early && buildTrip(trip, passed.concat([early]));
+    more = !!next && firstAt(next.result.path, early.label) >= 0;
+    if (more) { passed.push(early); args = next; }
+  }
+  if (args) {
+    passed.forEach(function(st) { args.info.stopAt[firstAt(args.result.path, st.label)] = st; });
+  }
+  return args;
+}
+
+function firstAt(path, label) {
+  for (var i = 0; i < path.length; i++) if (path[i].label === label) return i;
+  return -1;
+}
+
+function stopIndex(args, stop) {
+  var found = -1;
+  Object.keys(args.info.stopAt).forEach(function(k) { if (args.info.stopAt[k] === stop) found = +k; });
+  return found;
+}
+
+// compileTrip's route, leaving out the stops in passed
+function buildTrip(trip, passed) {
+  var targets = pendingStops(trip).filter(function(st) { return passed.indexOf(st) < 0; });
+  var ways = targets.length ? planStops(trip, targets, {}).ways : [];
+  // Places to go in turn; a segment is its entry, then its exit along the segment's trail
+  var seq = [];
+  targets.forEach(function(st, i) {
+    var way = stopWays(st)[ways[i]];
+    if (st.edge) seq.push({label: way[0], stop: null}, {label: way[1], along: st.edge.trail, chain: way[2], stop: st});
+    else seq.push({label: st.label, stop: st});
+  });
+  if (trip.to !== null) seq.push({label: trip.to, stop: null});
+  var path, dist = 0, userLeg = null, stopAt = {}, ok = true, tail = null, homeOnly = false;
+  if (trip.from !== null) {
+    path = [{label: trip.from, trail: null}];
+  } else if (seq.length) {
+    var lead = bestRouteFromMe(seq[0].label);
+    ok = !!lead;
+    if (ok) { path = lead.result.path.slice(); dist = lead.result.totalDist; userLeg = lead.anchor; }
+  } else {
+    // A round trip with every stop behind you: straight home
+    var best = null;
+    userAnchors(userLatLng).forEach(function(a) {
+      var r = pathToAnchors(a.label, trip.homeAnchors, {});
+      if (r && (!best || a.dist + r.len < best.total)) best = {a: a, r: r, total: a.dist + r.len};
+    });
+    ok = !!best;
+    homeOnly = true;
+    if (ok) { path = best.r.path; dist = best.r.len - best.r.anchor.dist; userLeg = best.a; tail = best.r.anchor; }
+  }
+  if (ok && trip.from === null && seq.length && seq[0].stop) stopAt[path.length - 1] = seq[0].stop;
+  var legStart = 0;
+  for (var i = trip.from !== null ? 0 : 1; ok && i < seq.length; i++) {
+    if (seq[i].along) {
+      legStart = path.length - 1;
+      seq[i].chain.slice(1).forEach(function(l) { path.push({label: l, trail: seq[i].along}); });
+      dist += edgeLen(seq[i].stop.edge);
+    } else {
+      var r = pathToAnchors(path[path.length - 1].label, [{label: seq[i].label, dist: 0}], edgeSet(path.slice(legStart)));
+      ok = !!r;
+      if (ok) { legStart = path.length - 1; path = path.concat(r.path.slice(1)); dist += r.len; }
+    }
+    if (ok && seq[i].stop) stopAt[path.length - 1] = seq[i].stop;
+  }
+  if (ok && trip.to === null && !homeOnly) {
+    var last = path[path.length - 1].label;
+    var same = pathToAnchors(last, trip.homeAnchors, {}), other = pathToAnchors(last, trip.homeAnchors, edgeSet(path));
+    var back = other && same && other.len <= LOOP_BACK_RATIO * same.len ? other : same;
+    ok = !!back;
+    if (ok) { path = path.concat(back.path.slice(1)); dist += back.len - back.anchor.dist; tail = back.anchor; }
+  }
+  return ok ? {start: path[0].label, result: {path: path, totalDist: dist}, userLeg: userLeg,
+               info: {trip: trip, tail: tail, stopAt: stopAt}} : null;
+}
+
 // userLeg (optional): {dist, trail, ti, along, cum} for the walk from the user's position to
 // the first intersection (ti/along: where the user snaps onto that trail, if on one).
 // A route with a userLeg is live: progress along it is tracked as the user moves.
-// noFit keeps the view. hist: {steps, segs} already walked before a reroute; a reroute
-// leaves the panel and any selection alone, and the caller redraws.
-function renderRoute(startLabel, destLabel, result, userLeg, noFit, hist) {
+// noFit keeps the view. hist: {steps, segs} already walked before a reroute; with hist the
+// panel and any selection are left alone, and the caller redraws.
+// info: {trip, tail, stopAt} from compileTrip; a round trip ends with a walk from the tail
+// anchor back home.
+function renderRoute(result, userLeg, noFit, hist, info) {
   if (!hist) clearSelection();
   clearRouteDisplay();
 
-  var path = result.path;
+  var trip = info.trip, path = result.path;
   var segs = [];
   if (userLeg) {
     var legPts = [userLatLng];
@@ -1566,10 +1975,21 @@ function renderRoute(startLabel, destLabel, result, userLeg, noFit, hist) {
     pts.push(intMarkers[v].getLatLng());
     segs.push({pts: pts, trimStart: true, trimEnd: true});
   }
+  if (info.tail) {
+    var tail = info.tail, tailPts = [intMarkers[tail.label].getLatLng()];
+    if (tail.ti !== undefined) tailPts = tailPts.concat(sliceTrail(tail.ti, tail.cum, tail.along));
+    tailPts.push(trip.home);
+    segs.push({pts: tailPts, trimStart: true, trimEnd: false});
+  }
   // Lay the pieces end to end so every point has a position along the route
   var s = 0;
   segs.forEach(function(seg) { seg.cum = lineCum(seg.pts); seg.s0 = s; s += segLen(seg); });
 
+  var segStartAt = {};
+  Object.keys(info.stopAt).forEach(function(idx) {
+    var st = info.stopAt[idx];
+    if (st.edge) segStartAt[idx - (st.edge.chain.length - 1)] = st;
+  });
   var steps = path.map(function(step, i) {
     var k = userLeg ? i : i - 1;
     var next = path[i + 1], nextFt = 0;
@@ -1579,10 +1999,11 @@ function renderRoute(startLabel, destLabel, result, userLeg, noFit, hist) {
       });
     }
     return {label: step.label, trail: step.trail, nextTrail: next ? next.trail : null, nextFt: nextFt,
-            at: k < 0 ? 0 : segs[k].s0 + segLen(segs[k])};
+            at: k < 0 ? 0 : segs[k].s0 + segLen(segs[k]), stop: info.stopAt[i] || null,
+            segStart: segStartAt[i] || null};
   });
 
-  plan = {start: startLabel, dest: destLabel, live: !!userLeg, segs: segs, steps: steps, total: s,
+  plan = {trip: trip, live: !!userLeg, segs: segs, steps: steps, total: s,
           graphDist: result.totalDist, progress: userLeg ? 0 : null, arrived: false,
           legTrail: userLeg ? (userLeg.trail || 'off trail') : null,
           hist: hist || {steps: [], segs: []}};
@@ -1597,13 +2018,243 @@ function renderRoute(startLabel, destLabel, result, userLeg, noFit, hist) {
   showRoutePanel();
 }
 
+// Start a trip and show it, or say why there's no route
+function startTrip(trip, failMsg) {
+  var args = compileTrip(trip);
+  if (args) renderRoute(args.result, args.userLeg, false, null, args.info);
+  else showPanelMsg(failMsg);
+}
+
+var LOOP_REUSE_COST = 4, LOOP_BACK_RATIO = 1.2;
+var LOOP_REVERSE_M = 100;   // a jump this far ahead onto the way back means you went the other way
+var SKIP_MARGIN_M = 50;     // see skipMissedStops
+
+// Shortest path from an intersection to the nearest of some anchors ({label, dist, ...}),
+// with the edges in avoid costing more. Returns {path, len, anchor}; len is in true meters
+// and includes the anchor's dist.
+function pathToAnchors(start, anchors, avoid) {
+  var cost = {}, len = {}, prev = {}, via = {}, done = {}, queue = [start];
+  cost[start] = 0;
+  len[start] = 0;
+  while (queue.length) {
+    queue.sort(function(a, b) { return cost[a] - cost[b]; });
+    var u = queue.shift();
+    if (!done[u]) {
+      done[u] = true;
+      (routeGraph[u] || []).forEach(function(e) {
+        var c = cost[u] + e.cost * (avoid[u + "|" + e.to + "|" + e.trail] ? LOOP_REUSE_COST : 1);
+        if (!(cost[e.to] <= c)) {
+          cost[e.to] = c; len[e.to] = len[u] + e.dist; prev[e.to] = u; via[e.to] = e.trail;
+          queue.push(e.to);
+        }
+      });
+    }
+  }
+  var best = null;
+  anchors.forEach(function(a) {
+    if (cost[a.label] !== undefined && (!best || cost[a.label] + a.dist < best.cost)) best = {cost: cost[a.label] + a.dist, anchor: a};
+  });
+  var result = null;
+  if (best) {
+    var path = [], n = best.anchor.label;
+    while (n !== undefined) { path.unshift({label: n, trail: via[n] || null}); n = prev[n]; }
+    result = {path: path, len: len[best.anchor.label] + best.anchor.dist, anchor: best.anchor};
+  }
+  return result;
+}
+
+function roundTripFromMe(label) {
+  if (userLatLng.distanceTo(intMarkers[label].getLatLng()) <= AT_INT_M) {
+    showPanelMsg('You are already at ' + intPill(label));
+  } else {
+    startTrip(newTrip(null, [label], null), 'No round trip found from your location to <strong>' + intName(label) + '</strong>.');
+  }
+}
+
+// --- Waypoints
+
+// Distance by trail, in meters, between two places: a label, null for "where you are" (as
+// a start), or "home" (as an end, for a round trip)
+function tripLegDist(trip, a, b) {
+  var d;
+  if (b === "home") {
+    var r = a === null ? {len: 0} : pathToAnchors(a, trip.homeAnchors, {});
+    d = r ? r.len : Infinity;
+  } else if (a === null) {
+    var best = bestRouteFromMe(b);
+    d = best ? best.total : Infinity;
+  } else {
+    d = pathTree(a).len[b];
+  }
+  return d === undefined ? Infinity : d;
+}
+
+// Add or remove a stop; the stops ahead are then put back in the best order
+function changeStops(change) {
+  var trip = plan.trip;
+  change(trip);
+  optimizeStops(trip);
+  replanTrip(plan.progress === null ? 0 : plan.progress);
+}
+
+function addWaypoint(label) {
+  changeStops(function(trip) { trip.stops.push({label: label, edge: null, done: false, skipped: false}); });
+}
+
+function removeWaypoint(label) {
+  changeStops(function(trip) { trip.stops = trip.stops.filter(function(s) { return s.done || s.label !== label; }); });
+}
+
+function sameEdge(e, a, b, trail) {
+  return !!e && e.trail === trail && ((e.a === a && e.b === b) || (e.a === b && e.b === a));
+}
+
+function addSegment(a, b, trail, chain) {
+  changeStops(function(trip) {
+    trip.stops.push({label: null, edge: {a: a, b: b, trail: trail, chain: chain || [a, b]}, done: false, skipped: false});
+  });
+  clearSelection(true);
+}
+
+function removeSegment(a, b, trail) {
+  changeStops(function(trip) { trip.stops = trip.stops.filter(function(s) { return s.done || !sameEdge(s.edge, a, b, trail); }); });
+  clearSelection(true);
+}
+
+function isPendingStop(label) {
+  return !!plan && pendingStops(plan.trip).some(function(s) { return s.label === label; });
+}
+
+function isPendingSegment(a, b, trail) {
+  return !!plan && pendingStops(plan.trip).some(function(s) { return sameEdge(s.edge, a, b, trail); });
+}
+
+// Plan what's left of the trip again, keeping what was walked up to walked as history
+function replanTrip(walked) {
+  var args = compileTrip(plan.trip);
+  if (args) {
+    renderRoute(args.result, args.userLeg, true, historyTo(walked, true), args.info);
+    drawRoute();
+    showRoutePanel();
+  }
+}
+
+// Steps and route pieces up to walked, added to what was already history. passedOnly
+// leaves out the step you're at, for a replan that starts from you and includes it again.
+function historyTo(walked, passedOnly) {
+  var hist = {steps: plan.hist.steps.slice(), segs: plan.hist.segs.slice()};
+  var upTo = passedOnly ? walked - AT_INT_M : walked + AT_INT_M;
+  if (plan.live) {
+    plan.steps.forEach(function(st) { if (st.at <= upTo) hist.steps.push(st); });
+    plan.segs.forEach(function(seg) {
+      var pts = segPiece(seg, seg.s0, walked);
+      if (pts) hist.segs.push({pts: pts, trimStart: seg.trimStart,
+                               trimEnd: walked >= seg.s0 + segLen(seg) && seg.trimEnd});
+    });
+  }
+  return hist;
+}
+
+// A stop is done once you're at it or past it; exit is where you left it (for a segment,
+// whichever end you walked it to)
+function markReachedStops() {
+  plan.steps.forEach(function(st, i) {
+    if (st.stop && !st.stop.done && stepState(i) !== "ahead") { st.stop.done = true; st.stop.exit = st.label; }
+  });
+}
+
+// Distance by trail, in meters, from a point to an intersection
+function distFromPoint(ll, label) {
+  var best = Infinity;
+  userAnchors(ll).forEach(function(a) {
+    var d = pathTree(a.label).len[label];
+    if (d !== undefined) best = Math.min(best, a.dist + d);
+  });
+  return best;
+}
+
+// Off the route and heading for a stop you missed: skip it once you're closer to the stop
+// after it than the missed stop is, and you've got SKIP_MARGIN_M closer to that one since
+// the last stop (or the trip's start), so a stop behind you isn't dropped at the outset.
+// A round trip's turnaround is never skipped.
+function skipMissedStops() {
+  var trip = plan.trip, pending = pendingStops(trip), go = true;
+  var ends = function(stop) { return stop.edge ? [stop.edge.a, stop.edge.b] : [stop.label]; };
+  var nearest = function(froms, tos, d) {
+    var best = Infinity;
+    froms.forEach(function(f) { tos.forEach(function(t) { best = Math.min(best, d(f, t)); }); });
+    return best;
+  };
+  var legDist = function(a, b) { return tripLegDist(trip, a, b); };
+  while (go && pending.length) {
+    var w = pending[0], after = pending[1] ? ends(pending[1]) : trip.to !== null ? [trip.to] : null;
+    go = after !== null;
+    if (go) {
+      var prev = trip.stops.slice(0, trip.stops.indexOf(w)).filter(function(s) { return s.done && !s.skipped; }).pop();
+      var from = prev ? intMarkers[prev.exit || prev.label || prev.edge.b].getLatLng() : trip.origin;
+      var meAfter = nearest([null], after, legDist);
+      go = meAfter < nearest(ends(w), after, legDist) &&
+        meAfter < nearest([from], after, distFromPoint) - SKIP_MARGIN_M;
+      if (go) { w.done = true; w.skipped = true; pending.shift(); }
+    }
+  }
+}
+
+// --- Round trip direction
+
+// The same round trip the other way: the route reversed, and the stops still ahead in
+// reverse order. From where you are, it joins at the far end of the old route.
+function reverseLoop() {
+  var trip = plan.trip, n = plan.steps.length, rp = [], ok = false;
+  for (var i = n - 1; i >= 0; i--) rp.push({label: plan.steps[i].label, trail: i < n - 1 ? plan.steps[i + 1].trail : null});
+  var lead = bestRouteFromMe(rp[0].label);
+  var tail = trip.homeAnchors.filter(function(a) { return a.label === rp[n - 1].label; })[0];
+  var extra = tail ? null : pathToAnchors(rp[n - 1].label, trip.homeAnchors, {});
+  if (lead && (tail || extra)) {
+    var path = lead.result.path.concat(rp.slice(1), extra ? extra.path.slice(1) : []);
+    var stopAt = {}, offset = lead.result.path.length - 1;
+    plan.steps.forEach(function(st, j) {
+      if (st.stop) stopAt[offset + n - 1 - (st.stop.edge ? j - (st.stop.edge.chain.length - 1) : j)] = st.stop;
+    });
+    var pending = pendingStops(trip).reverse();
+    trip.stops = trip.stops.filter(function(s) { return s.done; }).concat(pending);
+    renderRoute({path: path, totalDist: lead.result.totalDist + plan.graphDist + (extra ? extra.len - extra.anchor.dist : 0)},
+                lead.anchor, true, historyTo(plan.progress, true), {trip: trip, tail: tail || extra.anchor, stopAt: stopAt});
+    ok = true;
+  }
+  return ok;
+}
+
+// Whether a reversed round trip would be any different: not for a plain out and back
+function canReverseLoop() {
+  var labels = plan.steps.map(function(s) { return s.label; });
+  return plan.trip.to === null && plan.live && !plan.arrived && !plan.trip.stops.some(function(s) { return s.done; }) &&
+    labels.join(" ") !== labels.slice().reverse().join(" ");
+}
+
+// The Reverse loop button
+function reverseLoopNow() {
+  if (reverseLoop()) {
+    drawRoute();
+    showRoutePanel();
+  }
+}
+
+// The step of the last stop still ahead, or null once every stop is done
+function lastStopStep() {
+  var found = null;
+  plan.steps.forEach(function(st) { if (st.stop && !st.stop.done) found = st; });
+  return found;
+}
+
 // A rough fix (say, a phone that just woke up) isn't good enough to call you off the route
 var REROUTE_MAX_ACC_M = 50;
 
 function liveRouting() { return plan && plan.live && !plan.arrived; }
 
 // Where on the live route you are. Prefers spots at or past your last position, so a
-// route that doubles back doesn't jump ahead. Returns false when you're off the route.
+// route that doubles back doesn't jump ahead. Returns false when you're off the route,
+// and "reverse" when you're going around a round trip the other way.
 function trackProgress() {
   var px = userLatLng.lng * 82000, py = userLatLng.lat * 111000, cands = [];
   plan.segs.forEach(function(seg) {
@@ -1619,22 +2270,57 @@ function trackProgress() {
   var tol = Math.max(OFF_ROUTE_M, Math.min(userAccuracy, 60));
   var near = cands.filter(function(c) { return c.d <= tol; });
   if (near.length === 0) return false;
-  var ahead = near.filter(function(c) { return c.s >= plan.progress - 30; });
-  if (ahead.length === 0) ahead = near;
-  var minD = Math.min.apply(null, ahead.map(function(c) { return c.d; }));
-  var best = null;
-  ahead.forEach(function(c) { if (c.d <= minD + 5 && (!best || c.s < best.s)) best = c; });
-  plan.progress = best.s;
-  return true;
+  // Where a route passes the same ground twice (an out and back), a spot matches both
+  // ways. Going backwards costs a meter per meter, and jumping ahead a little, so the
+  // match just ahead of your last position wins.
+  var cost = function(c) {
+    return c.d + Math.max(0, plan.progress - c.s) + 0.02 * Math.max(0, c.s - plan.progress);
+  };
+  var cheapest = function(list) {
+    var best = null;
+    list.forEach(function(c) { if (!best || cost(c) < cost(best)) best = c; });
+    return best;
+  };
+  // On a round trip, matching far along the way home before the last stop means you set
+  // off around the loop the other way (only before any stop is reached, as for the
+  // Reverse loop button)
+  var any = cheapest(near), lastStop = canReverseLoop() ? lastStopStep() : null;
+  var result = "reverse";
+  if (!(lastStop && any.s - plan.progress > LOOP_REVERSE_M && any.s > lastStop.at)) {
+    // Progress can't skip past a stop you haven't reached: a later part of the route can
+    // run near the turnoff for it, and walking that way means you're missing the stop
+    var stop = nextStopStep();
+    var best = cheapest(near.filter(function(c) { return !stop || c.s <= stop.at + AT_INT_M; }));
+    if (best) plan.progress = best.s;
+    result = !!best;
+  }
+  return result;
+}
+
+// The step of the first stop not yet reached, or null
+function nextStopStep() {
+  return plan.steps.filter(function(st) { return st.stop && !st.stop.done; })[0] || null;
+}
+
+// trackProgress, reversing a round trip first if you're going around it the other way
+function trackOrReverse() {
+  var onRoute = trackProgress();
+  if (onRoute === "reverse") onRoute = reverseLoop() && trackProgress() === true;
+  return onRoute;
 }
 
 // Called on each new fix while a live route is up
 function updateLiveRoute() {
-  if (userLatLng.distanceTo(intMarkers[plan.dest].getLatLng()) <= AT_INT_M) {
+  var trip = plan.trip;
+  var onRoute = trackOrReverse();
+  markReachedStops();
+  var allDone = pendingStops(trip).length === 0;
+  var destLL = trip.to === null ? trip.home : intMarkers[trip.to].getLatLng();
+  if (allDone && userLatLng.distanceTo(destLL) <= AT_INT_M) {
     plan.progress = plan.total;
     plan.arrived = true;
-  } else if (trackProgress()) {
-    if (plan.total - plan.progress <= AT_INT_M) plan.arrived = true;
+  } else if (onRoute) {
+    if (allDone && plan.total - plan.progress <= AT_INT_M) plan.arrived = true;
   } else if (userAccuracy <= REROUTE_MAX_ACC_M) {
     rerouteFromHere();   // with no way from here, the old route stays up
   }
@@ -1643,18 +2329,34 @@ function updateLiveRoute() {
   else refreshLocateInfo();
 }
 
+// How far along the route you walked before leaving it. Fixes are seconds apart, so the
+// last one on the route often falls short of the intersection where you turned off.
+// If the trail you're on now starts at an intersection still ahead on the route, and
+// the new route (newPath) doesn't go back through it, you walked to it and turned there.
+function turnedAt(newPath) {
+  var walked = plan.progress, snap = snapToTrail(userLatLng);
+  if (snap.d < SNAP_M) {
+    var ends = segmentEnds(snap), onNew = {};
+    newPath.forEach(function(p) { onNew[p.label] = true; });
+    var endLabels = [ends.before, ends.after].filter(Boolean).map(function(e) { return e[0]; });
+    var turn = plan.steps.filter(function(st) {
+      return st.at > plan.progress + AT_INT_M && endLabels.indexOf(st.label) >= 0 && !onNew[st.label];
+    })[0];
+    if (turn) walked = turn.at;
+  }
+  return walked;
+}
+
 // Off the route: plan again from here, keeping what was already walked as grey history
 function rerouteFromHere() {
-  var best = bestRouteFromMe(plan.dest);
-  if (!best) return;
-  var hist = {steps: plan.hist.steps.slice(), segs: plan.hist.segs.slice()};
-  plan.steps.forEach(function(st) { if (st.at <= plan.progress + AT_INT_M) hist.steps.push(st); });
-  plan.segs.forEach(function(seg) {
-    var pts = segPiece(seg, seg.s0, plan.progress);
-    if (pts) hist.segs.push({pts: pts, trimStart: seg.trimStart,
-                             trimEnd: plan.progress >= seg.s0 + segLen(seg) && seg.trimEnd});
-  });
-  renderRoute(best.anchor.label, plan.dest, best.result, best.anchor, true, hist);
+  var stops = plan.trip.stops, was = stops.map(function(s) { return [s.done, s.skipped]; });
+  skipMissedStops();
+  var args = compileTrip(plan.trip);
+  if (args) {
+    renderRoute(args.result, args.userLeg, true, historyTo(turnedAt(args.result.path)), args.info);
+  } else {
+    stops.forEach(function(s, i) { s.done = was[i][0]; s.skipped = was[i][1]; });
+  }
 }
 
 var hoverMarker = null;
@@ -1666,8 +2368,8 @@ function hoverOwner(ownerName) {
   Object.keys(intFeatures).forEach(function(label) {
     var f = intFeatures[label];
     var m = intMarkers[label];
-    if (f.properties.owner === ownerName && m && m !== selectedMarker) {
-      m.setStyle({radius: 11, weight: 4, color: "#111", fillColor: ZONE_COLORS[m._zone], fillOpacity: 1});
+    if (f.properties.owner === ownerName && m && m !== selectedMarker && !f.properties.junction) {
+      m.setStyle({radius: 11, weight: 4, color: "#111", fillColor: ZONE_COLORS[m._zone], fillOpacity: 1, opacity: 1});
       m.bringToFront();
       hoverOwnerMarkers.push(label);
     }
@@ -1677,7 +2379,7 @@ function hoverOwner(ownerName) {
 function hoverInt(label) {
   unhover();
   if (intMarkers[label]) {
-    intMarkers[label].setStyle({radius: 11, weight: 3, color: "#f1c40f", fillColor: "#f1c40f", fillOpacity: 1});
+    intMarkers[label].setStyle({radius: 11, weight: 3, color: "#f1c40f", fillColor: "#f1c40f", fillOpacity: 1, opacity: 1});
     hoverMarker = label;
   }
 }
@@ -1697,7 +2399,7 @@ function unhover() {
   if (hoverMarker && intMarkers[hoverMarker]) {
     var z = intMarkers[hoverMarker]._zone;
     if (!selectedMarker || selectedMarker !== intMarkers[hoverMarker]) {
-      intMarkers[hoverMarker].setStyle({radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[z], fillOpacity: 0.85});
+      intMarkers[hoverMarker].setStyle(restStyle(intMarkers[hoverMarker]));
     }
     hoverMarker = null;
   }
@@ -1705,7 +2407,7 @@ function unhover() {
     var m = intMarkers[label];
     if (m && m !== selectedMarker) {
       var z = m._zone;
-      m.setStyle({radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[z], fillOpacity: 0.85});
+      m.setStyle(restStyle(m));
     }
   });
   hoverOwnerMarkers = [];
@@ -1733,26 +2435,49 @@ function selectIntFromTrail(label) {
   }
 }
 
-function showTrailInfo(feature, layer) {
+// The stretch of a trail between the signed places on either side of a point on it:
+// {a, b, trail, chain, ti, from, to}, where chain lists a, any unsigned junctions passed,
+// and b; or null where the trail ends without an intersection
+function segmentAt(feature, ll) {
+  var ti = feature.properties._idx, seg = null;
+  if (trailIntMap[ti]) {
+    var ends = segmentEnds(snapOnTrail(ll, ti), true);
+    if (ends.before && ends.after && ends.before[0] !== ends.after[0]) {
+      seg = {a: ends.before[0], b: ends.after[0], trail: feature.properties.pdf_name || feature.properties.name || "Unnamed",
+             chain: ends.chain, ti: ti, from: ends.before[1], to: ends.after[1]};
+    }
+  }
+  return seg;
+}
+
+var selectedSegLine = null;
+
+// ll (optional): where the trail was tapped. While routing, that picks out one segment
+// of the trail, which can be added to the route as a waypoint.
+function showTrailInfo(feature, layer, ll) {
   clearSelection(true);
 
   var p = feature.properties;
   var name = p.pdf_name || p.name || "";
+  var seg = plan && ll ? segmentAt(feature, ll) : null;
 
   highlightedSegments = [];
   var segIndices = [];
   trailLayer.eachLayer(function(l) {
     var ln = l.feature.properties.pdf_name || l.feature.properties.name || "";
     if (ln === name && name !== "") {
-      l.setStyle({color: "#00b8d4", weight: 6, opacity: 1});
+      if (!seg) l.setStyle({color: "#00b8d4", weight: 6, opacity: 1});
       highlightedSegments.push(l);
       segIndices.push(l.feature.properties._idx);
     }
   });
   if (highlightedSegments.length === 0) {
-    layer.setStyle({color: "#00b8d4", weight: 6, opacity: 1});
+    if (!seg) layer.setStyle({color: "#00b8d4", weight: 6, opacity: 1});
     highlightedSegments.push(layer);
     segIndices.push(feature.properties._idx);
+  }
+  if (seg) {
+    selectedSegLine = L.polyline(sliceTrail(seg.ti, seg.from, seg.to), {color: "#00b8d4", weight: 7, opacity: 1, interactive: false}).addTo(map);
   }
 
   var displayName = name || "Unnamed trail";
@@ -1772,7 +2497,18 @@ function showTrailInfo(feature, layer) {
     });
   });
 
-  var html = '<table>' +
+  var html = '';
+  if (seg) {
+    var segArgs = jsArg(seg.a) + ', ' + jsArg(seg.b) + ', ' + jsArg(seg.trail);
+    var addArgs = segArgs + ', ' + esc(JSON.stringify(seg.chain));
+    html += '<div class="seg-pick">' + intPill(seg.a) + ' – ' + intPill(seg.b) + ' on <strong>' + esc(seg.trail) + '</strong>' +
+      ' <span class="int-dist">' + formatDist(Math.abs(seg.to - seg.from)) + '</span><div>' +
+      (isPendingSegment(seg.a, seg.b, seg.trail)
+        ? '<button class="route-btn" style="background:#0d47a1" onclick="removeSegment(' + segArgs + ')">Remove from route</button> '
+        : '<button class="route-btn" style="background:#0d47a1" onclick="addSegment(' + addArgs + ')">Add to route</button> ') +
+      backToRouteBtn() + '</div></div>';
+  }
+  html += '<table>' +
     '<tr><td>Trail</td><td><strong style="font-size:16px">' + esc(displayName) + '</strong></td></tr>';
   var totalFt = Math.round(totalLength * 3.28084);
   var totalMi = (totalLength * 0.000621371);
@@ -1792,12 +2528,7 @@ function showTrailInfo(feature, layer) {
       html += '<div class="seg-bar">↕ ' + startGap.toLocaleString() + ' ft</div>';
     }
     for (var i = 0; i < allInts.length; i++) {
-      var label = allInts[i].label;
-      var zone = label.replace(/[0-9]/g, "");
-      var bg = ZONE_COLORS[zone] || "#888";
-      html += '<div class="int-row">' +
-        '<a class="int-link" style="background:' + bg + '" onmouseover="hoverInt(\'' + label + '\')" onmouseout="unhover()" onclick="selectIntFromTrail(\'' + label + '\')">' + label + '</a>' +
-        '</div>';
+      html += '<div class="int-row">' + intPill(allInts[i].label) + '</div>';
       if (i < allInts.length - 1) {
         var segFt = Math.round((allInts[i+1].dist - allInts[i].dist) * 3.28084);
         if (segFt > 0) html += '<div class="seg-bar">↕ ' + segFt.toLocaleString() + ' ft</div>';
@@ -1815,19 +2546,23 @@ function showTrailInfo(feature, layer) {
   }
 
   html += '</div>';
-  if (plan) html += '<div style="margin-top:6px">' + backToRouteBtn() + '</div>';
+  if (plan && !seg) html += '<div style="margin-top:6px">' + backToRouteBtn() + '</div>';
 
   document.getElementById("infoContent").innerHTML = html;
 }
 
 function clearSelection(keepRoute) {
+  if (selectedSegLine) {
+    map.removeLayer(selectedSegLine);
+    selectedSegLine = null;
+  }
   if (selectedRing) {
     map.removeLayer(selectedRing);
     selectedRing = null;
   }
   if (selectedMarker) {
     var z = selectedMarker._zone;
-    selectedMarker.setStyle({fillColor: ZONE_COLORS[z], radius: 7, weight: 2, color: "#fff", fillOpacity: 0.85});
+    selectedMarker.setStyle(restStyle(selectedMarker));
     selectedMarker = null;
   }
   highlightedSegments.forEach(function(l) {
@@ -1874,9 +2609,16 @@ var panelStartsCompact = false;
 try { panelStartsCompact = localStorage.getItem(PANEL_KEY) === "1"; } catch (e) {}
 setPanelCompact(panelStartsCompact);
 
-var defaultInfo = '<p style="color:#888">Click a trail or intersection marker for details.</p>' +
+var defaultInfo = '<div id="welcomeInfo"><p style="color:#888">Click a trail or intersection marker for details.</p>' +
   '<p class="full-only" style="margin-top:8px;color:#888;font-size:11px">__N_INTS__ numbered intersections across 6 zones.<br>' +
-  '__N_TRAILS__ trail segments, __N_NAMES__ named trails.</p>';
+  '__N_TRAILS__ trail segments, __N_NAMES__ named trails.</p></div>';
+
+// The panel when nothing is selected: where you are, once your location is known, or
+// the welcome text. Unlike showLocateInfo, this leaves the map where it is.
+function showHome() {
+  clearSelection(true);
+  document.getElementById("infoContent").innerHTML = userLatLng ? locateHtml(userPlace(userLatLng)) : defaultInfo;
+}
 
 // Only the Clear button ends a route; a tap on the map just brings the route panel back
 map.on("click", function() {
@@ -1884,7 +2626,7 @@ map.on("click", function() {
     if (!document.getElementById("routeInfo")) backToRoute();
   } else {
     clearSelection();
-    document.getElementById("infoContent").innerHTML = defaultInfo;
+    showHome();
   }
 });
 
@@ -1940,7 +2682,7 @@ function showPanelMsg(text) {
 
 function nearestInt(ll) {
   var best = null, bestD = Infinity;
-  Object.keys(intMarkers).forEach(function(label) {
+  Object.keys(intMarkers).filter(function(l) { return !isJunction(l); }).forEach(function(label) {
     var d = ll.distanceTo(intMarkers[label].getLatLng());
     if (d < bestD) { bestD = d; best = label; }
   });
@@ -1948,26 +2690,34 @@ function nearestInt(ll) {
 }
 
 var SNAP_M = 60;     // farther than this from every trail counts as off trail
+var ON_TRAILS_M = 300;   // this close to a trail, the map opens on you
 var AT_INT_M = 20;   // this close to an intersection counts as being at it
 
-// Nearest point on any trail: distance to it, which trail, and how far along that trail
-function snapToTrail(ll) {
+// Nearest point on trail ti: {d, ti, along, tan}, with tan the compass bearing of the
+// trail there, pointing toward increasing "along"
+function snapOnTrail(ll, ti) {
   var px = ll.lng * 82000, py = ll.lat * 111000, best = {d: Infinity};
-  trailData.features.forEach(function(f, ti) {
-    var c = flatCoords(f.geometry), cum = trailCum[ti];
-    for (var i = 0; i < c.length - 1; i++) {
-      var ax = c[i][0] * 82000, ay = c[i][1] * 111000;
-      var vx = c[i + 1][0] * 82000 - ax, vy = c[i + 1][1] * 111000 - ay;
-      var len2 = vx * vx + vy * vy;
-      var t = len2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / len2)) : 0;
-      var dx = px - (ax + t * vx), dy = py - (ay + t * vy);
-      var d = Math.sqrt(dx * dx + dy * dy);
-      if (d < best.d) {
-        // tan: compass bearing of the trail here, pointing toward increasing "along"
-        best = {d: d, ti: ti, along: cum[i] + t * (cum[i + 1] - cum[i]),
-                tan: (Math.atan2(vx, vy) * 180 / Math.PI + 360) % 360};
-      }
+  var c = flatCoords(trailData.features[ti].geometry), cum = trailCum[ti];
+  for (var i = 0; i < c.length - 1; i++) {
+    var ax = c[i][0] * 82000, ay = c[i][1] * 111000;
+    var vx = c[i + 1][0] * 82000 - ax, vy = c[i + 1][1] * 111000 - ay;
+    var len2 = vx * vx + vy * vy;
+    var t = len2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / len2)) : 0;
+    var d = Math.hypot(px - ax - t * vx, py - ay - t * vy);
+    if (d < best.d) {
+      best = {d: d, ti: ti, along: cum[i] + t * (cum[i + 1] - cum[i]),
+              tan: (Math.atan2(vx, vy) * 180 / Math.PI + 360) % 360};
     }
+  }
+  return best;
+}
+
+// Nearest point on any trail: distance to it, which trail, how far along it, and its name
+function snapToTrail(ll) {
+  var best = {d: Infinity};
+  trailData.features.forEach(function(f, ti) {
+    var s = snapOnTrail(ll, ti);
+    if (s.d < best.d) best = s;
   });
   if (best.d < Infinity) {
     var props = trailData.features[best.ti].properties;
@@ -1976,14 +2726,18 @@ function snapToTrail(ll) {
   return best;
 }
 
-// Intersections on either side of a snapped point along its trail (either may be null)
-function segmentEnds(snap) {
-  var before = null, after = null;
-  trailIntMap[snap.ti].ints.forEach(function(e) {
-    if (e[1] <= snap.along) before = e;
-    if (e[1] > snap.along && !after) after = e;
-  });
-  return {before: before, after: after};
+// Intersections on either side of a snapped point along its trail, as [label, along]
+// (either may be null). With signed, it goes on through unsigned junctions to the next
+// sign, and chain lists the places from before to after.
+function segmentEnds(snap, signed) {
+  var ints = trailIntMap[snap.ti].ints, iB = -1, iA = -1;
+  ints.forEach(function(e, k) { if (e[1] <= snap.along) iB = k; if (e[1] > snap.along && iA < 0) iA = k; });
+  if (signed) {
+    while (iB > 0 && isJunction(ints[iB][0])) iB--;
+    while (iA >= 0 && iA < ints.length - 1 && isJunction(ints[iA][0])) iA++;
+  }
+  return {before: iB >= 0 ? ints[iB] : null, after: iA >= 0 ? ints[iA] : null,
+          chain: iB >= 0 && iA >= 0 ? ints.slice(iB, iA + 1).map(function(e) { return e[0]; }) : []};
 }
 
 // Places the user can join the graph: intersections on either side along the nearest trail,
@@ -2006,34 +2760,40 @@ function userAnchors(ll) {
   return anchors;
 }
 
-// anchors (optional): userAnchors(userLatLng), when asking about several destinations
+// The best route from where you are: the anchor with the lowest routing cost, and its
+// route; total is the distance in meters. anchors (optional): userAnchors(userLatLng),
+// when asking about several destinations.
 function bestRouteFromMe(destLabel, anchors) {
   var best = null;
   (anchors || userAnchors(userLatLng)).forEach(function(a) {
-    var r = dijkstra(a.label, destLabel);
-    if (r && (!best || a.dist + r.totalDist < best.total)) {
-      best = {anchor: a, result: r, total: a.dist + r.totalDist};
+    var r = dijkstra(a.label, destLabel), cost = a.dist + pathTree(a.label).dist[destLabel];
+    if (r && (!best || cost < best.cost)) {
+      best = {anchor: a, result: r, total: a.dist + r.totalDist, cost: cost};
     }
   });
   return best;
 }
 
 function routeFromMe(destLabel) {
-  var best = null;
   if (userLatLng.distanceTo(intMarkers[destLabel].getLatLng()) <= AT_INT_M) {
     showPanelMsg('You are already at ' + intPill(destLabel));
-  } else if ((best = bestRouteFromMe(destLabel))) {
-    renderRoute(best.anchor.label, destLabel, best.result, best.anchor);
   } else {
-    showPanelMsg('No route found from your location to <strong>' + destLabel + '</strong>.');
+    startTrip(newTrip(null, [], destLabel), 'No route found from your location to <strong>' + intName(destLabel) + '</strong>.');
   }
 }
 
-// state (optional): "passed" greys the pill, "here" rings it
+// state (optional): "passed" greys the pill, "here" rings it. A landmark is its icon,
+// with its name beside it in the large view only.
 function intPill(label, state) {
-  var bg = ZONE_COLORS[label.replace(/[0-9]/g, "")] || "#888";
-  var cls = state === "passed" || state === "here" ? ' ' + state : '';
-  return '<a class="int-link' + cls + '" style="background:' + bg + '" onmouseover="hoverInt(\'' + label + '\')" onmouseout="unhover()" onclick="selectIntFromTrail(\'' + label + '\')">' + label + '</a>';
+  var p = intFeatures[label].properties;
+  if (p.junction) {
+    return '<span class="junction-dot' + (state === "passed" ? ' passed' : '') + '" title="Unmarked junction"></span>';
+  }
+  var kind = p.landmark ? ' rock-pill' : p.no_sign ? ' post-pill' : '';
+  var cls = kind + (state === "passed" || state === "here" ? ' ' + state : '');
+  var bg = p.landmark ? 'transparent' : p.no_sign ? POST_COLOR : ZONE_COLORS[p.zone];
+  return '<a class="int-link' + cls + '" style="background:' + bg + '" title="' + esc(intName(label)) + '" onmouseover="hoverInt(\'' + label + '\')" onmouseout="unhover()" onclick="selectIntFromTrail(\'' + label + '\')">' +
+    (p.landmark ? rockSvg(18) + '<span class="rock-name full-only">' + esc(p.landmark) + '</span>' : intName(label)) + '</a>';
 }
 
 // Where the user is: at an intersection, on a segment between two ends, or off trail
@@ -2043,7 +2803,8 @@ function userPlace(ll) {
   var snap = snapToTrail(ll);
   if (snap.d >= SNAP_M) return {type: "off", label: n.label, dist: n.dist};
 
-  var ends = segmentEnds(snap);
+  // The strip runs between signs: unsigned junctions on the way aren't shown
+  var ends = segmentEnds(snap, true);
   var c = flatCoords(trailData.features[snap.ti].geometry);
   function end(e, isStart) {
     if (e) return {label: e[0], dist: Math.abs(snap.along - e[1]), ll: intMarkers[e[0]].getLatLng()};
@@ -2271,7 +3032,7 @@ function trailPathBetween(a, b) {
     var endsA = segmentEnds(sa), endsB = segmentEnds(sb);
     [endsA.before, endsA.after].forEach(function(ea) {
       [endsB.before, endsB.after].forEach(function(eb) {
-        var mid = ea && eb ? pathTree(ea[0]).dist[eb[0]] : Infinity;
+        var mid = ea && eb && pathTree(ea[0]).len[eb[0]] !== undefined ? pathTree(ea[0]).len[eb[0]] : Infinity;
         var len = mid < Infinity ? Math.abs(sa.along - ea[1]) + mid + Math.abs(sb.along - eb[1]) : Infinity;
         if (len < (best ? best.len : Infinity)) best = {len: len, ea: ea, eb: eb};
       });
@@ -2471,7 +3232,10 @@ function onLocation(pos) {
     // Add "Route here from my location" to an open intersection panel, but don't
     // interrupt picking a destination
     if (currentIntFeature && selectedMarker && !routeMode) showIntInfo(currentIntFeature, selectedMarker);
-    if (!targetInt && NETWORK_BOUNDS.contains(userLatLng)) map.setView(userLatLng, 16);
+    else if (document.getElementById("welcomeInfo")) showHome();
+    // Jump to you only if you're out on the trails: the network's bounding box takes in
+    // whole neighborhoods, and opening the map at home shouldn't zoom to your house
+    if (!targetInt && snapToTrail(userLatLng).d <= ON_TRAILS_M) map.setView(userLatLng, 16);
   } else if (liveRouting()) {
     updateLiveRoute();
   } else {
@@ -2577,7 +3341,7 @@ function clearSearch() {
     var m = intMarkers[label];
     if (m && m !== selectedMarker) {
       var z = m._zone;
-      m.setStyle({radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[z], fillOpacity: 0.85});
+      m.setStyle(restStyle(m));
     }
   });
   searchHighlighted = [];
@@ -2588,13 +3352,13 @@ function applySearch() {
     var m = intMarkers[label];
     if (m && m !== selectedMarker) {
       var z = m._zone;
-      m.setStyle({radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[z], fillOpacity: 0.85});
+      m.setStyle(restStyle(m));
     }
   });
   searchHighlighted = [];
 
   var matches = Object.keys(intMarkers).filter(function(label) {
-    return label.toUpperCase().indexOf(searchBuf) === 0;
+    return label.toUpperCase().indexOf(searchBuf) === 0 && !isJunction(label);
   });
 
   if (matches.length === 0) {
@@ -2621,7 +3385,7 @@ function applySearch() {
   matches.forEach(function(label) {
     var m = intMarkers[label];
     if (m && m !== selectedMarker) {
-      m.setStyle({radius: 11, weight: 3, color: "#f1c40f", fillColor: "#f1c40f", fillOpacity: 1});
+      m.setStyle({radius: 11, weight: 3, color: "#f1c40f", fillColor: "#f1c40f", fillOpacity: 1, opacity: 1});
       m.bringToFront();
     }
   });

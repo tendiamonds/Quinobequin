@@ -7,7 +7,8 @@
         "number": 1,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F29"
       },
       "geometry": {
         "type": "Point",
@@ -23,7 +24,8 @@
         "number": 4,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F25"
       },
       "geometry": {
         "type": "Point",
@@ -39,7 +41,8 @@
         "number": 6,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D18"
       },
       "geometry": {
         "type": "Point",
@@ -55,7 +58,8 @@
         "number": 7,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D9"
       },
       "geometry": {
         "type": "Point",
@@ -71,7 +75,8 @@
         "number": 8,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D16"
       },
       "geometry": {
         "type": "Point",
@@ -87,7 +92,8 @@
         "number": 9,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F32"
       },
       "geometry": {
         "type": "Point",
@@ -103,7 +109,8 @@
         "number": 10,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F30"
       },
       "geometry": {
         "type": "Point",
@@ -119,7 +126,8 @@
         "number": 11,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C30"
       },
       "geometry": {
         "type": "Point",
@@ -135,7 +143,8 @@
         "number": 12,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B14"
       },
       "geometry": {
         "type": "Point",
@@ -151,7 +160,8 @@
         "number": 14,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B17"
       },
       "geometry": {
         "type": "Point",
@@ -167,7 +177,8 @@
         "number": 15,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B18"
       },
       "geometry": {
         "type": "Point",
@@ -183,7 +194,8 @@
         "number": 16,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C26"
       },
       "geometry": {
         "type": "Point",
@@ -199,7 +211,8 @@
         "number": 17,
         "degree": 4,
         "cluster_size": 2,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C21"
       },
       "geometry": {
         "type": "Point",
@@ -215,7 +228,8 @@
         "number": 18,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A16"
       },
       "geometry": {
         "type": "Point",
@@ -231,7 +245,8 @@
         "number": 19,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A15"
       },
       "geometry": {
         "type": "Point",
@@ -247,7 +262,8 @@
         "number": 21,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D19"
       },
       "geometry": {
         "type": "Point",
@@ -263,7 +279,8 @@
         "number": 22,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D14"
       },
       "geometry": {
         "type": "Point",
@@ -279,7 +296,8 @@
         "number": 25,
         "degree": 5,
         "cluster_size": 4,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C13"
       },
       "geometry": {
         "type": "Point",
@@ -295,7 +313,8 @@
         "number": 28,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C33"
       },
       "geometry": {
         "type": "Point",
@@ -311,7 +330,8 @@
         "number": 31,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D21"
       },
       "geometry": {
         "type": "Point",
@@ -327,7 +347,8 @@
         "number": 35,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B3"
       },
       "geometry": {
         "type": "Point",
@@ -343,7 +364,8 @@
         "number": 36,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F18"
       },
       "geometry": {
         "type": "Point",
@@ -359,7 +381,8 @@
         "number": 38,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C8"
       },
       "geometry": {
         "type": "Point",
@@ -375,7 +398,8 @@
         "number": 39,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C6"
       },
       "geometry": {
         "type": "Point",
@@ -391,7 +415,8 @@
         "number": 40,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C2"
       },
       "geometry": {
         "type": "Point",
@@ -409,7 +434,8 @@
         "cluster_size": 1,
         "zone": "C",
         "entry": true,
-        "parking": true
+        "parking": true,
+        "sign": "C1"
       },
       "geometry": {
         "type": "Point",
@@ -425,7 +451,8 @@
         "number": 42,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C7"
       },
       "geometry": {
         "type": "Point",
@@ -441,7 +468,8 @@
         "number": 43,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C4"
       },
       "geometry": {
         "type": "Point",
@@ -457,7 +485,8 @@
         "number": 44,
         "degree": 3,
         "cluster_size": 2,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C3"
       },
       "geometry": {
         "type": "Point",
@@ -473,7 +502,10 @@
         "number": 45,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "post": 1,
+        "post_dir": "SW",
+        "sign": "A17"
       },
       "geometry": {
         "type": "Point",
@@ -489,7 +521,8 @@
         "number": 46,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A19"
       },
       "geometry": {
         "type": "Point",
@@ -505,7 +538,8 @@
         "number": 47,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C16"
       },
       "geometry": {
         "type": "Point",
@@ -521,7 +555,8 @@
         "number": 49,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C22"
       },
       "geometry": {
         "type": "Point",
@@ -537,7 +572,8 @@
         "number": 50,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B20"
       },
       "geometry": {
         "type": "Point",
@@ -553,7 +589,8 @@
         "number": 51,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B19"
       },
       "geometry": {
         "type": "Point",
@@ -569,7 +606,8 @@
         "number": 53,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A9"
       },
       "geometry": {
         "type": "Point",
@@ -585,7 +623,8 @@
         "number": 54,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A11"
       },
       "geometry": {
         "type": "Point",
@@ -601,7 +640,8 @@
         "number": 55,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A4"
       },
       "geometry": {
         "type": "Point",
@@ -617,7 +657,8 @@
         "number": 57,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C14"
       },
       "geometry": {
         "type": "Point",
@@ -633,7 +674,8 @@
         "number": 58,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C18"
       },
       "geometry": {
         "type": "Point",
@@ -649,7 +691,8 @@
         "number": 64,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F5"
       },
       "geometry": {
         "type": "Point",
@@ -665,7 +708,8 @@
         "number": 65,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F10"
       },
       "geometry": {
         "type": "Point",
@@ -681,7 +725,8 @@
         "number": 66,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F9"
       },
       "geometry": {
         "type": "Point",
@@ -697,7 +742,8 @@
         "number": 67,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F7"
       },
       "geometry": {
         "type": "Point",
@@ -713,7 +759,8 @@
         "number": 72,
         "degree": 5,
         "cluster_size": 2,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C10"
       },
       "geometry": {
         "type": "Point",
@@ -729,7 +776,8 @@
         "number": 75,
         "degree": 5,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C24"
       },
       "geometry": {
         "type": "Point",
@@ -745,7 +793,8 @@
         "number": 80,
         "degree": 5,
         "cluster_size": 2,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C17"
       },
       "geometry": {
         "type": "Point",
@@ -761,7 +810,8 @@
         "number": 85,
         "degree": 5,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C23"
       },
       "geometry": {
         "type": "Point",
@@ -777,7 +827,8 @@
         "number": 91,
         "degree": 5,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C11"
       },
       "geometry": {
         "type": "Point",
@@ -793,7 +844,8 @@
         "number": 92,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C15"
       },
       "geometry": {
         "type": "Point",
@@ -809,7 +861,8 @@
         "number": 108,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D1"
       },
       "geometry": {
         "type": "Point",
@@ -825,7 +878,8 @@
         "number": 109,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D3"
       },
       "geometry": {
         "type": "Point",
@@ -841,7 +895,8 @@
         "number": 110,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D11"
       },
       "geometry": {
         "type": "Point",
@@ -857,7 +912,8 @@
         "number": 111,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D13"
       },
       "geometry": {
         "type": "Point",
@@ -873,7 +929,8 @@
         "number": 112,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C27"
       },
       "geometry": {
         "type": "Point",
@@ -889,7 +946,8 @@
         "number": 113,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C29"
       },
       "geometry": {
         "type": "Point",
@@ -905,7 +963,8 @@
         "number": 114,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B6"
       },
       "geometry": {
         "type": "Point",
@@ -921,7 +980,8 @@
         "number": 115,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B7"
       },
       "geometry": {
         "type": "Point",
@@ -937,7 +997,8 @@
         "number": 116,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B12"
       },
       "geometry": {
         "type": "Point",
@@ -953,7 +1014,8 @@
         "number": 117,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B5"
       },
       "geometry": {
         "type": "Point",
@@ -969,7 +1031,8 @@
         "number": 121,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A5"
       },
       "geometry": {
         "type": "Point",
@@ -985,7 +1048,8 @@
         "number": 122,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A7"
       },
       "geometry": {
         "type": "Point",
@@ -1001,7 +1065,8 @@
         "number": 123,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A8"
       },
       "geometry": {
         "type": "Point",
@@ -1017,7 +1082,8 @@
         "number": 124,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A20"
       },
       "geometry": {
         "type": "Point",
@@ -1033,7 +1099,8 @@
         "number": 125,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A22"
       },
       "geometry": {
         "type": "Point",
@@ -1049,7 +1116,8 @@
         "number": 126,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B2"
       },
       "geometry": {
         "type": "Point",
@@ -1067,7 +1135,8 @@
         "cluster_size": 1,
         "zone": "B",
         "entry": true,
-        "connects": "Upper Charles Rail Trail"
+        "connects": "Upper Charles Rail Trail",
+        "sign": "B1"
       },
       "geometry": {
         "type": "Point",
@@ -1083,7 +1152,8 @@
         "number": 128,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C5"
       },
       "geometry": {
         "type": "Point",
@@ -1099,7 +1169,8 @@
         "number": 129,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F24"
       },
       "geometry": {
         "type": "Point",
@@ -1115,7 +1186,8 @@
         "number": 130,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F31"
       },
       "geometry": {
         "type": "Point",
@@ -1131,7 +1203,8 @@
         "number": 131,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F17"
       },
       "geometry": {
         "type": "Point",
@@ -1147,7 +1220,8 @@
         "number": 132,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F16"
       },
       "geometry": {
         "type": "Point",
@@ -1163,7 +1237,8 @@
         "number": 133,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F13"
       },
       "geometry": {
         "type": "Point",
@@ -1179,7 +1254,8 @@
         "number": 134,
         "degree": 3,
         "cluster_size": 2,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F15"
       },
       "geometry": {
         "type": "Point",
@@ -1195,7 +1271,8 @@
         "number": 135,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F23"
       },
       "geometry": {
         "type": "Point",
@@ -1211,7 +1288,8 @@
         "number": 136,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B16"
       },
       "geometry": {
         "type": "Point",
@@ -1227,7 +1305,8 @@
         "number": 137,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B15"
       },
       "geometry": {
         "type": "Point",
@@ -1243,7 +1322,8 @@
         "number": 140,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D27"
       },
       "geometry": {
         "type": "Point",
@@ -1259,7 +1339,8 @@
         "number": 141,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D24"
       },
       "geometry": {
         "type": "Point",
@@ -1275,7 +1356,8 @@
         "number": 142,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D26"
       },
       "geometry": {
         "type": "Point",
@@ -1291,7 +1373,8 @@
         "number": 145,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D28"
       },
       "geometry": {
         "type": "Point",
@@ -1307,7 +1390,8 @@
         "number": 146,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A24"
       },
       "geometry": {
         "type": "Point",
@@ -1323,7 +1407,8 @@
         "number": 147,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F4"
       },
       "geometry": {
         "type": "Point",
@@ -1339,7 +1424,8 @@
         "number": 149,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A21"
       },
       "geometry": {
         "type": "Point",
@@ -1355,7 +1441,8 @@
         "number": 150,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B8"
       },
       "geometry": {
         "type": "Point",
@@ -1371,7 +1458,8 @@
         "number": 152,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C36"
       },
       "geometry": {
         "type": "Point",
@@ -1387,7 +1475,8 @@
         "number": 154,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D22"
       },
       "geometry": {
         "type": "Point",
@@ -1403,7 +1492,8 @@
         "number": 160,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D25"
       },
       "geometry": {
         "type": "Point",
@@ -1419,7 +1509,8 @@
         "number": 167,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C25"
       },
       "geometry": {
         "type": "Point",
@@ -1435,7 +1526,8 @@
         "number": 172,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A3"
       },
       "geometry": {
         "type": "Point",
@@ -1451,7 +1543,8 @@
         "number": 173,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A2"
       },
       "geometry": {
         "type": "Point",
@@ -1467,7 +1560,8 @@
         "number": 175,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F26"
       },
       "geometry": {
         "type": "Point",
@@ -1483,7 +1577,8 @@
         "number": 176,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F22"
       },
       "geometry": {
         "type": "Point",
@@ -1499,7 +1594,8 @@
         "number": 178,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F19"
       },
       "geometry": {
         "type": "Point",
@@ -1515,7 +1611,10 @@
         "number": 180,
         "degree": 3,
         "cluster_size": 2,
-        "zone": "F"
+        "zone": "F",
+        "post": 3,
+        "post_dir": "N",
+        "sign": "F2"
       },
       "geometry": {
         "type": "Point",
@@ -1531,7 +1630,8 @@
         "number": 181,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F12"
       },
       "geometry": {
         "type": "Point",
@@ -1547,13 +1647,14 @@
         "number": 182,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F6"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.4934367,
-          42.1704139
+          -71.49352,
+          42.17043
         ]
       }
     },
@@ -1563,7 +1664,8 @@
         "number": 183,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D5"
       },
       "geometry": {
         "type": "Point",
@@ -1579,7 +1681,8 @@
         "number": 184,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D2"
       },
       "geometry": {
         "type": "Point",
@@ -1595,7 +1698,8 @@
         "number": 186,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D4"
       },
       "geometry": {
         "type": "Point",
@@ -1611,7 +1715,8 @@
         "number": 187,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D8"
       },
       "geometry": {
         "type": "Point",
@@ -1627,7 +1732,8 @@
         "number": 193,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F3"
       },
       "geometry": {
         "type": "Point",
@@ -1643,7 +1749,8 @@
         "number": 200,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D15"
       },
       "geometry": {
         "type": "Point",
@@ -1659,7 +1766,8 @@
         "number": 201,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D10"
       },
       "geometry": {
         "type": "Point",
@@ -1675,7 +1783,8 @@
         "number": 202,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D7"
       },
       "geometry": {
         "type": "Point",
@@ -1691,7 +1800,10 @@
         "number": 204,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "post": 2,
+        "post_dir": "N",
+        "sign": "A18"
       },
       "geometry": {
         "type": "Point",
@@ -1707,7 +1819,8 @@
         "number": 206,
         "degree": 4,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A6"
       },
       "geometry": {
         "type": "Point",
@@ -1723,7 +1836,8 @@
         "number": 207,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A10"
       },
       "geometry": {
         "type": "Point",
@@ -1739,7 +1853,8 @@
         "number": 208,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A14"
       },
       "geometry": {
         "type": "Point",
@@ -1755,7 +1870,8 @@
         "number": 209,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A23"
       },
       "geometry": {
         "type": "Point",
@@ -1771,7 +1887,8 @@
         "number": 210,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C20"
       },
       "geometry": {
         "type": "Point",
@@ -1787,7 +1904,8 @@
         "number": 211,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C28"
       },
       "geometry": {
         "type": "Point",
@@ -1803,7 +1921,8 @@
         "number": 213,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F20"
       },
       "geometry": {
         "type": "Point",
@@ -1819,7 +1938,8 @@
         "number": 214,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F21"
       },
       "geometry": {
         "type": "Point",
@@ -1835,7 +1955,8 @@
         "number": 220,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C12"
       },
       "geometry": {
         "type": "Point",
@@ -1851,7 +1972,8 @@
         "number": 221,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C9"
       },
       "geometry": {
         "type": "Point",
@@ -1867,7 +1989,8 @@
         "number": 224,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F8"
       },
       "geometry": {
         "type": "Point",
@@ -1883,7 +2006,10 @@
         "number": 239,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "F"
+        "zone": "F",
+        "post": 5,
+        "post_dir": "W",
+        "sign": "F11"
       },
       "geometry": {
         "type": "Point",
@@ -1899,7 +2025,8 @@
         "number": 241,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D6"
       },
       "geometry": {
         "type": "Point",
@@ -1915,7 +2042,8 @@
         "number": 242,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C19"
       },
       "geometry": {
         "type": "Point",
@@ -1932,7 +2060,8 @@
         "degree": 3,
         "cluster_size": 1,
         "pre_kept": true,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F28"
       },
       "geometry": {
         "type": "Point",
@@ -1949,7 +2078,8 @@
         "degree": 3,
         "cluster_size": 1,
         "pre_kept": true,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F27"
       },
       "geometry": {
         "type": "Point",
@@ -1966,7 +2096,8 @@
         "degree": 3,
         "cluster_size": 1,
         "pre_kept": true,
-        "zone": "F"
+        "zone": "F",
+        "sign": "F14"
       },
       "geometry": {
         "type": "Point",
@@ -1982,7 +2113,8 @@
         "number": 254,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D20"
       },
       "geometry": {
         "type": "Point",
@@ -1998,7 +2130,8 @@
         "number": 255,
         "degree": 3,
         "cluster_size": 1,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D12"
       },
       "geometry": {
         "type": "Point",
@@ -2013,7 +2146,8 @@
       "properties": {
         "number": 257,
         "degree": 3,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D17"
       },
       "geometry": {
         "type": "Point",
@@ -2028,7 +2162,8 @@
       "properties": {
         "number": 260,
         "degree": 3,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A13"
       },
       "geometry": {
         "type": "Point",
@@ -2043,7 +2178,8 @@
       "properties": {
         "number": 261,
         "degree": 3,
-        "zone": "A"
+        "zone": "A",
+        "sign": "A12"
       },
       "geometry": {
         "type": "Point",
@@ -2058,7 +2194,8 @@
       "properties": {
         "number": 262,
         "degree": 3,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C35"
       },
       "geometry": {
         "type": "Point",
@@ -2073,7 +2210,8 @@
       "properties": {
         "number": 264,
         "degree": 3,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B10"
       },
       "geometry": {
         "type": "Point",
@@ -2088,7 +2226,8 @@
       "properties": {
         "number": 265,
         "degree": 3,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B9"
       },
       "geometry": {
         "type": "Point",
@@ -2103,7 +2242,8 @@
       "properties": {
         "number": 266,
         "degree": 3,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B11"
       },
       "geometry": {
         "type": "Point",
@@ -2118,7 +2258,8 @@
       "properties": {
         "number": 267,
         "degree": 3,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C34"
       },
       "geometry": {
         "type": "Point",
@@ -2133,7 +2274,8 @@
       "properties": {
         "number": 269,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E31"
       },
       "geometry": {
         "type": "Point",
@@ -2148,7 +2290,8 @@
       "properties": {
         "number": 271,
         "degree": 8,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E13"
       },
       "geometry": {
         "type": "Point",
@@ -2163,7 +2306,8 @@
       "properties": {
         "number": 273,
         "degree": 5,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E20"
       },
       "geometry": {
         "type": "Point",
@@ -2178,7 +2322,8 @@
       "properties": {
         "number": 274,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E7"
       },
       "geometry": {
         "type": "Point",
@@ -2193,7 +2338,8 @@
       "properties": {
         "number": 276,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E8"
       },
       "geometry": {
         "type": "Point",
@@ -2208,7 +2354,8 @@
       "properties": {
         "number": 279,
         "degree": 4,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E10"
       },
       "geometry": {
         "type": "Point",
@@ -2223,7 +2370,8 @@
       "properties": {
         "number": 282,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E15"
       },
       "geometry": {
         "type": "Point",
@@ -2238,7 +2386,8 @@
       "properties": {
         "number": 287,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E18"
       },
       "geometry": {
         "type": "Point",
@@ -2253,7 +2402,8 @@
       "properties": {
         "number": 289,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E23"
       },
       "geometry": {
         "type": "Point",
@@ -2268,7 +2418,8 @@
       "properties": {
         "number": 293,
         "degree": 2,
-        "zone": "D"
+        "zone": "D",
+        "sign": "D23"
       },
       "geometry": {
         "type": "Point",
@@ -2283,7 +2434,8 @@
       "properties": {
         "number": 300,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E27"
       },
       "geometry": {
         "type": "Point",
@@ -2298,7 +2450,8 @@
       "properties": {
         "number": 301,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E22"
       },
       "geometry": {
         "type": "Point",
@@ -2313,7 +2466,8 @@
       "properties": {
         "number": 304,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E40"
       },
       "geometry": {
         "type": "Point",
@@ -2328,7 +2482,8 @@
       "properties": {
         "number": 305,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E37"
       },
       "geometry": {
         "type": "Point",
@@ -2343,7 +2498,8 @@
       "properties": {
         "number": 306,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E38"
       },
       "geometry": {
         "type": "Point",
@@ -2358,7 +2514,8 @@
       "properties": {
         "number": 307,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E36"
       },
       "geometry": {
         "type": "Point",
@@ -2373,7 +2530,8 @@
       "properties": {
         "number": 310,
         "degree": 4,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E5"
       },
       "geometry": {
         "type": "Point",
@@ -2388,7 +2546,8 @@
       "properties": {
         "number": 312,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E14"
       },
       "geometry": {
         "type": "Point",
@@ -2403,7 +2562,8 @@
       "properties": {
         "number": 313,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E26"
       },
       "geometry": {
         "type": "Point",
@@ -2418,7 +2578,8 @@
       "properties": {
         "number": 314,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E4"
       },
       "geometry": {
         "type": "Point",
@@ -2433,7 +2594,8 @@
       "properties": {
         "number": 315,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E30"
       },
       "geometry": {
         "type": "Point",
@@ -2448,7 +2610,8 @@
       "properties": {
         "number": 316,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E34"
       },
       "geometry": {
         "type": "Point",
@@ -2463,7 +2626,8 @@
       "properties": {
         "number": 317,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E32"
       },
       "geometry": {
         "type": "Point",
@@ -2478,7 +2642,8 @@
       "properties": {
         "number": 320,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E2"
       },
       "geometry": {
         "type": "Point",
@@ -2493,7 +2658,8 @@
       "properties": {
         "number": 323,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E29"
       },
       "geometry": {
         "type": "Point",
@@ -2508,7 +2674,8 @@
       "properties": {
         "number": 325,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E3"
       },
       "geometry": {
         "type": "Point",
@@ -2523,7 +2690,8 @@
       "properties": {
         "number": 328,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E11"
       },
       "geometry": {
         "type": "Point",
@@ -2538,7 +2706,8 @@
       "properties": {
         "number": 336,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E28"
       },
       "geometry": {
         "type": "Point",
@@ -2553,7 +2722,8 @@
       "properties": {
         "number": 337,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E1"
       },
       "geometry": {
         "type": "Point",
@@ -2568,7 +2738,8 @@
       "properties": {
         "number": 338,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E19"
       },
       "geometry": {
         "type": "Point",
@@ -2583,7 +2754,8 @@
       "properties": {
         "number": 340,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E9"
       },
       "geometry": {
         "type": "Point",
@@ -2598,7 +2770,8 @@
       "properties": {
         "number": 341,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E21"
       },
       "geometry": {
         "type": "Point",
@@ -2613,7 +2786,8 @@
       "properties": {
         "number": 344,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E12"
       },
       "geometry": {
         "type": "Point",
@@ -2628,7 +2802,8 @@
       "properties": {
         "number": 345,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E16"
       },
       "geometry": {
         "type": "Point",
@@ -2643,7 +2818,8 @@
       "properties": {
         "number": 347,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E25"
       },
       "geometry": {
         "type": "Point",
@@ -2658,7 +2834,8 @@
       "properties": {
         "number": 348,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E17"
       },
       "geometry": {
         "type": "Point",
@@ -2673,7 +2850,8 @@
       "properties": {
         "number": 351,
         "degree": 3,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C31"
       },
       "geometry": {
         "type": "Point",
@@ -2688,7 +2866,8 @@
       "properties": {
         "number": 352,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E6"
       },
       "geometry": {
         "type": "Point",
@@ -2703,7 +2882,8 @@
       "properties": {
         "number": 353,
         "degree": 3,
-        "zone": "C"
+        "zone": "C",
+        "sign": "C32"
       },
       "geometry": {
         "type": "Point",
@@ -2718,7 +2898,8 @@
       "properties": {
         "number": 354,
         "degree": 3,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B13"
       },
       "geometry": {
         "type": "Point",
@@ -2733,7 +2914,8 @@
       "properties": {
         "number": 355,
         "degree": 3,
-        "zone": "B"
+        "zone": "B",
+        "sign": "B4"
       },
       "geometry": {
         "type": "Point",
@@ -2748,7 +2930,8 @@
       "properties": {
         "number": 356,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E24"
       },
       "geometry": {
         "type": "Point",
@@ -2763,7 +2946,8 @@
       "properties": {
         "number": 357,
         "degree": 3,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E39"
       },
       "geometry": {
         "type": "Point",
@@ -2778,7 +2962,8 @@
       "properties": {
         "number": 358,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E35"
       },
       "geometry": {
         "type": "Point",
@@ -2793,7 +2978,8 @@
       "properties": {
         "number": 359,
         "degree": 2,
-        "zone": "E"
+        "zone": "E",
+        "sign": "E33"
       },
       "geometry": {
         "type": "Point",
@@ -2810,7 +2996,8 @@
         "degree": 3,
         "zone": "F",
         "entry": true,
-        "parking": true
+        "parking": true,
+        "sign": "F1"
       },
       "geometry": {
         "type": "Point",
@@ -2827,7 +3014,8 @@
         "degree": 3,
         "zone": "A",
         "entry": true,
-        "parking": true
+        "parking": true,
+        "sign": "A1"
       },
       "geometry": {
         "type": "Point",
@@ -2844,13 +3032,1116 @@
         "degree": 3,
         "zone": "C",
         "entry": true,
-        "connects": "Upper Charles Rail Trail"
+        "connects": "Upper Charles Rail Trail",
+        "sign": "C37"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
           -71.50467753410341,
           42.183922669267744
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 363,
+        "degree": 3,
+        "zone": "F",
+        "post": 4,
+        "no_sign": true
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49308,
+          42.17045
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 364,
+        "degree": 2,
+        "zone": "F",
+        "no_sign": true,
+        "code": "R1",
+        "landmark": "Teetering Rock",
+        "kind": "rock",
+        "mark": [
+          -71.4943566,
+          42.1695704
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.494438,
+          42.169511
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 365,
+        "degree": 2,
+        "zone": "C",
+        "no_sign": true,
+        "junction": true,
+        "code": "J1"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4953,
+          42.18672
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 366,
+        "degree": 4,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J2"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50149,
+          42.16808
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 367,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J3"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49923,
+          42.16369
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 368,
+        "degree": 5,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J4"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50579,
+          42.16713
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 369,
+        "degree": 3,
+        "zone": "D",
+        "no_sign": true,
+        "junction": true,
+        "code": "J5"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50342,
+          42.17127
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 370,
+        "degree": 3,
+        "zone": "D",
+        "no_sign": true,
+        "junction": true,
+        "code": "J6"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5030495,
+          42.1711213
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 371,
+        "degree": 3,
+        "zone": "D",
+        "no_sign": true,
+        "junction": true,
+        "code": "J7"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5030778,
+          42.1712982
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 372,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J8"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49455,
+          42.16341
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 373,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J9"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49732,
+          42.16291
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 375,
+        "degree": 3,
+        "zone": "D",
+        "no_sign": true,
+        "junction": true,
+        "code": "J11"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50381,
+          42.17286
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 376,
+        "degree": 3,
+        "zone": "B",
+        "no_sign": true,
+        "junction": true,
+        "code": "J12"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50581,
+          42.17932
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 377,
+        "degree": 3,
+        "zone": "B",
+        "no_sign": true,
+        "junction": true,
+        "code": "J13"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50421,
+          42.17675
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 378,
+        "degree": 3,
+        "zone": "D",
+        "no_sign": true,
+        "junction": true,
+        "code": "J14"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50408,
+          42.17381
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 379,
+        "degree": 3,
+        "zone": "D",
+        "no_sign": true,
+        "junction": true,
+        "code": "J15"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4975282,
+          42.1725016
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 380,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J16"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50096,
+          42.16574
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 381,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J17"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4994812,
+          42.1645976
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 382,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J18"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49476,
+          42.16367
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 383,
+        "degree": 4,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J19"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49359,
+          42.16442
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 384,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J20"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49479,
+          42.16408
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 385,
+        "degree": 3,
+        "zone": "A",
+        "no_sign": true,
+        "junction": true,
+        "code": "J21"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.48389,
+          42.17757
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 386,
+        "degree": 3,
+        "zone": "B",
+        "no_sign": true,
+        "junction": true,
+        "code": "J22"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50639,
+          42.17784
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 387,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J23"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50117,
+          42.1682
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 388,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J24"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5013,
+          42.16638
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 389,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J25"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5009707,
+          42.1661893
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 390,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J26"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49988,
+          42.16372
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 391,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J27"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49982,
+          42.16395
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 392,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J28"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5000932,
+          42.1652477
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 393,
+        "degree": 3,
+        "zone": "C",
+        "no_sign": true,
+        "junction": true,
+        "code": "J29"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50442,
+          42.18684
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 394,
+        "degree": 3,
+        "zone": "D",
+        "no_sign": true,
+        "junction": true,
+        "code": "J30"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5026641,
+          42.1704941
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 395,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J31"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50875,
+          42.1685
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 396,
+        "degree": 4,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J32"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49509,
+          42.16271
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 397,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J33"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49038,
+          42.16245
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 398,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J34"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49909,
+          42.16686
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 399,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J35"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49897,
+          42.16317
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 400,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J36"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50108,
+          42.16548
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 401,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J37"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5053915,
+          42.1668582
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 402,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J38"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4852433,
+          42.1636733
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 403,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J39"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.495,
+          42.16306
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 404,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J40"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4903526,
+          42.1626407
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 406,
+        "degree": 3,
+        "zone": "C",
+        "no_sign": true,
+        "junction": true,
+        "code": "J42"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49509,
+          42.18649
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 407,
+        "degree": 3,
+        "zone": "C",
+        "no_sign": true,
+        "junction": true,
+        "code": "J43"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.503229,
+          42.1838584
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 408,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J44"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5007784,
+          42.1645468
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 409,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J45"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5015291,
+          42.1645636
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 411,
+        "degree": 3,
+        "zone": "D",
+        "no_sign": true,
+        "junction": true,
+        "code": "J47"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5028027,
+          42.17228
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 412,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J48"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.493801,
+          42.164128
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 413,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J49"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49391,
+          42.16398
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 414,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J50"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4938437,
+          42.1640611
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 415,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J51"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4938316,
+          42.1638695
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 416,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J52"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4937355,
+          42.16384
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 417,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J53"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4934935,
+          42.1637327
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 418,
+        "degree": 3,
+        "zone": "D",
+        "no_sign": true,
+        "junction": true,
+        "code": "J54"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5024555,
+          42.1700255
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 420,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J56"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.508642,
+          42.1680467
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 421,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J57"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5083689,
+          42.1678006
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 422,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J58"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5084744,
+          42.1678665
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 423,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J59"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5081327,
+          42.1677254
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 424,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J60"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5077054,
+          42.1675385
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 425,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J61"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5075653,
+          42.1673834
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 426,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J62"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5066887,
+          42.1672597
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 427,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J63"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5064101,
+          42.1672175
         ]
       }
     }
