@@ -629,7 +629,6 @@ def main():
         "widths": WIDTHS,
         "terrain": TERRAIN,
         "nav": ('<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a>'
-                '<span style="color:#f0b429;font-size:12px;font-weight:600">DRAFT</span>'
                 '<a href="checks.html" style="color:#ecf0f1;font-size:14px">Checks</a>'
                 '<a href="../map.html" style="margin-left:auto;opacity:0.8">Upper Charles &rarr;</a></nav>'),
     }
