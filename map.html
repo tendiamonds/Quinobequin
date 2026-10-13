@@ -395,7 +395,8 @@ var trailLayer = L.geoJSON(trailData, {
   onEachFeature: function(feature, layer) {
     layer.on("click", function(e) {
       L.DomEvent.stopPropagation(e);
-      showTrailInfo(feature, layer, e.latlng);
+      // On a trail right by an intersection, a finger means the intersection
+      if (!tapNearInt(e)) showTrailInfo(feature, layer, e.latlng);
     });
     layer.on("mouseover", function() {
       if (highlightedSegments.indexOf(layer) === -1)
@@ -493,6 +494,7 @@ intData.features.forEach(function(f) {
     }
   }
   marker.on("click", onTap);
+  marker._onTap = onTap;
   intMarkers[label] = marker;
   intFeatures[label] = f;
 
@@ -2162,7 +2164,33 @@ function showHome() {
 }
 
 // Only the Clear button ends a route; a tap on the map just brings the route panel back
-map.on("click", function() {
+// Fingers are wide and the lines thin: a tap this near an intersection or trail picks it
+// (the nearest), as if it had landed on it
+var TAP_INT_PX = 16, TAP_TRAIL_PX = 20;
+
+function tapNearInt(e) {
+  var best = null;
+  Object.keys(intMarkers).forEach(function(l) {
+    if (intFeatures[l].properties.junction) return;
+    var d = map.latLngToContainerPoint(intMarkers[l].getLatLng()).distanceTo(e.containerPoint);
+    if (d <= TAP_INT_PX && (!best || d < best.d)) best = {d: d, label: l};
+  });
+  if (best) intMarkers[best.label]._onTap({});
+  return !!best;
+}
+
+function tapNearTrail(e) {
+  var snap = snapToTrail(e.latlng);
+  if (snap.d === Infinity) return false;
+  var at = pointAlong(snap.ti, snap.along);
+  if (map.latLngToContainerPoint(at).distanceTo(e.containerPoint) > TAP_TRAIL_PX) return false;
+  var layer = trailLayer.getLayers().filter(function(l) { return l.feature.properties._idx === snap.ti; })[0];
+  showTrailInfo(layer.feature, layer, at);
+  return true;
+}
+
+map.on("click", function(e) {
+  if (tapNearInt(e) || tapNearTrail(e)) return;
   if (plan) {
     if (!document.getElementById("routeInfo")) backToRoute();
   } else {
