@@ -940,6 +940,37 @@ function removeRouteLayers() {
 function clearRouteDisplay() {
   removeRouteLayers();
   plan = null;
+  saveTrip();
+}
+
+// The route survives leaving the map (for Checks, or Home) and coming back in this tab,
+// like the breadcrumbs: the trip (its stops, and which are done) is kept, and the route
+// worked out again from it. A fresh start (you drove away, or a long break) drops it.
+var TRIP_KEY = REGION.storagePrefix + "Trip";
+var pendingTrip = null;   // a live route to pick up once your location is known
+// (and the latest progress is saved as you leave, too)
+window.addEventListener("pagehide", function() { if (plan) saveTrip(); });
+
+function saveTrip() {
+  try {
+    if (plan) {
+      sessionStorage.setItem(TRIP_KEY, JSON.stringify(plan.trip, function(k, v) {
+        return v instanceof L.LatLng ? {lat: v.lat, lng: v.lng, latLng: true} : v;
+      }));
+    } else {
+      sessionStorage.removeItem(TRIP_KEY);
+    }
+  } catch (e) {}
+}
+
+function savedTrip() {
+  try {
+    return JSON.parse(sessionStorage.getItem(TRIP_KEY), function(k, v) {
+      return v && v.latLng === true ? L.latLng(v.lat, v.lng) : v;
+    });
+  } catch (e) {
+    return null;
+  }
 }
 
 function completeRoute(destLabel) {
@@ -1515,6 +1546,7 @@ function renderRoute(result, userLeg, noFit, hist, info) {
           graphDist: result.totalDist, progress: userLeg ? 0 : null, arrived: false,
           legTrail: userLeg ? (userLeg.trail || 'off trail') : null,
           hist: hist || {steps: [], segs: []}};
+  saveTrip();
   if (hist) return;
   drawRoute();
 
@@ -1867,6 +1899,7 @@ function trackOrReverse() {
 
 // Called on each new fix while a live route is up
 function updateLiveRoute() {
+  saveTrip();
   var trip = plan.trip;
   var onRoute = trackOrReverse();
   markReachedStops();
@@ -3178,6 +3211,10 @@ function checkFreshStart(ll, acc) {
     (gap >= EXIT_GAP_MS && last.acc <= EXIT_NEAR_M && acc <= EXIT_NEAR_M &&
      nearEntry(L.latLng(last.lat, last.lng), EXIT_NEAR_M) && nearEntry(ll, EXIT_NEAR_M));
   if (crumbs.length && left) clearCrumbs();
+  if (left && !plan) {
+    pendingTrip = null;
+    try { sessionStorage.removeItem(TRIP_KEY); } catch (e) {}
+  }
   try {
     sessionStorage.setItem(FIX_KEY, JSON.stringify({t: Date.now(), lat: ll.lat, lng: ll.lng, acc: acc}));
   } catch (e) {}
@@ -3384,6 +3421,12 @@ function onLocation(pos) {
   checkFreshStart(userLatLng, userAccuracy);
   addCrumb(userLatLng, userAccuracy);
   updateMoveHeading(pos, userLatLng);
+  if (pendingTrip) {
+    var resumed = pendingTrip;
+    pendingTrip = null;
+    locateRequested = false;   // the route panel, not "You are at"
+    startTrip(resumed, "Couldn't pick up your route from here.");
+  }
   if (!userDot) {
     userAccCircle = L.circle(userLatLng, {
       radius: userAccuracy, stroke: false, fillColor: "#1e88e5", fillOpacity: 0.12, interactive: false
@@ -3517,6 +3560,21 @@ if (simMode) {
     if (r.state === "granted") startWatch();
   }).catch(function() {});
 }
+
+// A route you had going before leaving the map: a planned one comes straight back; a
+// live one (from where you are) once your location is known
+(function() {
+  var trip = targetInt ? null : savedTrip();
+  if (!trip) return;
+  if (trip.from !== null && trip.from !== undefined) {
+    startTrip(trip, "Couldn't bring back your route.");
+  } else {
+    pendingTrip = trip;
+    locateRequested = true;   // if your location can't be had, say why (and how to fix it)
+    showPanelMsg("Picking up your route…");
+    startWatch();
+  }
+})();
 
 // Keyboard intersection search
 var searchBuf = "";
