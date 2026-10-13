@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#2c3e50">
+<title>Turning on location — Blue Hills Reservation</title>
+<style>
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #222; line-height: 1.5; }
+  nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  nav.topnav a { color: #ecf0f1; font-size: 14px; font-weight: 500; text-decoration: none; }
+  .container { max-width: 720px; margin: 0 auto; padding: 20px; }
+  h1 { font-size: 22px; margin: 4px 0 6px; }
+  h2 { font-size: 18px; margin: 26px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #eee; }
+  .lead { color: #555; margin: 0 0 12px; }
+  ol { padding-left: 22px; margin: 6px 0; }
+  li { margin: 6px 0; }
+  .path { font-weight: 600; }
+  .tip { background: #fff8e1; border-left: 4px solid #f9a825; padding: 8px 12px; margin: 12px 0; font-size: 14px; }
+  .jump a { display: inline-block; margin: 4px 8px 4px 0; padding: 6px 12px; border-radius: 16px; background: #eceff1; color: #263238;
+            text-decoration: none; font-size: 14px; font-weight: 600; }
+  .back { display: inline-block; margin-top: 18px; padding: 10px 16px; border-radius: 6px; background: #0d47a1; color: white;
+          text-decoration: none; font-weight: 600; }
+</style>
+</head>
+<body>
+<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a><span style="color:#f0b429;font-size:12px;font-weight:600">DRAFT</span><a href="checks.html" style="color:#ecf0f1;font-size:14px">Checks</a><a href="../map.html" style="margin-left:auto;opacity:0.8">Upper Charles &rarr;</a></nav>
+<div class="container">
+<h1>Turning on location</h1>
+<p class="lead">The map can show where you are, follow you along a route, and tell you which way to turn. For that, your
+phone has to let this website use its location. Your location stays on your phone: the map only sends it if you choose
+to, in a problem report.</p>
+<p class="jump"><a href="#iphone">iPhone</a><a href="#iphone-chrome">iPhone with Chrome</a><a href="#android">Android</a><a href="#still">Still stuck?</a></p>
+
+<h2 id="iphone">iPhone or iPad (Safari)</h2>
+<p>There are three switches, and all three have to be on. Most trouble comes from the third: if you ever tapped
+<strong>Don&rsquo;t Allow</strong>, Safari remembers it and stops asking.</p>
+<ol>
+  <li><strong>Location for the phone.</strong> Open <span class="path">Settings &rsaquo; Privacy &amp; Security &rsaquo; Location Services</span>
+    and turn <strong>Location Services</strong> on.</li>
+  <li><strong>Location for websites.</strong> On that same screen, scroll down to <span class="path">Safari Websites</span>. Choose
+    <strong>While Using the App</strong> (or <strong>Ask Next Time Or When I Share</strong>), and turn on <strong>Precise Location</strong>.
+    Without Precise Location, the phone only shares a rough area, and the map will think you&rsquo;re nowhere near the trails.</li>
+  <li><strong>Location for this site.</strong> Open the map in Safari. Tap the <strong>aA</strong> button (or the small page icon) at the
+    left end of the address bar, then <span class="path">Website Settings &rsaquo; Location</span>, and choose <strong>Allow</strong> or
+    <strong>Ask</strong>.
+    <br>Or for every site at once: <span class="path">Settings &rsaquo; Apps &rsaquo; Safari &rsaquo; Location</span> (on older iPhones,
+    <span class="path">Settings &rsaquo; Safari &rsaquo; Location</span>), and choose <strong>Ask</strong> or <strong>Allow</strong>.</li>
+  <li><strong>Try it.</strong> Reload the map and tap the locate button (the circle with a cross, at the top right). If the phone
+    asks, tap <strong>Allow</strong>.</li>
+</ol>
+<div class="tip"><strong>Using the map from its home-screen icon?</strong> It asks for location separately from Safari. If you once
+told it no, open the map in Safari, allow location there as above, then try the icon again. If the icon still won&rsquo;t ask,
+remove it from the home screen and add it again: in Safari, tap <span class="path">Share &rsaquo; Add to Home Screen</span>.</div>
+<p style="font-size:13px;color:#666">The names of these settings move around a little between iPhone updates; if a step
+doesn&rsquo;t match what you see, look for the closest wording.</p>
+
+<h2 id="iphone-chrome">iPhone with Chrome (or another browser)</h2>
+<ol>
+  <li>Open <span class="path">Settings &rsaquo; Privacy &amp; Security &rsaquo; Location Services</span> and make sure
+    <strong>Location Services</strong> is on.</li>
+  <li>On that screen, find <strong>Chrome</strong> (or your browser) in the list, choose <strong>While Using the App</strong>,
+    and turn on <strong>Precise Location</strong>.</li>
+  <li>Back in the browser, reload the map, tap the locate button, and tap <strong>Allow</strong> when asked.</li>
+</ol>
+
+<h2 id="android">Android (Chrome)</h2>
+<ol>
+  <li>Swipe down from the top of the screen and make sure <strong>Location</strong> is on. In the phone&rsquo;s
+    <span class="path">Settings &rsaquo; Location</span>, turn on <strong>Use precise location</strong> (or <strong>Google Location
+    Accuracy</strong>) if you see it.</li>
+  <li>In Chrome, open the map and tap the icon at the left end of the address bar, then <span class="path">Permissions &rsaquo;
+    Location</span> (or <strong>Site settings &rsaquo; Location</strong>), and choose <strong>Allow</strong>.
+    <br>Or: <span class="path">Chrome menu &rsaquo; Settings &rsaquo; Site settings &rsaquo; Location</span>, and remove this site
+    from the <strong>Blocked</strong> list.</li>
+  <li>Reload the map, tap the locate button, and tap <strong>Allow</strong> when asked.</li>
+</ol>
+
+<h2 id="still">Still stuck?</h2>
+<p>Out in the woods, the first location can take a minute: give it time with a view of the sky. If it still won&rsquo;t
+work, let us know what kind of phone you have and what you see: <a href="mailto:tendiamonds@gmail.com?subject=Blue%20Hills%20Reservation%3A%20location%20won%27t%20work">email us</a>.</p>
+<a class="back" href="map.html">Back to the map</a>
+</div>
+</body>
+</html>

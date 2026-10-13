@@ -25,6 +25,7 @@ import json
 import math
 import os
 
+from checks import build_checks_page
 from trailmap import build_map_page, dist_m
 import make_favicon
 
@@ -67,6 +68,45 @@ BLAZE_DETOUR = 1.6       # the trail between neighbors is at most this much long
 BLAZE_GAP_M = 60         # an unmarked gap this short inside a blazed stretch is blazed too
 BLAZE_MIN_M = 30         # shorter blazed stretches are dropped
 
+# Things to check on the ground before fixing them in OpenStreetMap (see
+# bluehills_osm_fixes.md): OSM takes corrections from someone who's seen the sign or
+# trail, not from the park's map. This map already uses the corrected versions.
+OSM_FIX_LOOK = ("the number on the intersection sign (the four-digit number on a post or tree "
+                "at the junction).")
+FIELD_CHECKS = [
+    {"id": "osm-3153", "label": "3153", "lat": 42.223661, "lon": -71.045687,
+     "question": "What number is on the sign at this junction?",
+     "choices": ["3153", "5153", "Another number (note it)", "No sign"],
+     "why": "OpenStreetMap numbers this sign 5153, but 5xxx is the Ponkapoag section, south of I-93. This "
+            "junction is in Chickatawbut (3xxx), next to 3151 and 3152, and the park map has 3153 here.",
+     "look_for": OSM_FIX_LOOK},
+    {"id": "osm-3157", "label": "3157", "lat": 42.223442, "lon": -71.045101,
+     "question": "What number is on the sign at this junction?",
+     "choices": ["3157", "5157", "Another number (note it)", "No sign"],
+     "why": "OpenStreetMap numbers this sign 5157; the park map has 3157 here, about 50 m from 3153.",
+     "look_for": OSM_FIX_LOOK},
+    {"id": "osm-5422", "label": "5422", "lat": 42.198533, "lon": -71.074663,
+     "question": "Is the 5422 sign here, where Middle Road meets the Pipe Line?",
+     "choices": ["Yes, it's here", "No, it's 150 m west, at Middle Road and Wannamanhut Path", "Not at either", "Can't tell"],
+     "why": "OpenStreetMap puts 5422 about 150 m west, where Middle Road meets Wannamanhut Path. The park "
+            "map puts it here, on the straight Pipe Line between 5425 (north) and 5421 (south).",
+     "look_for": "the 5422 sign at this junction. If it isn't here, walk west along Middle Road to the "
+                 "next junction and check there, and note what number (if any) each junction has."},
+    {"id": "osm-4048", "label": "4048", "lat": 42.231346, "lon": -71.061380,
+     "question": "Heading north from 4048 (toward 4049, 4046 and 4066), is this the Pipe Line or Headquarters Path?",
+     "choices": ["Pipe Line", "Headquarters Path", "Can't tell"],
+     "why": "OpenStreetMap calls the whole track Headquarters Path, from 4012 all the way north past 4066. "
+            "The park map labels it Headquarters Path only up to 4048, and the Pipe Line from 4048 north.",
+     "look_for": "a trail-name sign at 4048 or along the northern stretch, or a gas-pipeline marker "
+                 "post along the corridor. \"It's obviously the pipeline corridor\" counts too: note it."},
+    {"id": "osm-5343", "label": "5343", "lat": 42.196356, "lon": -71.089654,
+     "question": "Is the trail from here east to 5370 (along the green dots) Acton Path, or Prescott Foot Path?",
+     "choices": ["Acton Path", "Prescott Foot Path", "Something else (note it)", "No name posted"],
+     "why": "OpenStreetMap has Prescott Foot Path continuing past 5343 to 5370. The park map labels "
+            "5343 to 5370 Acton Path, the north side of the Acton Path loop around Ponkapoag Pond.",
+     "look_for": "a trail-name sign at 5343 or at 5370 (east end). If there's none, note that too."},
+]
+
 SECTIONS = {   # from the Friends of the Blue Hills
     "1": ("Great Blue Hill", "#1565c0"),
     "2": ("Houghton's Pond", "#00897b"),
@@ -91,6 +131,19 @@ OSM_NAME_FIXES = {503099008: "Acton Path"}
 # name of the part after it). Way 9113729 is Headquarters Path up to 4048 and Pipe Line
 # from there north, as the park map labels them.
 OSM_WAY_SPLITS = {9113729: ("4048", "Pipe Line")}
+
+
+# The checks page's base look (the Upper Charles pages share theirs from build_map.py)
+CHECKS_CSS = """
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #222; background: #fafafa; }
+  a { color: #0277bd; }
+  .container { max-width: 760px; margin: 0 auto; padding: 20px; }
+  h1 { font-size: 22px; margin: 4px 0; }
+  .subtitle { color: #666; margin-bottom: 18px; font-size: 14px; }
+  nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  nav.topnav a { text-decoration: none; }
+"""
 
 
 def load(name):
@@ -553,6 +606,11 @@ def main():
                 ints.append([label[n], round(cum[k])])
         tim[ti] = {"length": round(s), "ints": ints}
 
+    # Intersections with something to check get a link to it in the map
+    checks_at = {c["label"]: c["question"] for c in FIELD_CHECKS}
+    for f in features:
+        if f["properties"].get("label") in checks_at:
+            f["properties"]["check"] = checks_at[f["properties"]["label"]]
     ints_fc = {"type": "FeatureCollection", "features": features}
     trails_fc = {"type": "FeatureCollection", "features": trail_feats}
     lons = [c[0] for f in trail_feats for c in f["geometry"]["coordinates"]]
@@ -572,6 +630,7 @@ def main():
         "terrain": TERRAIN,
         "nav": ('<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a>'
                 '<span style="color:#f0b429;font-size:12px;font-weight:600">DRAFT</span>'
+                '<a href="checks.html" style="color:#ecf0f1;font-size:14px">Checks</a>'
                 '<a href="../map.html" style="margin-left:auto;opacity:0.8">Upper Charles &rarr;</a></nav>'),
     }
     os.makedirs(OUT, exist_ok=True)
@@ -580,6 +639,13 @@ def main():
         f.write('<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=map.html">'
                 '<title>Blue Hills Reservation</title><a href="map.html">Blue Hills Reservation trail map</a>\n')
     make_favicon.make_icons(OUT, label="BH", color="#1f4e79", name="Blue Hills Reservation", short_name="Blue Hills")
+    build_checks_page(FIELD_CHECKS, os.path.join(OUT, "checks.html"), title="Field Checks — Blue Hills Reservation",
+                      subtitle="OpenStreetMap mistakes to confirm on the ground, nearest first. Answers are kept on "
+                               "this phone until you send them. Once you've confirmed one, here's "
+                               '<a href="https://github.com/tendiamonds/Quinobequin/blob/master/bluehills_osm_fixes.md">'
+                               "how to fix it in OpenStreetMap</a>.",
+                      css=CHECKS_CSS, nav=region["nav"], storage_prefix=region["storagePrefix"],
+                      email=region["report"]["email"])
 
     for k in WIDTHS:
         print("  %-14s %.1f km" % (k, sum(r[2] - r[1] for rs in widths.values() for r in rs if r[0] == k) / 1000))

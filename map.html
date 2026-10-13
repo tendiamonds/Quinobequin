@@ -243,6 +243,7 @@
   <h2>Upper Charles Forest</h2>
   <div class="content" id="infoContent"><div id="welcomeInfo">
     <p style="color:#888">Click a trail or intersection marker for details.</p>
+    <p style="margin-top:6px;font-size:12px"><a href="location-help.html">Location not working?</a></p>
     <p style="margin-top:8px;color:#888;font-size:11px">181 numbered intersections across 6 zones.<br>
     158 trail segments, 156 named trails.</p></div>
   </div>
@@ -2161,6 +2162,8 @@ try { panelStartsCompact = localStorage.getItem(PANEL_KEY) === "1"; } catch (e) 
 setPanelCompact(panelStartsCompact);
 
 var defaultInfo = '<div id="welcomeInfo"><p style="color:#888">Click a trail or intersection marker for details.</p>' +
+  '<p style="margin-top:6px;font-size:12px"><a href="location-help.html' + (/iPhone|iPad|iPod/.test(navigator.userAgent) ? '#iphone' : '') +
+  '">Location not working?</a></p>' +
   '<p class="full-only" style="margin-top:8px;color:#888;font-size:11px">181 numbered intersections across 6 zones.<br>' +
   '158 trail segments, 156 named trails.</p></div>';
 
@@ -2734,6 +2737,8 @@ function updateStripArrow() {
   }
 }
 
+var ROUGH_FIX_M = 300;   // a fix this vague means the phone is only sharing a rough area
+
 function locateHtml(place) {
   var html;
   shownPlace = place;
@@ -2765,6 +2770,11 @@ function locateHtml(place) {
   }
   if (plan) html += '<div style="margin-top:2px">' + backToRouteBtn() + '</div>';
   else if (!awayFromTrails()) html += exitsHtml();
+  // (Only on phones: a computer without GPS is always this vague, and has no such setting)
+  if (userAccuracy > ROUGH_FIX_M && (IS_IOS || /Android/.test(navigator.userAgent))) {
+    html += '<div class="estimated-tag" style="margin-top:6px">Your phone is only sharing a rough location (within ' +
+      formatDist(userAccuracy) + '). Turning on Precise Location fixes that. ' + HELP_LINK + '</div>';
+  }
   html += reportLinkHtml("here", "");
   return '<div id="locateInfo">' + html + '</div>';
 }
@@ -3135,6 +3145,11 @@ function onLocation(pos) {
   if (following) map.panTo(userLatLng);
 }
 
+// iPhones and iPads (an iPad can say it's a Mac): their location settings are the
+// hardest to find, so they get the steps right in the panel
+var IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+var HELP_LINK = '<a href="location-help.html' + (IS_IOS ? '#iphone' : '') + '">How to turn on location</a>';
+
 function onLocationError(err) {
   if (err.code === 1 && watchId !== null) {
     navigator.geolocation.clearWatch(watchId);
@@ -3142,9 +3157,18 @@ function onLocationError(err) {
   }
   if (locateRequested) {
     locateRequested = false;
-    showPanelMsg(err.code === 1
-      ? "Location access is blocked for this site. You can allow it in your browser's site settings."
-      : "Couldn't get your location. Try again in a moment.");
+    if (err.code === 1 && IS_IOS) {
+      showPanelMsg("Your iPhone isn't letting this site use your location. Check all three:" +
+        '<ol style="margin:6px 0 6px 18px;padding:0">' +
+        '<li><b>Settings › Privacy &amp; Security › Location Services</b>: on</li>' +
+        '<li>Same screen, <b>Safari Websites</b>: While Using the App, with Precise Location on</li>' +
+        '<li>In Safari, tap <b>aA</b> in the address bar › Website Settings › Location: Allow</li></ol>' +
+        'Then reload and tap the locate button. ' + HELP_LINK + '.');
+    } else {
+      showPanelMsg((err.code === 1
+        ? "Location access is blocked for this site."
+        : "Couldn't get your location. Out in the woods it can take a minute; try again.") + " " + HELP_LINK);
+    }
   }
 }
 

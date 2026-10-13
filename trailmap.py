@@ -25,6 +25,7 @@ import json
 import math
 import os
 import re
+import urllib.parse
 
 import elevation
 
@@ -174,10 +175,109 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
         f.write(html)
     print("Wrote " + os.path.join(out_dir, "map.html"))
 
+    # How to let the site use your location, linked from the map when it can't
+    report = region.get("report") or {}
+    contact = ('<a href="mailto:%s?subject=%s">email us</a>.' % (report["email"], urllib.parse.quote(region["name"] + ": location won't work"))
+               if report.get("email") else "use the map's Report a problem link.")
+    page = (LOCATION_HELP.replace("__REGION_NAME__", region["name"]).replace("__NAV__", region["nav"])
+            .replace("__REPORT__", contact))
+    with open(os.path.join(out_dir, "location-help.html"), "w", encoding="utf-8") as f:
+        f.write(page)
+
 
 # ---------------------------------------------------------------------------
 # Map HTML template
 # ---------------------------------------------------------------------------
+
+LOCATION_HELP = r"""<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#2c3e50">
+<title>Turning on location — __REGION_NAME__</title>
+<style>
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #222; line-height: 1.5; }
+  nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  nav.topnav a { color: #ecf0f1; font-size: 14px; font-weight: 500; text-decoration: none; }
+  .container { max-width: 720px; margin: 0 auto; padding: 20px; }
+  h1 { font-size: 22px; margin: 4px 0 6px; }
+  h2 { font-size: 18px; margin: 26px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #eee; }
+  .lead { color: #555; margin: 0 0 12px; }
+  ol { padding-left: 22px; margin: 6px 0; }
+  li { margin: 6px 0; }
+  .path { font-weight: 600; }
+  .tip { background: #fff8e1; border-left: 4px solid #f9a825; padding: 8px 12px; margin: 12px 0; font-size: 14px; }
+  .jump a { display: inline-block; margin: 4px 8px 4px 0; padding: 6px 12px; border-radius: 16px; background: #eceff1; color: #263238;
+            text-decoration: none; font-size: 14px; font-weight: 600; }
+  .back { display: inline-block; margin-top: 18px; padding: 10px 16px; border-radius: 6px; background: #0d47a1; color: white;
+          text-decoration: none; font-weight: 600; }
+</style>
+</head>
+<body>
+__NAV__
+<div class="container">
+<h1>Turning on location</h1>
+<p class="lead">The map can show where you are, follow you along a route, and tell you which way to turn. For that, your
+phone has to let this website use its location. Your location stays on your phone: the map only sends it if you choose
+to, in a problem report.</p>
+<p class="jump"><a href="#iphone">iPhone</a><a href="#iphone-chrome">iPhone with Chrome</a><a href="#android">Android</a><a href="#still">Still stuck?</a></p>
+
+<h2 id="iphone">iPhone or iPad (Safari)</h2>
+<p>There are three switches, and all three have to be on. Most trouble comes from the third: if you ever tapped
+<strong>Don&rsquo;t Allow</strong>, Safari remembers it and stops asking.</p>
+<ol>
+  <li><strong>Location for the phone.</strong> Open <span class="path">Settings &rsaquo; Privacy &amp; Security &rsaquo; Location Services</span>
+    and turn <strong>Location Services</strong> on.</li>
+  <li><strong>Location for websites.</strong> On that same screen, scroll down to <span class="path">Safari Websites</span>. Choose
+    <strong>While Using the App</strong> (or <strong>Ask Next Time Or When I Share</strong>), and turn on <strong>Precise Location</strong>.
+    Without Precise Location, the phone only shares a rough area, and the map will think you&rsquo;re nowhere near the trails.</li>
+  <li><strong>Location for this site.</strong> Open the map in Safari. Tap the <strong>aA</strong> button (or the small page icon) at the
+    left end of the address bar, then <span class="path">Website Settings &rsaquo; Location</span>, and choose <strong>Allow</strong> or
+    <strong>Ask</strong>.
+    <br>Or for every site at once: <span class="path">Settings &rsaquo; Apps &rsaquo; Safari &rsaquo; Location</span> (on older iPhones,
+    <span class="path">Settings &rsaquo; Safari &rsaquo; Location</span>), and choose <strong>Ask</strong> or <strong>Allow</strong>.</li>
+  <li><strong>Try it.</strong> Reload the map and tap the locate button (the circle with a cross, at the top right). If the phone
+    asks, tap <strong>Allow</strong>.</li>
+</ol>
+<div class="tip"><strong>Using the map from its home-screen icon?</strong> It asks for location separately from Safari. If you once
+told it no, open the map in Safari, allow location there as above, then try the icon again. If the icon still won&rsquo;t ask,
+remove it from the home screen and add it again: in Safari, tap <span class="path">Share &rsaquo; Add to Home Screen</span>.</div>
+<p style="font-size:13px;color:#666">The names of these settings move around a little between iPhone updates; if a step
+doesn&rsquo;t match what you see, look for the closest wording.</p>
+
+<h2 id="iphone-chrome">iPhone with Chrome (or another browser)</h2>
+<ol>
+  <li>Open <span class="path">Settings &rsaquo; Privacy &amp; Security &rsaquo; Location Services</span> and make sure
+    <strong>Location Services</strong> is on.</li>
+  <li>On that screen, find <strong>Chrome</strong> (or your browser) in the list, choose <strong>While Using the App</strong>,
+    and turn on <strong>Precise Location</strong>.</li>
+  <li>Back in the browser, reload the map, tap the locate button, and tap <strong>Allow</strong> when asked.</li>
+</ol>
+
+<h2 id="android">Android (Chrome)</h2>
+<ol>
+  <li>Swipe down from the top of the screen and make sure <strong>Location</strong> is on. In the phone&rsquo;s
+    <span class="path">Settings &rsaquo; Location</span>, turn on <strong>Use precise location</strong> (or <strong>Google Location
+    Accuracy</strong>) if you see it.</li>
+  <li>In Chrome, open the map and tap the icon at the left end of the address bar, then <span class="path">Permissions &rsaquo;
+    Location</span> (or <strong>Site settings &rsaquo; Location</strong>), and choose <strong>Allow</strong>.
+    <br>Or: <span class="path">Chrome menu &rsaquo; Settings &rsaquo; Site settings &rsaquo; Location</span>, and remove this site
+    from the <strong>Blocked</strong> list.</li>
+  <li>Reload the map, tap the locate button, and tap <strong>Allow</strong> when asked.</li>
+</ol>
+
+<h2 id="still">Still stuck?</h2>
+<p>Out in the woods, the first location can take a minute: give it time with a view of the sky. If it still won&rsquo;t
+work, let us know what kind of phone you have and what you see: __REPORT__</p>
+<a class="back" href="map.html">Back to the map</a>
+</div>
+</body>
+</html>
+"""
+
 
 MAP_TEMPLATE = r"""<!DOCTYPE html>
 <html>
@@ -417,6 +517,7 @@ __NAV__
   <h2>__REGION_NAME__</h2>
   <div class="content" id="infoContent"><div id="welcomeInfo">
     <p style="color:#888">Click a trail or intersection marker for details.</p>
+    <p style="margin-top:6px;font-size:12px"><a href="location-help.html">Location not working?</a></p>
     <p style="margin-top:8px;color:#888;font-size:11px">__N_INTS__ numbered intersections across __N_ZONES__ zones.<br>
     __N_TRAILS__ trail segments, __N_NAMES__ named trails.</p></div>
   </div>
@@ -2336,6 +2437,8 @@ try { panelStartsCompact = localStorage.getItem(PANEL_KEY) === "1"; } catch (e) 
 setPanelCompact(panelStartsCompact);
 
 var defaultInfo = '<div id="welcomeInfo"><p style="color:#888">Click a trail or intersection marker for details.</p>' +
+  '<p style="margin-top:6px;font-size:12px"><a href="location-help.html' + (/iPhone|iPad|iPod/.test(navigator.userAgent) ? '#iphone' : '') +
+  '">Location not working?</a></p>' +
   '<p class="full-only" style="margin-top:8px;color:#888;font-size:11px">__N_INTS__ numbered intersections across __N_ZONES__ zones.<br>' +
   '__N_TRAILS__ trail segments, __N_NAMES__ named trails.</p></div>';
 
@@ -2909,6 +3012,8 @@ function updateStripArrow() {
   }
 }
 
+var ROUGH_FIX_M = 300;   // a fix this vague means the phone is only sharing a rough area
+
 function locateHtml(place) {
   var html;
   shownPlace = place;
@@ -2940,6 +3045,11 @@ function locateHtml(place) {
   }
   if (plan) html += '<div style="margin-top:2px">' + backToRouteBtn() + '</div>';
   else if (!awayFromTrails()) html += exitsHtml();
+  // (Only on phones: a computer without GPS is always this vague, and has no such setting)
+  if (userAccuracy > ROUGH_FIX_M && (IS_IOS || /Android/.test(navigator.userAgent))) {
+    html += '<div class="estimated-tag" style="margin-top:6px">Your phone is only sharing a rough location (within ' +
+      formatDist(userAccuracy) + '). Turning on Precise Location fixes that. ' + HELP_LINK + '</div>';
+  }
   html += reportLinkHtml("here", "");
   return '<div id="locateInfo">' + html + '</div>';
 }
@@ -3310,6 +3420,11 @@ function onLocation(pos) {
   if (following) map.panTo(userLatLng);
 }
 
+// iPhones and iPads (an iPad can say it's a Mac): their location settings are the
+// hardest to find, so they get the steps right in the panel
+var IS_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+var HELP_LINK = '<a href="location-help.html' + (IS_IOS ? '#iphone' : '') + '">How to turn on location</a>';
+
 function onLocationError(err) {
   if (err.code === 1 && watchId !== null) {
     navigator.geolocation.clearWatch(watchId);
@@ -3317,9 +3432,18 @@ function onLocationError(err) {
   }
   if (locateRequested) {
     locateRequested = false;
-    showPanelMsg(err.code === 1
-      ? "Location access is blocked for this site. You can allow it in your browser's site settings."
-      : "Couldn't get your location. Try again in a moment.");
+    if (err.code === 1 && IS_IOS) {
+      showPanelMsg("Your iPhone isn't letting this site use your location. Check all three:" +
+        '<ol style="margin:6px 0 6px 18px;padding:0">' +
+        '<li><b>Settings › Privacy &amp; Security › Location Services</b>: on</li>' +
+        '<li>Same screen, <b>Safari Websites</b>: While Using the App, with Precise Location on</li>' +
+        '<li>In Safari, tap <b>aA</b> in the address bar › Website Settings › Location: Allow</li></ol>' +
+        'Then reload and tap the locate button. ' + HELP_LINK + '.');
+    } else {
+      showPanelMsg((err.code === 1
+        ? "Location access is blocked for this site."
+        : "Couldn't get your location. Out in the woods it can take a minute; try again.") + " " + HELP_LINK);
+    }
   }
 }
 

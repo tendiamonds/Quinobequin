@@ -2,7 +2,9 @@
 A field checklist page: things to check at particular intersections on the next walk, with
 a way to record what you found. Shared by the regions' sites.
 
-  build_checks_page(checks, path, title=..., css=..., nav=..., storage_prefix=..., email=...)
+  build_checks_page(checks, path, title=..., subtitle=..., css=..., nav=..., storage_prefix=..., email=...)
+
+subtitle is HTML (it can carry links).
 
 checks: [{"id", "label", "lat", "lon", "question", "choices": [...], "why", "look_for"}],
 one per thing to check ("label" is the intersection, for the map link and its card's
@@ -199,7 +201,7 @@ def build_checks_page(checks, path, title, subtitle, css, nav, storage_prefix, e
     page = (PAGE.replace("__TIP__", tip).replace("__SHARED__", "true" if shared else "false")
             .replace("__TITLE__", html.escape(title))
             .replace("__TITLE_JS__", json.dumps(title))
-            .replace("__SUBTITLE__", html.escape(subtitle))
+            .replace("__SUBTITLE__", subtitle)   # HTML, from our own build scripts
             .replace("__CSS__", css)
             .replace("__NAV__", nav)
             .replace("__CHECKS__", json.dumps(checks))
