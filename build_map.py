@@ -16,20 +16,12 @@ import os
 import re
 from collections import OrderedDict, defaultdict
 
+from checks import build_checks_page
+from crs import CRS, holders_text, sign_checks, sign_crs
 from trailmap import build_map_page, build_trail_int_map, dist_m
 
 PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
 TOWNS = {136: "Holliston", 139: "Hopkinton", 185: "Milford"}
-
-TOWN_FOREST_LOCS = {
-    "M_201192_880840",
-    "M_200767_881204",
-    "M_200582_881415",
-    "M_200791_880798",
-}
-FAIRBANKS_LOCS = {
-    "M_200659_879945",
-}
 
 EXIT_POINTS = {
     "A": (-71.4845932, 42.1782725),
@@ -42,8 +34,6 @@ EXIT_POINTS = {
 F_G_GROUP = {36, 178, 213, 214, 176, 4, 129, 1, 245, 135, 9, 175, 10, 248, 130}
 
 PUBLIC_ORDER = [
-    "Adams Town Forest (Trustees CR)",
-    "Fairbanks Land (Trustees/DCR CR)",
     "Town of Holliston",
     "Town of Hopkinton",
     "Town of Milford",
@@ -159,10 +149,6 @@ def classify_owner(parcel_feat):
     loc_id = pp.get("LOC_ID") or ""
 
     if town == "Holliston":
-        if loc_id in TOWN_FOREST_LOCS:
-            return "Adams Town Forest (Trustees CR)", town, True
-        if loc_id in FAIRBANKS_LOCS:
-            return "Fairbanks Land (Trustees/DCR CR)", town, True
         upper = raw_owner.upper()
         if upper in ("HOLLISTON, TOWN OF", "TOWN OF HOLLISTON",
                      "CONSERVATION COMMISSION", "UNKNOWN", ""):
@@ -326,6 +312,8 @@ def load_and_process():
             feat["properties"]["label"] = feat["properties"].get("code") or "P%d" % feat["properties"]["post"]
 
     rows = []
+    on_cr = sign_crs()
+    to_check = {c["label"]: c for c in sign_checks()}
     for feat in ints["features"]:
         lon, lat = feat["geometry"]["coordinates"]
         parcel = find_parcel(lon, lat, parcels)
@@ -333,6 +321,13 @@ def load_and_process():
         feat["properties"]["owner"] = owner
         feat["properties"]["town"] = town
         feat["properties"]["is_public"] = is_public
+        cr = on_cr.get(feat["properties"]["label"])
+        check = to_check.get(feat["properties"]["label"])
+        if check:
+            feat["properties"]["check"] = check["question"]
+        if cr:
+            feat["properties"]["cr"] = cr
+            feat["properties"]["cr_holders"] = holders_text(cr)
         if feat["properties"].get("no_sign"):
             continue   # the zone and owner pages list signs
         rows.append({
@@ -341,6 +336,7 @@ def load_and_process():
             "owner": owner,
             "town": town,
             "is_public": is_public,
+            "cr": cr,
         })
 
     rows.sort(key=lambda r: (r["zone"], int(r["label"][1:])))
@@ -396,6 +392,7 @@ def nav_html(active):
         ("map.html", "Map"),
         ("zones.html", "Zones"),
         ("owners.html", "Owners"),
+        ("checks.html", "Checks"),
     ]
     parts = ['<nav class="topnav">']
     for href, label in items:
@@ -561,7 +558,8 @@ NAV_PLACEHOLDER
     <li>The name of the town the intersection is in</li>
     <li>The name of the zone</li>
     <li>The town seal</li>
-    <li>The logo of the non-town organization for the zone</li>
+    <li>The logos of the organizations that hold a conservation restriction on the land
+    the sign stands on, if any</li>
   </ul>
   <p style="margin-top:16px">Sample signs:</p>
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0">
@@ -583,13 +581,15 @@ NAV_PLACEHOLDER
   </ul>
 
   <h2>Land Ownership</h2>
-  <p>Holliston public land is classified into three categories based on deed records:</p>
+  <p>The Holliston land in the network is town-owned conservation land. Parts of it are also
+  under conservation restrictions (CRs), which keep it protected permanently and are
+  enforced by their holders:</p>
   <ul style="margin:8px 0 8px 20px">
-    <li><strong>Adams Town Forest</strong> &mdash; ~87 acres with a Conservation Restriction
-    held by The Trustees of Reservations</li>
-    <li><strong>Fairbanks Land</strong> &mdash; 210 acres with a CR co-held by
-    The Trustees and DCR</li>
-    <li><strong>Town of Holliston</strong> &mdash; other town-owned conservation parcels</li>
+    <li><strong>Adams Street Town Forest Additions</strong> &mdash; 85.6 acres added to the
+    Town Forest in 2013, with a CR held by The Trustees of Reservations. The original
+    Town Forest isn&rsquo;t under a CR.</li>
+    <li><strong>Fairbanks</strong> &mdash; the 210-acre David Reed Fairbanks conservation
+    area, with a CR co-held by The Trustees and DCR</li>
   </ul>
   <p>See the <a href="owners.html">Owner Report</a> for the full breakdown of all public
   and private parcels the trail network crosses.</p>
@@ -709,6 +709,18 @@ def build_owners_page(rows):
 <p class="subtitle">TOTAL intersections across OWNER_CT owners.</p>
 """]
 
+    # The CRs: land still owned as listed below, with the holders' logos on its signs
+    lines.append('<h2>Conservation Restrictions</h2>')
+    lines.append('<p>A conservation restriction doesn&rsquo;t change who owns the land; the holders '
+                 'enforce it. Signs on CR land carry the holders&rsquo; logos.</p>')
+    lines.append('<table class="report"><thead><tr><th>Restriction</th><th>Held by</th><th>Intersections</th></tr></thead><tbody>')
+    for name, cr in CRS.items():
+        labels = [r["label"] for r in rows if r["cr"] == name]
+        lines.append('<tr id="%s"><td><strong>%s</strong><br><span style="font-size:12px;color:#666">%s.<br>%s</span></td>'
+                     '<td>%s</td><td>%s</td></tr>' % (slugify(name), name, cr["land"][0].upper() + cr["land"][1:], cr["recorded"],
+                                                      holders_text(name), int_links_html(labels)))
+    lines.append("</tbody></table>")
+
     lines.append('<div class="section-public">')
     lines.append('<h2>Public Parcels <span class="tag tag-public">%d intersections</span></h2>' % total_pub)
     lines.append('<table class="report"><thead><tr><th>Owner</th><th>Town</th><th>Intersections</th></tr></thead><tbody>')
@@ -757,6 +769,11 @@ def main():
     build_map_page(ints, trails, region(), PROJ)
     build_zones_page(rows)
     build_owners_page(rows)
+    build_checks_page(sign_checks(), rf"{PROJ}\checks.html", title="Field Checks — Upper Charles Forest",
+                      subtitle="Signs to check on the next walk, nearest first. Answers are kept on this phone "
+                               "until you send them.",
+                      css=PAGE_CSS, nav=nav_html("checks"), storage_prefix=region()["storagePrefix"],
+                      email=region()["report"]["email"])
 
 
 if __name__ == "__main__":

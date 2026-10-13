@@ -751,6 +751,11 @@ function showIntInfo(feature, marker) {
       '</td></tr>' : '') +
     (p.owner ? '<tr class="full-only"><td>Owner</td><td><a href="' + esc(ownerHref) + '" onmouseover="hoverOwner(' + jsArg(p.owner) + ')" onmouseout="unhover()">' + esc(p.owner) + '</a> ' + pubTag + '</td></tr>' : '') +
     (p.town ? '<tr class="full-only"><td>Town</td><td>' + esc(p.town) + '</td></tr>' : '') +
+    // Something to check here on the next walk (checks.html)
+    (p.check ? '<tr class="full-only"><td>Field check</td><td><a href="' + esc('checks.html#' + p.label) + '">' + esc(p.check) + '</a></td></tr>' : '') +
+    // A conservation restriction on the land (it doesn't change the owner)
+    (p.cr ? '<tr class="full-only"><td>Protected</td><td><a href="' + esc('owners.html#' + ownerSlug(p.cr)) + '" onmouseover="hoverOwner(' +
+      jsArg(p.cr) + ', ' + jsArg("cr") + ')" onmouseout="unhover()">' + esc(p.cr) + '</a><div class="blaze-marks">held by ' + esc(p.cr_holders) + '</div></td></tr>' : '') +
     '</table>';
 
   var connections = intTrailMap[p.label] || [];
@@ -1813,12 +1818,14 @@ var hoverMarker = null;
 var hoverTrailLayers = [];
 var hoverOwnerMarkers = [];
 
-function hoverOwner(ownerName) {
+// Highlight every intersection with this owner (or, with field "cr", on this
+// conservation restriction's land)
+function hoverOwner(ownerName, field) {
   unhover();
   Object.keys(intFeatures).forEach(function(label) {
     var f = intFeatures[label];
     var m = intMarkers[label];
-    if (f.properties.owner === ownerName && m && m !== selectedMarker && !f.properties.junction) {
+    if (f.properties[field || "owner"] === ownerName && m && m !== selectedMarker && !f.properties.junction) {
       m.setStyle({radius: 11, weight: 4, color: "#111", fillColor: ZONE_COLORS[m._zone], fillOpacity: 1, opacity: 1});
       m.bringToFront();
       hoverOwnerMarkers.push(label);

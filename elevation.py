@@ -44,7 +44,9 @@ def fetch_grid(bounds, cache):
     s, w, n, e = s - PAD_DEG, w - PAD_DEG, n + PAD_DEG, e + PAD_DEG
     if os.path.exists(cache):
         grid = georeference(cache)
-        if grid[1] <= w and grid[2] <= s and grid[3] >= e and grid[4] >= n:
+        # Covers the bounds (to within half a pixel, as the edges are rounded)
+        slack = 0.5 * (grid[3] - grid[1]) / grid[0].shape[1]
+        if grid[1] <= w + slack and grid[2] <= s + slack and grid[3] >= e - slack and grid[4] >= n - slack:
             return grid
     # Square pixels in degrees (RES_M north-south, or coarser for a big region, which the
     # service would refuse), so the service has nothing to stretch
