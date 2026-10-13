@@ -13,6 +13,9 @@ build_map_page(ints, trails, region, out_dir) writes out_dir/map.html. region is
   zonesPage      whether the site has a zones.html for zone tags to link to
   otherMaps      [{"name": ..., "href": ...}] links to the other regions' maps
   nav            the page's top navigation bar (HTML)
+  dem            (optional) where to keep the region's elevation grid (elevation.py); with
+                 it, trails get elevation profiles
+  blazes, widths, terrain   (optional) blazed trails and trail widths (build_bluehills.py)
 
 The intersections and trails are GeoJSON; build_trail_int_map works out which
 intersections lie on which trails, which the app routes over.
@@ -22,6 +25,8 @@ import json
 import math
 import os
 import re
+
+import elevation
 
 
 def dist_m(lon1, lat1, lon2, lat2):
@@ -94,6 +99,7 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     points); otherwise it's worked out by snapping."""
     for i, f in enumerate(trails["features"]):
         f["properties"]["_idx"] = i
+    ele_step = elevation.add_elevations(ints, trails, region["bounds"], region["dem"]) if region.get("dem") else None
 
     int_data = json.dumps(ints)
     trail_data = json.dumps(trails)
@@ -142,6 +148,10 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     int_trail_json = json.dumps(int_trail_map)
 
     client = {k: region[k] for k in ("name", "zones", "view", "bounds", "storagePrefix", "report", "otherMaps", "zonesPage")}
+    client["blazes"] = region.get("blazes", {})
+    client["widths"] = region.get("widths", {})
+    client["terrain"] = region.get("terrain", [])
+    client["eleStep"] = ele_step
     html = MAP_TEMPLATE
     # Legend rows only for kinds of marker this region has
     for kind in ("post", "landmark", "road"):
@@ -228,6 +238,11 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
     padding: 10px 14px; font-size: 12px;
   }
   .legend-panel h3 { font-size: 13px; margin-bottom: 6px; }
+  .legend-head { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px; }
+  .legend-caret { font-size: 11px; color: #888; }
+  .legend-panel.collapsed { padding: 6px 12px; }
+  .legend-panel.collapsed h3 { margin-bottom: 0; }
+  .legend-panel.collapsed .legend-row { display: none; }
   .legend-row { display: flex; align-items: center; margin: 3px 0; }
   .legend-swatch {
     width: 14px; height: 14px; border-radius: 50%; margin-right: 8px;
@@ -253,6 +268,7 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .int-link.rock-pill { white-space: nowrap; min-width: 0; padding: 0 2px; color: #333; }
   .int-link.rock-pill .rock-svg { margin-top: -2px; }
   .rock-name { margin-left: 5px; font-weight: 600; vertical-align: middle; }
+  .rock-name.passed { color: #9e9e9e; }
   /* Digits sit on the baseline with room below for descenders they don't have, so center
      the box and lift them a pixel */
   .post-badge { display: inline-flex; align-items: center; justify-content: center; padding-bottom: 1px;
@@ -267,6 +283,11 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .int-link.post-pill { color: #ffd54f; text-shadow: 0 0 1px #3e2a12, 0 0 1px #3e2a12; }
   .int-list .int-dist { color: #888; font-size: 11px; }
   .int-list .seg-bar { color: #bbb; font-size: 10px; padding: 0 0 0 16px; }
+  .int-list .seg-link { display: block; color: #78909c; cursor: pointer; text-decoration: none; padding: 2px 0 2px 16px; }
+  .int-list .seg-link:hover { color: #0277bd; text-decoration: underline; }
+  .int-list .seg-link.sel { color: #00838f; font-weight: 700; border-left: 3px solid #00b8d4; padding-left: 13px; margin-left: 3px; }
+  .trail-break { font-size: 10px; color: #90a4ae; font-style: italic; padding: 2px 0 2px 16px; }
+  .trail-whole { color: #0277bd; cursor: pointer; text-decoration: underline; white-space: nowrap; }
   .int-terminus { display: inline-block; width: 12px; height: 12px; background: #333;
     border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,0.3); }
 
@@ -353,6 +374,17 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .report-warn { color: #c62828; font-size: 12px; }
   .report-fine { color: #888; font-size: 11px; margin-top: 6px; }
   .estimated-tag { font-size: 11px; color: #b26a00; }
+  .blaze-chip { display: inline-flex; margin-left: 4px; vertical-align: middle; }
+  .blaze-chip.against { opacity: 0.35; }
+  .blaze-row { display: flex; align-items: flex-start; gap: 6px; padding: 2px 0; line-height: 1.25; }
+  .blaze-row svg { margin-top: 2px; }
+  .blaze-marks { font-size: 11px; color: #888; }
+  .route-terrain { font-size: 12px; color: #455a64; margin: -4px 0 8px; }
+  .terrain-tag { display: inline-flex; margin-left: 6px; vertical-align: middle; }
+  .grade-tag { font-size: 10px; font-weight: 700; color: #37474f; margin-left: 6px; white-space: nowrap; }
+  .route-ele { font-size: 12px; color: #455a64; margin: -2px 0 8px; }
+  .ele-profile { display: block; width: 100%; height: 54px; margin-top: 3px; }
+  .ele-range { display: flex; justify-content: space-between; font-size: 10px; color: #90a4ae; }
   .seg-pick { padding: 6px 0 8px; margin-bottom: 8px; border-bottom: 1px solid #eee; font-size: 13px; }
   .route-skipped { font-size: 12px; color: #777; margin: -2px 0 6px; }
   .turn-tag { font-size: 10px; font-weight: 700; color: #0d47a1; text-transform: uppercase; letter-spacing: 0.3px; }
@@ -391,7 +423,7 @@ __NAV__
 </div>
 
 <div class="legend-panel">
-  <h3>Legend</h3>
+  <h3 class="legend-head" onclick="toggleLegend()" title="Show or hide the legend">Legend <span class="legend-caret">▾</span></h3>
   <div class="legend-row"><div class="legend-line" style="background:#2c3e50"></div> Trail</div>
   <div class="legend-row"><div class="legend-line" style="background:#00b8d4;height:4px"></div> Trail (highlighted)</div>
   <div class="legend-row"><div class="legend-swatch" style="background:#888"></div> Intersection</div>
@@ -710,6 +742,7 @@ function showIntInfo(feature, marker) {
         (p.post ? '<tr><td>Post</td><td>' + postBadgeHtml(p.post) + '</td></tr>' : '')) +
     (p.estimated ? '<tr><td></td><td><div class="estimated-tag">Location estimated from the park map' +
       (REGION.report && REGION.report.signReports ? '. If you\'re at this sign, please report it.' : '.') + '</div></td></tr>' : '') +
+    (p.ele !== undefined && REGION.eleStep ? '<tr class="full-only"><td>Elevation</td><td>' + feet(p.ele) + '</td></tr>' : '') +
     (p.entry ? '<tr><td>Access</td><td><span class="entry-tag">◆ Entry point</span>' +
       (p.parking ? '<span class="parking-tag">P Parking</span>' : '') +
       (p.connects ? '<div class="connects-tag">Connects to ' + esc(p.connects) + '</div>' : '') +
@@ -983,8 +1016,11 @@ function stepRowHtml(step, state, ft) {
     (state === "here" ? '<span class="you-badge">You</span>' : '') + intPill(step.label, state);
   if (step.nextTrail) {
     html += '<span class="route-arrow">→</span>' +
-      '<span class="route-trail-name">' + esc(step.nextTrail) + '</span>' +
-      '<span class="int-dist">' + formatDist((ft === undefined ? step.nextFt : ft) / 3.28084) + '</span>';
+      '<span class="route-trail-name">' + esc(step.nextTrail) + '</span>' + blazeChipsHtml(step.nextBlazes || []) +
+      '<span class="int-dist">' + formatDist((ft === undefined ? step.nextFt : ft) / 3.28084) + '</span>' +
+      // Rough legs are flagged (the route's terrain summary says what the bars mean)
+      (step.nextTerrain >= 2 ? '<span class="terrain-tag" title="' + esc(REGION.terrain[step.nextTerrain]) + ' terrain">' +
+        terrainSvg(step.nextTerrain) + '</span>' : '') + gradeTagHtml(step.nextClimb);
   }
   var stop = step.segStart || (step.stop && !step.stop.edge ? step.stop : null);
   if (stop) html += '<span class="turn-tag">' + (isTurnaround(stop) ? 'turn around' : 'waypoint') + '</span>';
@@ -1076,7 +1112,7 @@ function routePanelHtml() {
     html += '<div class="route-skipped">Skipped ' + skipped.map(function(s) { return s.edge ? stopName(s) : intPill(s.label, "passed"); }).join(', ') + '</div>';
   }
   if (!plan.arrived) {
-    html += '<div style="font-size:13px;margin-bottom:8px">' + distLine + '</div>';
+    html += '<div style="font-size:13px;margin-bottom:8px">' + distLine + '</div>' + routeTerrainHtml() + routeEleHtml();
   }
   html += '<div class="int-list">';
   var histFt = shownFt(plan.hist.steps), stepFt = shownFt(plan.steps);
@@ -1358,7 +1394,11 @@ function renderRoute(result, userLeg, noFit, hist, info) {
         if (c[0] === next.trail && c[1] === next.label) nextFt = c[2] * 3.28084;
       });
     }
+    var edge = next && routeEdge(step.label, next.label, next.trail);
     return {label: step.label, trail: step.trail, nextTrail: next ? next.trail : null, nextFt: nextFt,
+            nextBlazes: edge ? blazesOn(edge.ti, edge.a, edge.b) : [],
+            nextTerrain: edge ? terrainOn(edge.ti, edge.a, edge.b) : null,
+            nextClimb: edge && REGION.eleStep ? climbStats(eleProfile(edge.ti, edge.a, edge.b)) : null,
             at: k < 0 ? 0 : segs[k].s0 + segLen(segs[k]), stop: info.stopAt[i] || null,
             segStart: segStartAt[i] || null};
   });
@@ -1860,51 +1900,207 @@ function segmentAt(feature, ll) {
 
 var selectedSegLine = null;
 
-// ll (optional): where the trail was tapped. While routing, that picks out one segment
-// of the trail, which can be added to the route as a waypoint.
-function showTrailInfo(feature, layer, ll) {
+// The pieces of trail ti's trail: those with its name that connect to it, through
+// intersections or ends they share. Two trails far apart can have the same name.
+function sameTrail(ti) {
+  var name = function(i) { var q = trailData.features[i].properties; return q.pdf_name || q.name || ""; };
+  var ends = function(i) {
+    var c = flatCoords(trailData.features[i].geometry), out = {};
+    [c[0], c[c.length - 1]].forEach(function(p) { out[p[0].toFixed(5) + "," + p[1].toFixed(5)] = true; });
+    ((trailIntMap[i] || {}).ints || []).forEach(function(e) { out[e[0]] = true; });
+    return out;
+  };
+  var found = {}, queue = [ti], mine = name(ti);
+  var others = trailData.features.map(function(f, i) { return i; }).filter(function(i) { return name(i) === mine; });
+  var keys = {};
+  others.forEach(function(i) { keys[i] = ends(i); });
+  found[ti] = true;
+  while (queue.length) {
+    var a = queue.pop();
+    others.forEach(function(b) {
+      if (!found[b] && Object.keys(keys[a]).some(function(k) { return keys[b][k]; })) { found[b] = true; queue.push(b); }
+    });
+  }
+  return found;
+}
+
+// The pieces of trail ti's trail in walking order: {pieces: [{ti, rev, off, len, jump}],
+// total}. Pieces join where they share an end (a point, or an intersection right at it).
+// A trail that forks can't be walked in one line; jump marks a piece that starts another
+// branch, not meeting the one before it.
+function trailChain(ti) {
+  var p = trailData.features[ti].properties;
+  var set = (p.pdf_name || p.name) ? Object.keys(sameTrail(ti)).map(Number) : [ti];
+  var lenOf = function(i) { return trailCum[i][trailCum[i].length - 1]; };
+  var endKeys = function(i, atEnd) {
+    var c = flatCoords(trailData.features[i].geometry), q = atEnd ? c[c.length - 1] : c[0], keys = {};
+    keys[q[0].toFixed(5) + "," + q[1].toFixed(5)] = true;
+    ((trailIntMap[i] || {}).ints || []).forEach(function(e) {
+      var near = Math.min(15, lenOf(i) / 2);
+      if (atEnd ? lenOf(i) - e[1] < near : e[1] < near) keys[e[0]] = true;
+    });
+    return keys;
+  };
+  var ends = {};
+  set.forEach(function(i) { ends[i] = [endKeys(i, false), endKeys(i, true)]; });
+  var meets = function(a, b) { return Object.keys(a).some(function(k) { return b[k]; }); };
+  var shared = function(i, e) { return set.some(function(j) { return j !== i && (meets(ends[i][e], ends[j][0]) || meets(ends[i][e], ends[j][1])); }); };
+  // Start from a loose end, if there is one
+  var first = set.filter(function(i) { return !shared(i, 0) || !shared(i, 1); })[0];
+  if (first === undefined) first = set[0];
+  var pieces = [], used = {}, off = 0, cur = first, rev = shared(first, 0) && !shared(first, 1), jump = false;
+  while (cur !== undefined) {
+    used[cur] = true;
+    pieces.push({ti: cur, rev: rev, off: off, len: lenOf(cur), jump: jump});
+    off += lenOf(cur);
+    var tail = ends[cur][rev ? 0 : 1], next;
+    next = set.filter(function(j) { return !used[j] && (meets(tail, ends[j][0]) || meets(tail, ends[j][1])); })[0];
+    jump = next === undefined;
+    if (jump) {
+      // A branch: preferably one starting at a loose end
+      var left = set.filter(function(j) { return !used[j]; });
+      next = left.filter(function(j) { return !shared(j, 0) || !shared(j, 1); })[0];
+      if (next === undefined) next = left[0];
+      if (next !== undefined) rev = shared(next, 0) && !shared(next, 1);
+    } else {
+      rev = !meets(tail, ends[next][0]) && meets(tail, ends[next][1]);
+    }
+    cur = next;
+  }
+  return {pieces: pieces, total: off};
+}
+
+// The pieces' stretches from d0 to d1 along the chain: [{ti, a, b}], a to b in walking order
+function chainSlices(chain, d0, d1) {
+  var out = [];
+  chain.pieces.forEach(function(pc) {
+    var lo = Math.max(d0, pc.off), hi = Math.min(d1, pc.off + pc.len);
+    if (hi - lo > 0.5) {
+      var a = lo - pc.off, b = hi - pc.off;
+      var jump = pc.jump && lo <= pc.off + 0.5;
+      out.push(pc.rev ? {ti: pc.ti, a: pc.len - a, b: pc.len - b, jump: jump} : {ti: pc.ti, a: a, b: b, jump: jump});
+    }
+  });
+  return out;
+}
+
+// The numbered intersections along the chain, in order: [{label, d, piece}] (piece: its
+// index in the chain)
+function chainStops(chain) {
+  var stops = [];
+  chain.pieces.forEach(function(pc, i) {
+    var ints = ((trailIntMap[pc.ti] || {}).ints || []).slice();
+    if (pc.rev) ints.reverse();
+    ints.forEach(function(e) {
+      var d = pc.off + (pc.rev ? pc.len - e[1] : e[1]), last = stops[stops.length - 1];
+      // Where two pieces meet, their shared intersection is listed once
+      var again = last && last.label === e[0] && !(pc.jump && last.piece < i);
+      if (!isJunction(e[0]) && !again) stops.push({label: e[0], d: d, piece: i});
+    });
+  });
+  return stops;
+}
+
+// Terrain over some stretches: [[terrain, meters]], roughest first
+function terrainMix(slices) {
+  var len = [];
+  slices.forEach(function(sl) {
+    var lo = Math.min(sl.a, sl.b), hi = Math.max(sl.a, sl.b);
+    (trailData.features[sl.ti].properties.widths || []).forEach(function(r) {
+      var x = Math.max(lo, r[1]), y = Math.min(hi, r[2]);
+      if (y > x) { var t = terrainOn(sl.ti, x, y); if (t !== null) len[t] = (len[t] || 0) + (y - x); }
+    });
+  });
+  var out = [];
+  for (var t = len.length - 1; t >= 0; t--) if (len[t]) out.push([t, len[t]]);
+  return out;
+}
+
+// What the trail panel shows: the trail (feature and layer tapped), its chain and stops,
+// and the stretch selected ([from, to] along the chain), or null for the whole trail
+var trailView = null;
+
+// Show a stretch of the trail in the panel: from mark k to the next. While routing, as if
+// its middle were tapped, so it can be added to the route.
+function showTrailStretch(k) {
+  var v = trailView, marks = trailMarks(v);
+  var mid = chainSlices(v.chain, (marks[k].d + marks[k + 1].d) / 2, marks[k + 1].d)[0];
+  if (plan && mid) {
+    var l = trailLayer.getLayers().filter(function(x) { return x.feature.properties._idx === mid.ti; })[0];
+    showTrailInfo(l.feature, l, pointAlong(mid.ti, mid.a));
+  } else {
+    showTrailInfo(v.feature, v.layer, null, k);
+  }
+}
+
+function showWholeTrail() {
+  showTrailInfo(trailView.feature, trailView.layer, null, null);
+}
+
+// Where the stretches begin and end: [{d, label, brk}] along the chain. Each run of
+// connected pieces (each branch) has marks at its ends, named for the intersection there
+// if there is one, and at its stops; brk marks a branch's first. Stretches run from a
+// mark to the next, within a branch.
+function trailMarks(v) {
+  var marks = [], pieces = v.chain.pieces, first = 0;
+  for (var i = 1; i <= pieces.length; i++) {
+    if (i < pieces.length && !pieces[i].jump) continue;
+    var a = pieces[first].off, b = i < pieces.length ? pieces[i].off : v.chain.total;
+    var run = [{d: a, label: null, brk: marks.length > 0}];
+    v.stops.forEach(function(st) {
+      if (st.piece < first || st.piece >= i) return;
+      var last = run[run.length - 1];
+      if (st.d - last.d <= 3) { if (!last.label) last.label = st.label; }
+      else run.push({d: st.d, label: st.label});
+    });
+    var end = run[run.length - 1];
+    if (run.length > 1 && b - end.d <= 3) end.d = b;
+    else run.push({d: b, label: null});
+    marks = marks.concat(run);
+    first = i;
+  }
+  return marks;
+}
+
+// ll (optional): where the trail was tapped, which picks out the stretch between the
+// intersections around it (and while routing, a segment that can be added to the route
+// as a waypoint). k (optional): show the stretch from trailMarks mark k to the next
+// instead; null for the whole trail.
+function showTrailInfo(feature, layer, ll, k) {
   clearSelection(true);
 
   var p = feature.properties;
   var name = p.pdf_name || p.name || "";
   var seg = plan && ll ? segmentAt(feature, ll) : null;
+  var chain = trailChain(p._idx);
+  trailView = {feature: feature, layer: layer, chain: chain, stops: chainStops(chain)};
+  var marks = trailMarks(trailView);
 
-  highlightedSegments = [];
-  var segIndices = [];
-  trailLayer.eachLayer(function(l) {
-    var ln = l.feature.properties.pdf_name || l.feature.properties.name || "";
-    if (ln === name && name !== "") {
-      if (!seg) l.setStyle({color: "#00b8d4", weight: 6, opacity: 1});
-      highlightedSegments.push(l);
-      segIndices.push(l.feature.properties._idx);
+  // Which stretch: the one tapped, the one asked for, or (null) the whole trail
+  var sel = null;
+  if (ll) {
+    var snap = snapOnTrail(ll, p._idx);
+    var pi = chain.pieces.findIndex(function(x) { return x.ti === p._idx; }), pc = chain.pieces[pi];
+    var d = pc.off + (pc.rev ? pc.len - snap.along : snap.along);
+    // The stretch around it, in the tapped piece's branch
+    for (var m = 0; m < marks.length - 1; m++) {
+      if (!marks[m + 1].brk && d >= marks[m].d - 0.5 && d <= marks[m + 1].d + 0.5 &&
+          chainSlices(chain, marks[m].d, marks[m + 1].d).some(function(sl) { return sl.ti === p._idx; })) { k = m; break; }
     }
-  });
-  if (highlightedSegments.length === 0) {
-    if (!seg) layer.setStyle({color: "#00b8d4", weight: 6, opacity: 1});
-    highlightedSegments.push(layer);
-    segIndices.push(feature.properties._idx);
   }
-  if (seg) {
-    selectedSegLine = L.polyline(sliceTrail(seg.ti, seg.from, seg.to), {color: "#00b8d4", weight: 7, opacity: 1, interactive: false}).addTo(map);
-  }
+  // A trail with no intersections along it is all one stretch: the whole trail
+  if (k !== undefined && k !== null && marks.length > 2) sel = {a: marks[k], b: marks[k + 1], k: k};
+  // While routing, a tapped segment (which can be added to the route) is what's shown
+  var slices = seg ? [{ti: seg.ti, a: seg.from, b: seg.to}] : sel ? chainSlices(chain, sel.a.d, sel.b.d) : chainSlices(chain, 0, chain.total);
+  var spanLen = slices.reduce(function(t, sl) { return t + Math.abs(sl.b - sl.a); }, 0);
+
+  // The trail (or stretch) drawn over the map, above any blazes
+  highlightedSegments = [];
+  selectedSegLine = L.featureGroup(slices.map(function(sl) {
+    return L.polyline(sliceTrail(sl.ti, sl.a, sl.b), {color: "#00b8d4", weight: sel || seg ? 7 : 6, opacity: 1, interactive: false});
+  })).addTo(map);
 
   var displayName = name || "Unnamed trail";
-
-  var totalLength = 0;
-  var allInts = [];
-  var seen = {};
-  segIndices.forEach(function(si) {
-    var info = trailIntMap[si];
-    if (!info) return;
-    totalLength += info.length;
-    info.ints.forEach(function(pair) {
-      if (!seen[pair[0]]) {
-        seen[pair[0]] = true;
-        allInts.push({label: pair[0], dist: pair[1]});
-      }
-    });
-  });
-
   var html = '';
   if (seg) {
     var segArgs = jsArg(seg.a) + ', ' + jsArg(seg.b) + ', ' + jsArg(seg.trail);
@@ -1916,43 +2112,80 @@ function showTrailInfo(feature, layer, ll) {
         : '<button class="route-btn" style="background:#0d47a1" onclick="addSegment(' + addArgs + ')">Add to route</button> ') +
       backToRouteBtn() + '</div></div>';
   }
-  html += '<table>' +
-    '<tr><td>Trail</td><td><strong style="font-size:16px">' + esc(displayName) + '</strong></td></tr>';
-  var totalFt = Math.round(totalLength * 3.28084);
-  var totalMi = (totalLength * 0.000621371);
-  var lengthStr = totalMi >= 0.1 ? totalMi.toFixed(1) + ' mi (' + totalFt.toLocaleString() + ' ft)' : totalFt.toLocaleString() + ' ft';
-  if (totalLength > 0) html += '<tr><td>Length</td><td>' + lengthStr + '</td></tr>';
+
+  // The stretch shown, by the intersections at its ends (a dot where the trail ends)
+  var endName = function(label) {
+    return label ? intPill(label) : '<span class="int-terminus" title="End of the trail"></span>';
+  };
+  var ends = seg ? [seg.a, seg.b] : sel ? [sel.a.label, sel.b.label] : null;
+  html += '<table><tr><td>Trail</td><td><strong style="font-size:16px">' + esc(displayName) + '</strong>' + (ends
+    ? '<div class="blaze-marks">' + endName(ends[0]) + ' → ' + endName(ends[1]) +
+      ' &nbsp;·&nbsp; <a class="trail-whole" onclick="showWholeTrail()">whole trail</a></div>'
+    : '') + '</td></tr>';
+  if (chain.total > 0) {
+    html += '<tr><td>Length</td><td>' + formatDist(spanLen) +
+      (ends ? ' <span class="int-dist">of ' + formatDist(chain.total) + '</span>' : '') + '</td></tr>';
+  }
+
+  // Blazes on the stretch (on most of it), or anywhere on the whole trail
+  var blazed = [];
+  slices.forEach(function(sl) {
+    var here = ends ? blazesOn(sl.ti, sl.a, sl.b).map(function(o) { return o.key; })
+      : (trailData.features[sl.ti].properties.blazes || []).map(function(r) { return r[0]; });
+    here.forEach(function(k) { if (blazed.indexOf(k) < 0) blazed.push(k); });
+  });
+  if (blazed.length) {
+    html += '<tr><td>Blazes</td><td>' + blazed.map(function(k) {
+      var b = REGION.blazes[k];
+      // The name, and under it how it's marked
+      return '<div class="blaze-row">' + blazeMarkSvg(k) + '<div>' + esc(b.name) + '<div class="blaze-marks">' + esc(b.marks) +
+        (b.one_way ? ', one way' : '') + '</div></div></div>';
+    }).join('') + '</td></tr>';
+  }
+
+  var mix = terrainMix(slices);
+  if (mix.length) {
+    var main = mix.slice().sort(function(a, b) { return b[1] - a[1]; })[0];
+    var widths = {};
+    slices.forEach(function(sl) { var w = widthOn(sl.ti, sl.a, sl.b); if (w) widths[w] = true; });
+    var widthText = Object.keys(widths).map(function(w) { return REGION.widths[w].toLowerCase(); }).join(', ');
+    html += '<tr><td>Terrain</td><td><div class="blaze-row">' + terrainSvg(main[0]) + '<div>' + esc(REGION.terrain[main[0]]) +
+      (mix.length > 1 ? ' mostly' : '') + '<div class="blaze-marks">' +
+      (mix.length > 1 ? mix.map(function(m) { return formatDist(m[1]) + ' ' + REGION.terrain[m[0]].toLowerCase(); }).join(' · ') : esc(widthText)) +
+      '</div></div></div></td></tr>';
+  }
+
+  if (REGION.eleStep) {
+    var prof = [], off = 0;
+    slices.forEach(function(sl) {
+      if (sl.jump && prof.length) prof.push(null);
+      eleProfile(sl.ti, sl.a, sl.b).forEach(function(q, i) {
+        if (i || !prof.length || prof[prof.length - 1] === null) prof.push([off + q[0], q[1]]);
+      });
+      off += Math.abs(sl.b - sl.a);
+    });
+    if (prof.length > 1) {
+      var st = climbStats(prof), worst = Math.max(st.maxUp, st.maxDown);
+      html += '<tr><td>Climb</td><td>' + climbHtml(st) +
+        '<div class="blaze-marks">' + steepness(worst) + (worst >= STEEPNESS[0][0] ? ', ' + Math.round(100 * worst) + '% at the steepest' : '') + '</div>' +
+        profileSvg(prof) + '</td></tr>';
+    }
+  }
   if (p.surface) html += '<tr class="full-only"><td>Surface</td><td>' + esc(p.surface) + '</td></tr>';
   if (p.highway) html += '<tr class="full-only"><td>Type</td><td>' + esc(p.highway) + '</td></tr>';
   html += '</table>';
 
-  var TERMINUS_MIN = 10;
+  // Intersections along the trail; the stretches between them pick out that stretch
   html += '<div class="int-list full-only"><strong style="font-size:12px;color:#555">Intersections</strong>';
-
-  if (allInts.length > 0) {
-    var startGap = Math.round(allInts[0].dist * 3.28084);
-    if (startGap > TERMINUS_MIN) {
-      html += '<div class="int-row"><span class="int-terminus">●</span></div>';
-      html += '<div class="seg-bar">↕ ' + startGap.toLocaleString() + ' ft</div>';
+  for (var m = 0; m < marks.length; m++) {
+    if (marks[m].brk) html += '<div class="trail-break">branch</div>';
+    html += '<div class="int-row">' + endName(marks[m].label) + '</div>';
+    if (m < marks.length - 1 && !marks[m + 1].brk) {
+      var on = sel && sel.k === m;
+      html += '<a class="seg-bar seg-link' + (on ? ' sel' : '') + '" onclick="showTrailStretch(' + m + ')" title="Show this stretch">↕ ' +
+        formatDist(marks[m + 1].d - marks[m].d) + '</a>';
     }
-    for (var i = 0; i < allInts.length; i++) {
-      html += '<div class="int-row">' + intPill(allInts[i].label) + '</div>';
-      if (i < allInts.length - 1) {
-        var segFt = Math.round((allInts[i+1].dist - allInts[i].dist) * 3.28084);
-        if (segFt > 0) html += '<div class="seg-bar">↕ ' + segFt.toLocaleString() + ' ft</div>';
-      }
-    }
-    var endGap = Math.round((totalLength - allInts[allInts.length - 1].dist) * 3.28084);
-    if (endGap > TERMINUS_MIN) {
-      html += '<div class="seg-bar">↕ ' + endGap.toLocaleString() + ' ft</div>';
-      html += '<div class="int-row"><span class="int-terminus">●</span></div>';
-    }
-  } else if (totalLength > 0) {
-    html += '<div class="int-row"><span class="int-terminus">●</span></div>';
-    html += '<div class="seg-bar">↕ ' + totalFt.toLocaleString() + ' ft</div>';
-    html += '<div class="int-row"><span class="int-terminus">●</span></div>';
   }
-
   html += '</div>';
   if (plan && !seg) html += '<div style="margin-top:6px">' + backToRouteBtn() + '</div>';
   html += reportLinkHtml("trail", name || "Unnamed trail", seg && (seg.a + "–" + seg.b));
@@ -1974,9 +2207,7 @@ function clearSelection(keepRoute) {
     selectedMarker.setStyle(restStyle(selectedMarker));
     selectedMarker = null;
   }
-  highlightedSegments.forEach(function(l) {
-    l.setStyle({color: "#2c3e50", weight: 3, opacity: 0.6});
-  });
+  highlightedSegments.forEach(function(l) { trailLayer.resetStyle(l); });
   highlightedSegments = [];
   if (!keepRoute) clearRouteDisplay();
   routeMode = false;
@@ -2153,6 +2384,314 @@ var trailCum = trailData.features.map(function(f) {
   return cum;
 });
 
+// --- Blazed trails (REGION.blazes). Each is drawn over the trails in marks like its own:
+// dots, blue blazes, or for triangle-marked loops a stripe with arrows showing which way
+// it's marked (the arrows only up close, where they're far enough apart). They're named
+// in trail details and route steps. A trail's blazes are [blaze, from m, to m, direction]
+// stretches; direction is +1 or -1 along the trail for one-way blazes, 0 for the rest.
+var blazeKeys = Object.keys(REGION.blazes || {});
+var BLAZE_ARROW_M = 150, BLAZE_ARROW_ZOOM = 15;
+var blazeArrows = L.layerGroup();
+
+// A small sample of a blaze's mark, for the legend, trail details, and route steps
+function blazeMarkSvg(key) {
+  var b = REGION.blazes[key];
+  var mark = b.style === "dots" ? '<circle cx="7" cy="7" r="4" fill="' + b.color + '" stroke="#333" stroke-width="1"/>'
+    : b.style === "blazes" ? '<rect x="4.5" y="2" width="5" height="10" fill="' + b.color + '" stroke="#0d47a1" stroke-width="0.8"/>'
+    : '<path d="M3 2.5 L12 7 L3 11.5 Z" fill="' + b.color + '" stroke="#333" stroke-width="1" stroke-linejoin="round"/>';
+  return '<svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle;flex:none">' + mark + '</svg>';
+}
+
+function blazeArrowIcon(color, bearing) {
+  return L.divIcon({className: "", iconSize: [14, 14], iconAnchor: [7, 7],
+    html: '<svg width="14" height="14" viewBox="0 0 14 14" style="transform:rotate(' + Math.round(bearing - 90) + 'deg)">' +
+      '<path d="M2.5 2.5 L12 7 L2.5 11.5 Z" fill="' + color + '" stroke="#333" stroke-width="1.2" stroke-linejoin="round"/></svg>'});
+}
+
+function bearingAlong(ti, s) {
+  var a = pointAlong(ti, Math.max(0, s - 5)), b = pointAlong(ti, s + 5);
+  return (Math.atan2((b.lng - a.lng) * 82000, (b.lat - a.lat) * 111000) * 180 / Math.PI + 360) % 360;
+}
+
+var blazeLayer = L.layerGroup();
+// Stripes first, so dots and blazes sharing the stretch show on top
+trailData.features.forEach(function(f, ti) {
+  (f.properties.blazes || []).forEach(function(r) {
+    var b = REGION.blazes[r[0]];
+    if (b.style === "arrows") {
+      var pts = sliceTrail(ti, r[1], r[2]);
+      blazeLayer.addLayer(L.polyline(pts, {color: "#333", weight: 7, opacity: 0.9, interactive: false}));
+      blazeLayer.addLayer(L.polyline(pts, {color: b.color, weight: 4, opacity: 1, interactive: false}));
+    }
+  });
+});
+trailData.features.forEach(function(f, ti) {
+  (f.properties.blazes || []).forEach(function(r) {
+    var b = REGION.blazes[r[0]], pts = sliceTrail(ti, r[1], r[2]);
+    var rect = b.style === "blazes";
+    // Blazes sharing a stretch take turns along it
+    var line = {dashArray: rect ? "4,12" : "0.1,10", dashOffset: String(blazeKeys.indexOf(r[0]) * 5),
+                lineCap: rect ? "butt" : "round", interactive: false, opacity: 1};
+    if (b.style !== "arrows") {
+      blazeLayer.addLayer(L.polyline(pts, L.extend({}, line, {color: rect ? "#fff" : "#333", weight: rect ? 8 : 5})));
+      blazeLayer.addLayer(L.polyline(pts, L.extend({}, line, {color: b.color, weight: rect ? 5 : 4})));
+    }
+    if (r[3]) {
+      for (var s = r[1] + 60; s < r[2] - 20; s += BLAZE_ARROW_M) {
+        blazeArrows.addLayer(L.marker(pointAlong(ti, s), {icon: blazeArrowIcon(b.color, bearingAlong(ti, s) + (r[3] < 0 ? 180 : 0)),
+                                                          interactive: false, keyboard: false}));
+      }
+    }
+  });
+});
+if (blazeKeys.length) {
+  blazeLayer.addTo(map);
+  var showBlazeArrows = function() {
+    if (map.getZoom() >= BLAZE_ARROW_ZOOM) blazeArrows.addTo(map);
+    else blazeArrows.remove();
+  };
+  map.on("zoomend", showBlazeArrows);
+  showBlazeArrows();
+  var legendPanel = document.querySelector(".legend-panel");
+  blazeKeys.forEach(function(k) {
+    var b = REGION.blazes[k];
+    legendPanel.insertAdjacentHTML("beforeend", '<div class="legend-row">' + blazeMarkSvg(k) + '&nbsp; ' + esc(b.name) +
+      (b.one_way ? ' (one way)' : '') + '</div>');
+  });
+}
+
+// The legend shows with the home panel (the welcome, or where you are) and steps aside for
+// everything else (trails, intersections, routes), which would run down under it; and in
+// any case if the panel reaches it
+function fitLegend() {
+  var legend = document.querySelector(".legend-panel"), panel = document.getElementById("infoPanel");
+  if (!legend || !panel) return;
+  var home = !!document.querySelector("#infoContent #welcomeInfo, #infoContent #locateInfo");
+  legend.style.visibility = "";
+  var a = legend.getBoundingClientRect(), b = panel.getBoundingClientRect();
+  var overlap = a.width && b.width && a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+  legend.style.visibility = home && !overlap ? "" : "hidden";
+}
+// The legend can be folded away to just its heading; the browser remembers which
+var LEGEND_KEY = REGION.storagePrefix + "LegendCollapsed";
+function setLegendCollapsed(collapsed) {
+  var legend = document.querySelector(".legend-panel");
+  legend.classList.toggle("collapsed", collapsed);
+  legend.querySelector(".legend-caret").textContent = collapsed ? "▸" : "▾";
+  try { localStorage.setItem(LEGEND_KEY, collapsed ? "1" : ""); } catch (e) {}
+  fitLegend();
+}
+function toggleLegend() { setLegendCollapsed(!document.querySelector(".legend-panel").classList.contains("collapsed")); }
+try { if (localStorage.getItem(LEGEND_KEY)) setLegendCollapsed(true); } catch (e) {}
+if (window.ResizeObserver) new ResizeObserver(fitLegend).observe(document.getElementById("infoPanel"));
+if (window.MutationObserver) new MutationObserver(fitLegend).observe(document.getElementById("infoContent"), {childList: true});
+window.addEventListener("resize", fitLegend);
+fitLegend();
+
+// The blazes along trail ti from a to b (meters along it): those covering most of it.
+// against: a one-way blaze marked the other way, so its marks face away from you.
+function blazesOn(ti, a, b) {
+  var lo = Math.min(a, b), hi = Math.max(a, b), out = [];
+  (trailData.features[ti].properties.blazes || []).forEach(function(r) {
+    var cover = Math.min(hi, r[2]) - Math.max(lo, r[1]);
+    if (cover >= 0.5 * (hi - lo) && out.every(function(o) { return o.key !== r[0]; })) {
+      out.push({key: r[0], against: !!r[3] && (b > a) !== (r[3] > 0)});
+    }
+  });
+  return out;
+}
+
+// --- Terrain (REGION.widths, REGION.terrain). A trail's widths are [width, from m, to m]
+// stretches. A wide trail or road is easy; a narrow one is rougher, and how rough depends
+// on its blaze (REGION.blazes terrain): a narrow stretch of the Skyline is the roughest.
+function widthOn(ti, a, b) {
+  var lo = Math.min(a, b), hi = Math.max(a, b), best = null, most = 0;
+  (trailData.features[ti].properties.widths || []).forEach(function(r) {
+    var cover = Math.min(hi, r[2]) - Math.max(lo, r[1]);
+    if (lo === hi ? lo >= r[1] && lo <= r[2] : cover > most) { best = r[0]; most = cover; }
+  });
+  return best;
+}
+
+// The terrain from a to b along trail ti, as an index into REGION.terrain, or null if unknown
+function terrainOn(ti, a, b) {
+  var width = widthOn(ti, a, b);
+  if (!width) return null;
+  if (width !== "narrow") return 0;
+  return blazesOn(ti, a, b).reduce(function(t, o) { return Math.max(t, REGION.blazes[o.key].terrain || 0); }, 1);
+}
+
+// Four rising bars, as many dark as the terrain is rough
+function terrainSvg(level) {
+  var bars = '';
+  for (var i = 0; i < 4; i++) {
+    bars += '<rect x="' + (i * 4) + '" y="' + (9 - 3 * i) + '" width="3" height="' + (3 + 3 * i) + '" fill="' + (i <= level ? '#37474f' : '#cfd8dc') + '"/>';
+  }
+  return '<svg width="15" height="12" viewBox="0 0 15 12" style="vertical-align:middle;flex:none">' + bars + '</svg>';
+}
+
+function terrainHtml(level) {
+  return terrainSvg(level) + ' ' + esc(REGION.terrain[level]);
+}
+
+// How much of the route ahead is each kind of terrain: "1.2 mi Easy · 0.3 mi Difficult"
+function routeTerrainHtml() {
+  var len = [];
+  plan.steps.forEach(function(s, i) {
+    var next = plan.steps[i + 1];
+    var e = next && stepState(i + 1) !== "passed" && routeEdge(s.label, next.label, next.trail);
+    var t = e ? terrainOn(e.ti, e.a, e.b) : null;
+    if (t !== null) len[t] = (len[t] || 0) + Math.abs(e.b - e.a);
+  });
+  var parts = [];
+  for (var t = len.length - 1; t >= 0; t--) {
+    if (len[t]) parts.push(terrainSvg(t) + ' ' + formatDist(len[t]) + ' ' + esc(REGION.terrain[t].toLowerCase()));
+  }
+  return parts.length ? '<div class="route-terrain full-only">' + parts.join(' &nbsp;·&nbsp; ') + '</div>' : '';
+}
+
+// --- Elevation (REGION.eleStep). A trail's ele is its elevation in meters every eleStep
+// along it, and at its end (USGS 3D Elevation Program lidar). Routes show their climb and
+// an elevation profile, steep legs are flagged, and trail details give the climb between
+// intersections.
+var GRADE_SPAN_M = 50;   // steepness is measured over this distance, so a rock isn't a cliff
+var CLIMB_MIN_M = 1;     // rises and dips smaller than this are noise
+var STEEP_LEG = 0.10;    // a leg with a stretch this steep is flagged in route steps
+var STEEPNESS = [[0.04, "Flat"], [0.08, "Gentle"], [0.15, "Steep"], [Infinity, "Very steep"]];
+
+function eleAt(ti, s) {
+  var e = trailData.features[ti].properties.ele, step = REGION.eleStep;
+  if (!e || !step) return null;
+  var total = trailCum[ti][trailCum[ti].length - 1];
+  s = Math.max(0, Math.min(s, total));
+  var i = Math.min(Math.floor(s / step), e.length - 2);
+  if (i < 0) return e[0];
+  var s1 = Math.min((i + 1) * step, total);
+  var t = s1 > i * step ? (s - i * step) / (s1 - i * step) : 0;
+  return e[i] + Math.max(0, Math.min(1, t)) * (e[i + 1] - e[i]);
+}
+
+// [[meters from a, elevation]] along trail ti from a to b
+function eleProfile(ti, a, b) {
+  var len = Math.abs(b - a), n = Math.max(1, Math.ceil(len / REGION.eleStep)), out = [];
+  for (var k = 0; k <= n; k++) {
+    var e = eleAt(ti, a + (b - a) * k / n);
+    if (e === null) return [];
+    out.push([len * k / n, e]);
+  }
+  return out;
+}
+
+// Total climb and descent (meters), and the steepest stretch up and down (as grades)
+function climbStats(pts) {
+  var up = 0, down = 0, maxUp = 0, maxDown = 0, ref = pts.length ? pts[0][1] : 0;
+  for (var i = 0; i < pts.length; i++) {
+    // A break (null) between branches: start again after it
+    if (pts[i] === null) { if (pts[i + 1]) ref = pts[i + 1][1]; continue; }
+    var d = pts[i][1] - ref;
+    if (d >= CLIMB_MIN_M) { up += d; ref = pts[i][1]; }
+    else if (d <= -CLIMB_MIN_M) { down -= d; ref = pts[i][1]; }
+    for (var j = i + 1; j < pts.length && pts[j] !== null; j++) {
+      var run = pts[j][0] - pts[i][0];
+      // Over GRADE_SPAN_M, or the whole of a shorter stretch (if it's not tiny)
+      if (run >= GRADE_SPAN_M || ((j === pts.length - 1 || pts[j + 1] === null) && i === 0 && run >= 20)) {
+        var g = (pts[j][1] - pts[i][1]) / run;
+        maxUp = Math.max(maxUp, g);
+        maxDown = Math.max(maxDown, -g);
+        break;
+      }
+    }
+  }
+  return {up: up, down: down, maxUp: maxUp, maxDown: maxDown};
+}
+
+function steepness(grade) {
+  for (var i = 0; i < STEEPNESS.length; i++) if (grade < STEEPNESS[i][0]) return STEEPNESS[i][1];
+}
+
+function feet(m) { return Math.round(m * 3.28084).toLocaleString() + " ft"; }
+
+function climbHtml(st) {
+  return '↑ ' + feet(st.up) + ' &nbsp;↓ ' + feet(st.down);
+}
+
+// An elevation profile: the ground in grey, its steep stretches in red, and where you are
+// (meters along it), if given. A null in pts breaks it (between a trail's branches).
+function profileSvg(pts, here) {
+  if (pts.length < 2) return '';
+  var real = pts.filter(function(p) { return p !== null; });
+  var W = 280, H = 54, total = real[real.length - 1][0] || 1;
+  var lo = Infinity, hi = -Infinity;
+  real.forEach(function(p) { lo = Math.min(lo, p[1]); hi = Math.max(hi, p[1]); });
+  // At least 15 m of height, so a flat walk looks flat
+  if (hi - lo < 15) { var mid = (hi + lo) / 2; lo = mid - 7.5; hi = mid + 7.5; }
+  var x = function(d) { return (d / total * (W - 2) + 1).toFixed(1); };
+  var y = function(e) { return (H - 3 - (e - lo) / (hi - lo) * (H - 8)).toFixed(1); };
+  var runs = [[]];
+  pts.forEach(function(p) { if (p === null) runs.push([]); else runs[runs.length - 1].push(p); });
+  var ground = runs.filter(function(r) { return r.length > 1; }).map(function(r) {
+    var line = r.map(function(p) { return x(p[0]) + ',' + y(p[1]); }).join(' ');
+    return '<polygon points="' + x(r[0][0]) + ',' + H + ' ' + line + ' ' + x(r[r.length - 1][0]) + ',' + H + '" fill="#e0e4e7"/>' +
+      '<polyline points="' + line + '" fill="none" stroke="#546e7a" stroke-width="1.5" vector-effect="non-scaling-stroke"/>';
+  }).join('');
+  var steep = '';
+  for (var i = 0; i < pts.length - 1; i++) {
+    if (pts[i] === null || pts[i + 1] === null) continue;
+    // Each stretch's grade, over GRADE_SPAN_M around it
+    var a = i, b = i + 1;
+    while (a > 0 && pts[a - 1] !== null && pts[i][0] - pts[a][0] < GRADE_SPAN_M / 2) a--;
+    while (b < pts.length - 1 && pts[b + 1] !== null && pts[b][0] - pts[i + 1][0] < GRADE_SPAN_M / 2) b++;
+    var g = Math.abs(pts[b][1] - pts[a][1]) / ((pts[b][0] - pts[a][0]) || 1);
+    if (g >= STEEPNESS[2][0]) {
+      steep += '<line x1="' + x(pts[i][0]) + '" y1="' + y(pts[i][1]) + '" x2="' + x(pts[i + 1][0]) + '" y2="' + y(pts[i + 1][1]) + '"/>';
+    }
+  }
+  var mark = here !== undefined && here !== null && here >= 0 && here <= total
+    ? '<line x1="' + x(here) + '" y1="0" x2="' + x(here) + '" y2="' + H + '" stroke="#0d47a1" stroke-width="2" vector-effect="non-scaling-stroke"/>' : '';
+  return '<svg class="ele-profile" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none">' +
+    ground + '<g stroke="#c62828" stroke-width="2.5" vector-effect="non-scaling-stroke">' + steep + '</g>' + mark + '</svg>' +
+    '<div class="ele-range"><span>' + feet(lo) + '</span><span>' + feet(hi) + '</span></div>';
+}
+
+// The route's elevation profile, from its first intersection
+function routeProfile() {
+  var pts = [], off = 0;
+  plan.steps.forEach(function(s, i) {
+    var next = plan.steps[i + 1];
+    var e = next && routeEdge(s.label, next.label, next.trail);
+    if (!e) return;
+    var leg = eleProfile(e.ti, e.a, e.b);
+    if (!leg.length && pts.length && pts[pts.length - 1] !== null) pts.push(null);
+    leg.forEach(function(p, k) { if (k || !pts.length || pts[pts.length - 1] === null) pts.push([off + p[0], p[1]]); });
+    off += Math.abs(e.b - e.a);
+  });
+  return pts;
+}
+
+function routeEleHtml() {
+  if (!REGION.eleStep) return '';
+  var pts = routeProfile();
+  if (pts.length < 2) return '';
+  var here = plan.live && plan.progress !== null ? plan.progress - plan.steps[0].at : null;
+  return '<div class="route-ele full-only"><div>' + climbHtml(climbStats(pts)) + '</div>' + profileSvg(pts, here) + '</div>';
+}
+
+// A route step's flag for a steep leg: "↑12%" or "↓14%"
+function gradeTagHtml(st) {
+  if (!st || Math.max(st.maxUp, st.maxDown) < STEEP_LEG) return '';
+  var upHill = st.maxUp >= st.maxDown, pct = Math.round(100 * Math.max(st.maxUp, st.maxDown));
+  return '<span class="grade-tag" title="Steepest stretch: ' + pct + '% ' + (upHill ? 'up' : 'down') + '">' +
+    (upHill ? '↑' : '↓') + pct + '%</span>';
+}
+
+function blazeChipsHtml(list) {
+  return list.map(function(o) {
+    var b = REGION.blazes[o.key];
+    return '<span class="blaze-chip' + (o.against ? ' against' : '') + '" title="' + esc(b.name + ': ' + b.marks +
+      (o.against ? ', marked the other way' : '')) + '">' + blazeMarkSvg(o.key) + '</span>';
+  }).join('');
+}
+
 function formatDist(m) {
   var ft = m * 3.28084;
   return ft < 1000 ? (Math.round(ft / 10) * 10).toLocaleString() + " ft"
@@ -2281,7 +2820,9 @@ function intPill(label, state) {
   var cls = kind + (state === "passed" || state === "here" ? ' ' + state : '');
   var bg = p.landmark ? 'transparent' : p.no_sign ? POST_COLOR : ZONE_COLORS[p.zone];
   return '<a class="int-link' + cls + '" style="background:' + bg + '" title="' + esc(intName(label)) + '" onmouseover="hoverInt(\'' + label + '\')" onmouseout="unhover()" onclick="selectIntFromTrail(\'' + label + '\')">' +
-    (p.landmark ? rockSvg(18) + '<span class="rock-name full-only">' + esc(p.landmark) + '</span>' : intName(label)) + '</a>';
+    (p.landmark ? rockSvg(18) + '<span class="rock-name full-only">' + esc(p.landmark) + '</span>' : p.no_sign ? esc(String(p.post)) : intName(label)) + '</a>' +
+    // A post with no sign is just its number, named beside it (like a landmark)
+    (p.no_sign && !p.landmark ? '<span class="rock-name full-only' + (state === "passed" ? ' passed' : '') + '">' + esc(intName(label)) + '</span>' : '');
 }
 
 // Where the user is: at an intersection, on a segment between two ends, or off trail

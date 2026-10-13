@@ -1,3 +1,4 @@
 __pycache__/
 # The park's own trail map: kept locally, not republished (bluehills_pdf.py reads it)
 bluehills_data/blue-hills-trail-map-2020.pdf
+elevation_cache/

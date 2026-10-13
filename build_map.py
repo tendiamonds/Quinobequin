@@ -12,6 +12,7 @@ owner names link to the owner page, zone badges link to the zone page.
 import heapq
 import json
 import math
+import os
 import re
 from collections import OrderedDict, defaultdict
 
@@ -71,6 +72,7 @@ def region():
         "view": {"center": [42.178, -71.498], "zoom": 14},
         "bounds": [[42.156, -71.518], [42.201, -71.483]],
         "storagePrefix": "vtn",   # kept from when this was the Vietnam Trail Network map
+        "dem": os.path.join(PROJ, "elevation_cache", "upper_charles.tif"),
         # The prototype signs up now use an abandoned numbering, so no "I'm at this sign"
         "report": {"email": "tendiamonds@gmail.com", "signReports": False},
         "otherMaps": [{"name": "Blue Hills", "href": "bluehills/map.html"}],

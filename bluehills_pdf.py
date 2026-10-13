@@ -22,6 +22,8 @@ import re
 
 import pymupdf
 
+from build_bluehills import load_numbered
+
 PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
 DATA = os.path.join(PROJ, "bluehills_data")
 PDF = os.path.join(DATA, "blue-hills-trail-map-2020.pdf")
@@ -96,7 +98,7 @@ def make_predictor(at, known, controls):
 
 def main():
     els = json.load(open(os.path.join(DATA, "osm_trails.json")))
-    numbered = {e["tags"]["ref"]: (e["lon"], e["lat"], e["id"]) for e in json.load(open(os.path.join(DATA, "osm_numbered.json")))}
+    numbered = {num: ll + (node,) for num, node, ll in load_numbered()}
     nodes = {e["id"]: (e["lon"], e["lat"]) for e in els if e["type"] == "node"}
     use = collections.Counter()
     for w in (e for e in els if e["type"] == "way"):
