@@ -1534,6 +1534,7 @@ function pickEntrance(destLabel, roundTrip, all) {
   }).filter(function(o) { return o.len !== undefined; }).sort(function(a, b) { return a.cost - b.cost; });
   if (opts.length) {
     clearSelection(true);
+    all = all || opts.length <= ENTRANCE_CHOICES + 1;   // "More" for just one more isn't worth it
     var html = '<div class="route-msg" style="margin-top:0">You\'re away from the trails. Start the ' +
       (roundTrip ? 'round trip' : 'route') + ' to ' + intPill(destLabel) + ' from which entrance?</div><div class="exits">';
     opts.slice(0, all ? opts.length : ENTRANCE_CHOICES).forEach(function(o) {
@@ -3121,6 +3122,7 @@ function showDriveList(all) {
     return {label: l, d: from.distanceTo(driveLatLng(l)), dist: userLatLng ? userLatLng.distanceTo(driveLatLng(l)) : null};
   });
   places.sort(function(a, b) { return a.d - b.d; });
+  all = all || places.length <= DRIVE_CHOICES + 1;   // "More" for just one more isn't worth it
   var opens = IS_ANDROID ? "your maps app" : IS_IOS ? NAV_APPS[navApp()] : "Google Maps";
   var html = '<div class="route-msg" style="margin-top:0">Directions to an entrance' +
     '<div style="font-size:12px;color:#666;margin-top:2px">Tap one for directions in ' + opens + ', or share it.</div></div><div class="exits">';
