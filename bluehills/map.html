@@ -127,6 +127,8 @@
   }
   .route-step { display: flex; align-items: center; gap: 6px; margin: 4px 0; font-size: 12px; }
   .route-arrow { color: #0d47a1; font-weight: 700; }
+  .turn-icon { flex: none; }
+  .route-step.passed .turn-icon { opacity: 0.45; }
   .route-trail-name { color: #555; font-style: italic; }
   .entry-diamond { width: 24px; height: 24px; margin: 5px; transform: rotate(45deg);
     border: 4px solid #555; background: rgba(255,255,255,0.9); box-sizing: border-box;
@@ -182,6 +184,7 @@
   .route-row::-webkit-scrollbar { display: none; }
   .route-row .int-link { flex: none; min-width: 30px; }
   .route-next { white-space: nowrap; }
+  .route-next .turn-icon { vertical-align: middle; margin-left: 4px; }
   .start-chip { display: inline-block; padding: 0 7px; border-radius: 10px; border: 2px solid #0d47a1;
     background: #fff; color: #0d47a1; font-size: 11px; font-weight: 700; line-height: 15px; flex: none; }
   .plan-link { margin-top: 8px; font-size: 12px; }
@@ -912,15 +915,127 @@ function drawRoute() {
 // Trimming is in pixels, so it has to be redone at each zoom level
 map.on("zoomend", function() { if (plan) drawRoute(); });
 
-// ft (optional): distance to the next step shown, if quiet steps are skipped in between
-function stepRowHtml(step, state, ft) {
+// --- Turn icons: a small picture of a route step's intersection, the trails within
+// TURN_R_M of it as they lie, turned so you arrive from the bottom, with your way through
+// in bold ending in an arrow. An unsigned junction just ahead is taken into the picture,
+// so a jog (right, then left a few steps on) reads as one turn.
+var TURN_R_M = 30, TURN_MAX_R_M = 60, TURN_HALF_PX = 14;
+var turnClipId = 0;
+
+function routePointAt(s) {
+  var segs = plan.segs;
+  for (var k = 0; k < segs.length; k++) {
+    if (s <= segs[k].s0 + segLen(segs[k]) || k === segs.length - 1) return segPointAt(segs[k], s - segs[k].s0);
+  }
+  return null;
+}
+
+function routeLineBetween(a, b) {
+  var pts = [];
+  plan.segs.forEach(function(seg) { var p = segPiece(seg, a, b); if (p) pts = pts.concat(p); });
+  return pts;
+}
+
+// Drawn once per route; each copy on the page gets its own clip id (an icon can be in
+// both views, and a clip in the hidden one doesn't work everywhere)
+function turnIconHtml(i) {
+  plan.turnIcons = plan.turnIcons || {};
+  if (plan.turnIcons[i] === undefined) plan.turnIcons[i] = turnIconSvg(i);
+  return plan.turnIcons[i].replace(/CLIP_ID/g, 'turn-clip-' + (turnClipId++));
+}
+
+// Turning back (an out and back's turnaround): the way you came, so a plain U-turn sign
+var U_TURN_SVG = '<svg class="turn-icon" width="' + 2 * TURN_HALF_PX + '" height="' + 2 * TURN_HALF_PX + '" viewBox="' +
+  -TURN_HALF_PX + ' ' + -TURN_HALF_PX + ' ' + 2 * TURN_HALF_PX + ' ' + 2 * TURN_HALF_PX + '">' +
+  '<circle r="' + (TURN_HALF_PX - 0.5) + '" fill="#f4f6f7" stroke="#cfd8dc"/>' +
+  '<path d="M4.5 10V-2A4.75 4.75 0 0 0-5-2V3" fill="none" stroke="#0d47a1" stroke-width="2.6" stroke-linecap="round"/>' +
+  '<path d="M-5 8.5L-8.6 2.6H-1.4Z" fill="#0d47a1"/></svg>';
+
+function isUTurn(i) {
+  var prev = plan.steps[i - 1], next = plan.steps[i + 1];
+  return !!(prev && next && next.label === prev.label && next.trail === plan.steps[i].trail);
+}
+
+function turnIconSvg(i) {
+  var step = plan.steps[i], at = step.at;
+  if (!step.nextTrail || !plan.segs.length) return '';
+  if (isUTurn(i)) return U_TURN_SVG;
+  var c = intMarkers[step.label].getLatLng();
+  var r = TURN_R_M;
+  for (var j = i + 1; j < plan.steps.length && isJunction(plan.steps[j].label) && plan.steps[j].at - at <= TURN_MAX_R_M - 20; j++) {
+    r = Math.max(r, plan.steps[j].at - at + 20);
+  }
+  // Facing the way you arrive (at the start, the way you leave), in meters from c
+  function local(ll) { return [(ll.lng - c.lng) * 82000, (ll.lat - c.lat) * 111000]; }
+  var p0 = local(routePointAt(Math.max(at - 15, 0))), p1 = local(routePointAt(at > 1 ? at : at + 15));
+  var h = at > 1 ? Math.atan2(-p0[0], -p0[1]) : Math.atan2(p1[0], p1[1]);
+  var cos = Math.cos(h), sin = Math.sin(h), k = (TURN_HALF_PX - 1) / r;
+  function xy(m) {
+    return [(m[0] * cos - m[1] * sin) * k, -(m[0] * sin + m[1] * cos) * k];
+  }
+  function pathD(pts) {
+    return pts.map(function(p, n) { return (n ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join('');
+  }
+  // The trails near it, each the runs of its points within reach (the circle clips them)
+  var others = '';
+  trailData.features.forEach(function(f) {
+    var m = flatCoords(f.geometry).map(function(q) { return local(L.latLng(q[1], q[0])); });
+    var near = m.map(function(q) { return Math.abs(q[0]) < 2 * r && Math.abs(q[1]) < 2 * r; });
+    var run = [];
+    for (var n = 0; n <= m.length; n++) {
+      if (n < m.length && (near[n] || near[n - 1] || near[n + 1])) {
+        run.push(xy(m[n]));
+      } else {
+        if (run.length > 1) others += pathD(run);
+        run = [];
+      }
+    }
+  });
+  // Your way through: in from beyond the edge, out to an arrowhead near it. The arrow
+  // ends where the route gets that far from the middle, however it wiggles on the way (a
+  // marker a few meters off the trails' meeting point has the route double back to it),
+  // but no farther along it than 1.5 r, so a route that turns back stays readable.
+  var way = routeLineBetween(Math.max(at - 2 * r, 0), at).map(function(ll) { return xy(local(ll)); });
+  var out = routeLineBetween(at, at + 1.5 * r).map(function(ll) { return xy(local(ll)); });
+  var reach = 0.8 * (TURN_HALF_PX - 1);
+  for (var o = 1; o < out.length; o++) {
+    var d0 = Math.hypot(out[o - 1][0], out[o - 1][1]), d1 = Math.hypot(out[o][0], out[o][1]);
+    if (d1 >= reach) {
+      var f = d1 > d0 ? (reach - d0) / (d1 - d0) : 1;
+      out = out.slice(0, o).concat([[out[o - 1][0] + f * (out[o][0] - out[o - 1][0]), out[o - 1][1] + f * (out[o][1] - out[o - 1][1])]]);
+      break;
+    }
+  }
+  way = way.concat(out);
+  var tip = way[way.length - 1], back = tip;
+  for (var b = way.length - 2; b >= 0; b--) {
+    back = way[b];
+    if (Math.hypot(tip[0] - back[0], tip[1] - back[1]) >= 4) break;
+  }
+  var dx = tip[0] - back[0], dy = tip[1] - back[1], len = Math.hypot(dx, dy) || 1;
+  dx /= len; dy /= len;
+  var head = [[tip[0] + dx * 2, tip[1] + dy * 2], [tip[0] - dx * 3 - dy * 3.2, tip[1] - dy * 3 + dx * 3.2],
+              [tip[0] - dx * 3 + dy * 3.2, tip[1] - dy * 3 - dx * 3.2]];
+  var id = 'CLIP_ID', w = 2 * TURN_HALF_PX;
+  return '<svg class="turn-icon" width="' + w + '" height="' + w + '" viewBox="' + -TURN_HALF_PX + ' ' + -TURN_HALF_PX + ' ' + w + ' ' + w + '">' +
+    '<defs><clipPath id="' + id + '"><circle r="' + (TURN_HALF_PX - 1) + '"/></clipPath></defs>' +
+    '<circle r="' + (TURN_HALF_PX - 0.5) + '" fill="#f4f6f7" stroke="#cfd8dc"/>' +
+    '<g clip-path="url(#' + id + ')" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="' + others + '" stroke="#9aa5ab" stroke-width="2"/>' +
+    '<path d="' + pathD(way) + '" stroke="#0d47a1" stroke-width="2.6"/></g>' +
+    '<path d="' + pathD(head) + 'Z" fill="#0d47a1"/></svg>';
+}
+
+// ft (optional): distance to the next step shown, if quiet steps are skipped in between;
+// icon (optional): its turn icon, in place of the arrow
+function stepRowHtml(step, state, ft, icon) {
   var html = '<div class="route-step' + (state === "passed" ? ' passed' : '') + '">' +
     (state === "here" ? '<span class="you-badge">You</span>' : '') +
     // The pill (or a signless place's icon, unnamed: it says what it is when tapped)
     // centered in a column, so what follows lines up from row to row
     '<span class="exit-chip">' + pillIcon(step.label, state) + '</span>';
   if (step.nextTrail) {
-    html += '<span class="route-arrow">→</span>' +
+    html += (icon || '<span class="route-arrow">→</span>') +
       '<span class="route-trail-name">' + esc(step.nextTrail) + '</span>' + blazeChipsHtml(step.nextBlazes || []) +
       '<span class="int-dist">' + formatDist((ft === undefined ? step.nextFt : ft) / 3.28084) + '</span>' +
       // Rough legs are flagged (the route's terrain summary says what the bars mean)
@@ -976,14 +1091,29 @@ function routePanelHtml() {
   // ...and the route's last pill is already that intersection, so no End chip after it
   var endChip = dest === null && !(trip.homeLabel && plan.steps[plan.steps.length - 1].label === trip.homeLabel);
   var live = plan.live && !plan.arrived ? ' <span class="live-tag">LIVE</span>' : '';
-  // On a live route, also how far to the next pill (the one after it, if you're at one)
-  var next = plan.live && !plan.arrived
-    ? plan.steps.filter(function(s, i) { return states[i] === "ahead" && !quietStep(s); })[0] : null;
-  var nextStr = next && next.label !== dest
-    ? ' <span class="route-next">· <strong>' + formatDist(next.at - plan.progress) + '</strong> to ' + intPill(next.label) + '</span>'
-    : '';
-  // "0.4 mi to A12 · 160 ft to A2"
-  var distLine = '<span class="route-next"><strong>' + toGoStr + '</strong> to ' + destHtml + '</span>' + nextStr;
+  // On a live route, also how far to the next pill and its turn; at a pill, its turn
+  var nextAt = -1, hereAt = -1;
+  if (plan.live && !plan.arrived) {
+    plan.steps.forEach(function(s, i) {
+      if (!quietStep(s)) {
+        if (states[i] === "here" && hereAt < 0) hereAt = i;
+        if (states[i] === "ahead" && nextAt < 0) nextAt = i;
+      }
+    });
+  }
+  var next = nextAt >= 0 ? plan.steps[nextAt] : null;
+  // "0.4 mi to A12 · 160 ft to A2 (turn)", or "0.4 mi to A12 · at A2 (turn)". A function:
+  // the line is in both views, and each copy of a turn icon needs its own id.
+  var distLine = function() {
+    var html = '<span class="route-next"><strong>' + toGoStr + '</strong> to ' + destHtml + '</span>';
+    if (hereAt >= 0 && turnIconHtml(hereAt)) {
+      html += ' <span class="route-next">· at ' + intPill(plan.steps[hereAt].label) + turnIconHtml(hereAt) + '</span>';
+    } else if (next && next.label !== dest) {
+      html += ' <span class="route-next">· <strong>' + formatDist(next.at - plan.progress) + '</strong> to ' +
+        intPill(next.label) + turnIconHtml(nextAt) + '</span>';
+    }
+    return html;
+  };
 
   // Small view: one row of pills
   var row = '';
@@ -999,7 +1129,7 @@ function routePanelHtml() {
   var small = '<div class="compact-only">' +
     '<div class="route-compact-head">' + (plan.arrived
       ? arrivedHtml
-      : distLine + live) +
+      : distLine() + live) +
     '</div><div class="route-row">' + row + '</div></div>';
 
   // Large view: the step list
@@ -1017,7 +1147,7 @@ function routePanelHtml() {
     html += '<div class="route-skipped">Skipped ' + skipped.map(function(s) { return s.edge ? stopName(s) : intPill(s.label, "passed"); }).join(', ') + '</div>';
   }
   if (!plan.arrived) {
-    html += '<div style="font-size:13px;margin-bottom:8px">' + distLine + '</div>' + routeTerrainHtml() + routeEleHtml();
+    html += '<div style="font-size:13px;margin-bottom:8px">' + distLine() + '</div>' + routeTerrainHtml() + routeEleHtml();
   }
   html += '<div class="int-list">';
   var histFt = shownFt(plan.hist.steps), stepFt = shownFt(plan.steps);
@@ -1031,7 +1161,7 @@ function routePanelHtml() {
         '<span class="route-trail-name">' + esc(trail) + '</span>' +
         '<span class="int-dist">' + formatDist(upTo.at - plan.progress) + '</span></div>';
     }
-    if (!quietStep(s)) html += stepRowHtml(s, states[i], stepFt[i]);
+    if (!quietStep(s)) html += stepRowHtml(s, states[i], stepFt[i], turnIconHtml(i));
   });
   if (endChip) html += '<div class="route-step">' + homePill + '</div>';
   html += '</div>';
@@ -1333,6 +1463,8 @@ function startTrip(trip, failMsg) {
 
 var LOOP_REUSE_COST = 4, LOOP_BACK_RATIO = 1.2;
 var LOOP_REVERSE_M = 100;   // a jump this far ahead onto the way back means you went the other way
+var BACKWARD_M = 10;        // ...once you've walked this far back along it (see trackProgress)
+var BACKWARD_FIXES = 6;     // fixes to wait for that before treating it as leaving the route
 var SKIP_MARGIN_M = 50;     // see skipMissedStops
 
 // Shortest path from an intersection to the nearest of some anchors ({label, dist, ...}),
@@ -1639,7 +1771,26 @@ function trackProgress() {
   // Reverse loop button)
   var any = cheapest(near), lastStop = canReverseLoop() ? lastStopStep() : null;
   var result = "reverse";
-  if (!(lastStop && any.s - plan.progress > LOOP_REVERSE_M && any.s > lastStop.at)) {
+  var far = any.s - plan.progress > LOOP_REVERSE_M;
+  // Otherwise (a stop already reached, say the first loop of a figure 8 walked), matching
+  // far ahead, beyond two or more stops, and walking back along the route from there, means
+  // you set off around this part the other way: those stops get visited last first. A
+  // fix or two is needed to see which way you're walking; till then you stay on the route.
+  var behind = far && !lastStop ? stopsBefore(any.s) : [];
+  var back = plan.backward;
+  plan.backward = null;
+  if (behind.length >= 2 && userAccuracy <= REROUTE_MAX_ACC_M) {
+    if (back && any.s <= back.s - BACKWARD_M) {
+      flipStops(behind);
+      plan.flipped = behind.slice().reverse();
+      return "replan";
+    }
+    if (!back || any.s < back.s + BACKWARD_M && back.fixes < BACKWARD_FIXES) {
+      plan.backward = back && any.s < back.s + BACKWARD_M ? {s: back.s, fixes: back.fixes + 1} : {s: any.s, fixes: 1};
+      return true;
+    }
+  }
+  if (!(lastStop && far && any.s > lastStop.at)) {
     // Progress can't skip past a stop you haven't reached: a later part of the route can
     // run near the turnoff for it, and walking that way means you're missing the stop
     var stop = nextStopStep();
@@ -1648,6 +1799,21 @@ function trackProgress() {
     result = !!best;
   }
   return result;
+}
+
+// The stops not yet reached on the route before position s, in route order
+function stopsBefore(s) {
+  var found = [];
+  plan.steps.forEach(function(st) {
+    if (st.stop && !st.stop.done && st.at < s && found.indexOf(st.stop) < 0) found.push(st.stop);
+  });
+  return found;
+}
+
+// The trip's stops with these ones (in route order) put in the opposite order, in place
+function flipStops(list) {
+  var stops = plan.trip.stops, slots = list.map(function(st) { return stops.indexOf(st); });
+  list.slice().reverse().forEach(function(st, i) { stops[slots[i]] = st; });
 }
 
 // The step of the first stop not yet reached, or null
@@ -1659,6 +1825,12 @@ function nextStopStep() {
 function trackOrReverse() {
   var onRoute = trackProgress();
   if (onRoute === "reverse") onRoute = reverseLoop() && trackProgress() === true;
+  if (onRoute === "replan") {
+    var was = plan;
+    rerouteFromHere();
+    if (plan === was) flipStops(was.flipped);   // no way from here: the old order again
+    onRoute = trackProgress() === true;
+  }
   return onRoute;
 }
 
