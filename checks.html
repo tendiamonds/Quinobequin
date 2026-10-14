@@ -55,6 +55,7 @@
   .card-head .lbl { font-size: 18px; font-weight: 700; }
   .card-head .dist { margin-left: auto; font-size: 13px; color: #546e7a; white-space: nowrap; }
   .card-head a { font-size: 13px; }
+  .at { font-size: 12px; color: #607d8b; margin: -2px 0 6px; }
   .q { font-size: 15px; font-weight: 600; margin: 4px 0 6px; }
   .why, .look { font-size: 13px; color: #455a64; margin: 4px 0; }
   .look b, .why b { color: #263238; }
@@ -65,6 +66,14 @@
   textarea { width: 100%; font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid #cfd8dc; border-radius: 6px; }
   .saved { font-size: 13px; color: #2e7d32; margin-top: 8px; }
   .warn { font-size: 13px; color: #c62828; margin-top: 6px; }
+  .desk-link { font-size: 13px; margin: -10px 0 16px; }
+  .desk { margin-top: 28px; }
+  .desk h2 { font-size: 18px; margin-bottom: 8px; }
+  .desk p { font-size: 13px; color: #455a64; margin: 6px 0; }
+  .desk table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 10px 0; }
+  .desk th, .desk td { border: 1px solid #dde3e7; padding: 5px 8px; text-align: left; vertical-align: top; }
+  .desk th { background: #eceff1; }
+  .desk td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -85,8 +94,28 @@
   <button class="btn2 quiet" onclick="copyResults()">Copy results</button>
   <button class="btn2" onclick="sendResults()">Send results</button>
 </div>
+<p class="desk-link"><a href="#desk">At a desk? Where the map has each one, to copy or download</a></p>
 <p class="look" style="margin:-8px 0 14px"><b>Look for:</b> small boundary signs on trees (The Trustees may post signs up to a foot square on the CR&#x27;s edge), painted blazes or survey pins along the line, or a stone wall or old fence line that follows it. Stand at the post when you save, so the answer records where it is.</p><div class="where" id="where">Finding where you are… (allow location to sort by distance and record where you stand)</div>
 <div id="cards"></div>
+<div class="desk" id="desk">
+<h2>For a desk review</h2>
+<p>Where the map has each of these. They're the mapped positions of the trail
+intersections, not surveyed post locations, so expect them to be off by several meters.</p>
+<p><button class="btn2 quiet" onclick="copyTable()">Copy table</button>
+  <a href="checks.csv" download>Download CSV</a> &middot; <a href="checks.geojson" download>Download GeoJSON</a>
+  <span id="deskCopied" style="color:#2e7d32;margin-left:6px"></span></p>
+<table id="deskTable">
+<tr><th>Intersection</th><th>Latitude</th><th>Longitude</th><th>Why it's in question</th><th></th></tr>
+<tr><td>D5</td><td class="num">42.171993</td><td class="num">-71.498145</td><td>11 m inside the CR line on The Trustees&#x27; 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees&#x27; own CR map.</td><td><a href="map.html?int=D5">map</a></td></tr>
+<tr><td>D6</td><td class="num">42.172307</td><td class="num">-71.498519</td><td>5 m inside the CR line on The Trustees&#x27; 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees&#x27; own CR map.</td><td><a href="map.html?int=D6">map</a></td></tr>
+<tr><td>D7</td><td class="num">42.172633</td><td class="num">-71.498707</td><td>2 m inside the CR line on The Trustees&#x27; 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees&#x27; own CR map; the town parcel map puts it on Town of Milford land, which would mean no CR.</td><td><a href="map.html?int=D7">map</a></td></tr>
+<tr><td>E11</td><td class="num">42.168954</td><td class="num">-71.497621</td><td>15 m outside the CR line on The Trustees&#x27; 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees&#x27; own CR map.</td><td><a href="map.html?int=E11">map</a></td></tr>
+<tr><td>E19</td><td class="num">42.168168</td><td class="num">-71.497790</td><td>3 m outside the CR line on The Trustees&#x27; 2013 map; confirm which side the post stands.</td><td><a href="map.html?int=E19">map</a></td></tr>
+<tr><td>E23</td><td class="num">42.167846</td><td class="num">-71.497788</td><td>9 m outside the CR line on The Trustees&#x27; 2013 map; confirm which side the post stands.</td><td><a href="map.html?int=E23">map</a></td></tr>
+<tr><td>E28</td><td class="num">42.167464</td><td class="num">-71.497738</td><td>12 m outside the CR line on The Trustees&#x27; 2013 map; confirm which side the post stands.</td><td><a href="map.html?int=E28">map</a></td></tr>
+<tr><td>F1</td><td class="num">42.170569</td><td class="num">-71.487705</td><td>9 m inside the CR line on The Trustees&#x27; 2013 map; confirm which side the post stands.</td><td><a href="map.html?int=F1">map</a></td></tr>
+</table>
+</div>
 </div>
 <script>
 var CHECKS = [{"id": "cr-D5", "label": "D5", "lat": 42.171993, "lon": -71.498145, "question": "Is the post for D5 on the Fairbanks land (held by The Trustees and DCR)?", "choices": ["On CR land", "Not on CR land", "Can't tell"], "why": "11 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map.", "look_for": "small boundary signs on trees (The Trustees may post signs up to a foot square on the CR's edge), painted blazes or survey pins along the line, or a stone wall or old fence line that follows it. Stand at the post when you save, so the answer records where it is."}, {"id": "cr-D6", "label": "D6", "lat": 42.172307, "lon": -71.498519, "question": "Is the post for D6 on the Fairbanks land (held by The Trustees and DCR)?", "choices": ["On CR land", "Not on CR land", "Can't tell"], "why": "5 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map.", "look_for": "small boundary signs on trees (The Trustees may post signs up to a foot square on the CR's edge), painted blazes or survey pins along the line, or a stone wall or old fence line that follows it. Stand at the post when you save, so the answer records where it is."}, {"id": "cr-D7", "label": "D7", "lat": 42.172633, "lon": -71.498707, "question": "Is the post for D7 on the Fairbanks land (held by The Trustees and DCR)?", "choices": ["On CR land", "Not on CR land", "Can't tell"], "why": "2 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map; the town parcel map puts it on Town of Milford land, which would mean no CR.", "look_for": "small boundary signs on trees (The Trustees may post signs up to a foot square on the CR's edge), painted blazes or survey pins along the line, or a stone wall or old fence line that follows it. Stand at the post when you save, so the answer records where it is."}, {"id": "cr-E11", "label": "E11", "lat": 42.168954, "lon": -71.497621, "question": "Is the post for E11 on the Fairbanks land (held by The Trustees and DCR)?", "choices": ["On CR land", "Not on CR land", "Can't tell"], "why": "15 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map.", "look_for": "small boundary signs on trees (The Trustees may post signs up to a foot square on the CR's edge), painted blazes or survey pins along the line, or a stone wall or old fence line that follows it. Stand at the post when you save, so the answer records where it is."}, {"id": "cr-E19", "label": "E19", "lat": 42.168168, "lon": -71.49779, "question": "Is the post for E19 on the Fairbanks land (held by The Trustees and DCR)?", "choices": ["On CR land", "Not on CR land", "Can't tell"], "why": "3 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands.", "look_for": "small boundary signs on trees (The Trustees may post signs up to a foot square on the CR's edge), painted blazes or survey pins along the line, or a stone wall or old fence line that follows it. Stand at the post when you save, so the answer records where it is."}, {"id": "cr-E23", "label": "E23", "lat": 42.167846, "lon": -71.497788, "question": "Is the post for E23 on the Fairbanks land (held by The Trustees and DCR)?", "choices": ["On CR land", "Not on CR land", "Can't tell"], "why": "9 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands.", "look_for": "small boundary signs on trees (The Trustees may post signs up to a foot square on the CR's edge), painted blazes or survey pins along the line, or a stone wall or old fence line that follows it. Stand at the post when you save, so the answer records where it is."}, {"id": "cr-E28", "label": "E28", "lat": 42.167464, "lon": -71.497738, "question": "Is the post for E28 on the Fairbanks land (held by The Trustees and DCR)?", "choices": ["On CR land", "Not on CR land", "Can't tell"], "why": "12 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands.", "look_for": "small boundary signs on trees (The Trustees may post signs up to a foot square on the CR's edge), painted blazes or survey pins along the line, or a stone wall or old fence line that follows it. Stand at the post when you save, so the answer records where it is."}, {"id": "cr-F1", "label": "F1", "lat": 42.170569, "lon": -71.487705, "question": "Is the post for F1 on the Fairbanks land (held by The Trustees and DCR)?", "choices": ["On CR land", "Not on CR land", "Can't tell"], "why": "9 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands.", "look_for": "small boundary signs on trees (The Trustees may post signs up to a foot square on the CR's edge), painted blazes or survey pins along the line, or a stone wall or old fence line that follows it. Stand at the post when you save, so the answer records where it is."}];
@@ -100,12 +129,16 @@ var here = null;   // {lat, lon, acc}
 function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
 function distM(a, b) { var dx = (a.lon - b.lon) * 82000, dy = (a.lat - b.lat) * 111000; return Math.sqrt(dx * dx + dy * dy); }
 function fmtDist(m) { var ft = m * 3.28084; return ft < 1000 ? Math.round(ft / 10) * 10 + " ft" : (m / 1609.344).toFixed(1) + " mi"; }
+function coords(c) { return c.lat.toFixed(6) + ", " + c.lon.toFixed(6); }
 function store() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} }
 
 function cardHtml(c) {
   var s = saved[c.id], d = drafts[c.id] || {}, html = '<div class="card' + (s ? ' done' : '') + '" id="' + esc(c.label) + '">' +
     '<div class="card-head"><span class="lbl">' + esc(c.label) + '</span><a href="map.html?int=' + encodeURIComponent(c.label) + '">map</a>' +
     '<span class="dist" id="dist-' + esc(c.id) + '"></span></div>' +
+    // Where the map has it now, opening in your maps app
+    '<div class="at">Map has it at <a href="https://www.google.com/maps/search/?api=1&query=' + c.lat + ',' + c.lon + '">' +
+      coords(c) + '</a></div>' +
     '<div class="q">' + esc(c.question) + '</div>' +
     (c.why ? '<div class="why"><b>Why:</b> ' + esc(c.why) + '</div>' : '') +
     (c.look_for && !SHARED_TIP ? '<div class="look"><b>Look for:</b> ' + esc(c.look_for) + '</div>' : '') +
@@ -121,7 +154,8 @@ function cardHtml(c) {
     (s ? ' <button class="btn2 quiet" onclick="unsave(\'' + c.id + '\')">Clear</button>' : '') + '</div>' +
     '<div class="warn" id="warn-' + esc(c.id) + '"></div>' +
     (s ? '<div class="saved">✓ ' + esc(s.answer) + ' — saved ' + esc(new Date(s.when).toLocaleString()) +
-      (s.lat ? ', standing at ' + s.lat.toFixed(6) + ', ' + s.lon.toFixed(6) + ' (± ' + Math.round(s.acc) + ' m)' : ', location not available') + '</div>' : '') +
+      (s.lat ? ', standing at ' + coords(s) + ' (± ' + Math.round(s.acc) + ' m), ' + fmtDist(distM(s, c)) + ' from the map\'s spot'
+        : ', location not available') + '</div>' : '') +
     '</div>';
   return html;
 }
@@ -175,12 +209,23 @@ function resultsText() {
     if (s) {
       lines.push("  " + c.question);
       lines.push("  When: " + s.when);
-      lines.push("  Standing at: " + (s.lat ? s.lat.toFixed(6) + ", " + s.lon.toFixed(6) + " (+/- " + Math.round(s.acc) + " m)" : "location not available"));
+      lines.push("  Map has it at: " + coords(c));
+      lines.push("  Standing at: " + (s.lat ? coords(s) + " (+/- " + Math.round(s.acc) + " m), " + fmtDist(distM(s, c)) + " from the map's spot" : "location not available"));
       if (s.note) lines.push("  Note: " + s.note);
     }
   });
   lines.push("", "Page: " + location.href.split("#")[0], "Device: " + navigator.userAgent);
   return lines.join("\n");
+}
+
+// The desk table, tab-separated, for a spreadsheet or GIS
+function copyTable() {
+  var text = [...document.querySelectorAll("#deskTable tr")].map(function(tr) {
+    return [...tr.children].slice(0, 4).map(function(td) { return td.innerText.trim(); }).join("\t");
+  }).join("\n");
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function() {
+    document.getElementById("deskCopied").textContent = "Copied.";
+  }, function() { window.prompt("Copy the table:", text); });
 }
 
 function sendResults() {
