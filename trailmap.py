@@ -365,8 +365,8 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   }
   .int-link:hover { opacity: 0.8; text-decoration: none; }
   .rock-svg { display: inline-block; vertical-align: middle; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.35)); }
-  .int-link.rock-pill { white-space: nowrap; min-width: 0; padding: 0 2px; color: #333; }
-  .int-link.rock-pill .rock-svg { margin-top: -2px; }
+  .int-link.icon-pill { white-space: nowrap; min-width: 0; padding: 0 2px; color: #333; }
+  .int-link.icon-pill .rock-svg { margin-top: -2px; }
   .rock-name { margin-left: 5px; font-weight: 600; vertical-align: middle; }
   .rock-name.passed { color: #9e9e9e; }
   /* Digits sit on the baseline with room below for descenders they don't have, so center
@@ -380,7 +380,6 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .junction-dot { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%;
     background: #9e9e9e; border: 2px solid #fff; box-shadow: 0 0 0 1px #9e9e9e; vertical-align: middle; margin: 0 2px; }
   .junction-dot.passed { opacity: 0.4; }
-  .int-link.post-pill { color: #ffd54f; text-shadow: 0 0 1px #3e2a12, 0 0 1px #3e2a12; }
   .int-list .int-dist { color: #888; font-size: 11px; }
   .int-list .seg-bar { color: #bbb; font-size: 10px; padding: 0 0 0 16px; }
   .int-list .seg-link { display: block; color: #78909c; cursor: pointer; text-decoration: none; padding: 2px 0 2px 16px; }
@@ -420,6 +419,9 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
     font: 700 11px/15px sans-serif; text-align: center; box-shadow: 0 0 0 1px #0d3c78; }
   .legend-row .parking-badge { position: static; display: inline-block; margin: 0 6px 0 1px; vertical-align: middle; }
   .parking-tag { font-size: 11px; font-weight: 700; color: #1565c0; margin-left: 6px; }
+  .lot-badge { display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; box-sizing: border-box; border-radius: 3px; background: #1565c0; color: #fff;
+    font: 700 11px/1 sans-serif; border: 1.5px solid #fff; box-shadow: 0 0 0 1px #0d3c78; vertical-align: middle; }
   .connects-tag { font-size: 11px; color: #555; margin-top: 2px; }
   .locate-ctl a { display: flex; align-items: center; justify-content: center; }
   .locate-ctl a.active { color: #1e88e5; }
@@ -493,11 +495,20 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .route-row .seg-you { margin: 0 1px; }
   .exits { margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; }
   .exits-head { font-size: 12px; font-weight: 600; color: #555; margin-bottom: 4px; }
-  .exit-btn { display: flex; align-items: center; gap: 8px; width: 100%; margin: 4px 0; padding: 6px 8px;
+  .exit-btn { display: flex; align-items: center; gap: 6px; width: 100%; margin: 4px 0; padding: 6px 8px;
     border: 1px solid #cfd8dc; border-radius: 6px; background: #f7f9fa; cursor: pointer;
     font: inherit; text-align: left; }
   .exit-btn:hover { background: #eaf2f8; }
-  .exit-dist { font-weight: 600; color: #222; }
+  a.exit-btn { color: inherit; text-decoration: none; box-sizing: border-box; }
+  .drive-row { display: flex; align-items: stretch; gap: 6px; }
+  .drive-row .exit-btn { flex: 1; min-width: 0; }
+  .share-btn { flex: none; margin: 4px 0; padding: 0 10px; border: 1px solid #dde3e7; border-radius: 6px; background: #f5f7f8;
+    color: #37474f; cursor: pointer; display: flex; align-items: center; }
+  .exit-dist { font-weight: 600; color: #222; white-space: nowrap; min-width: 38px; text-align: right;
+    font-variant-numeric: tabular-nums; flex: none; }
+  /* The P centered between the distance and the note, a pixel left for the space after "mi" */
+  .park-slot { width: 10px; flex: none; text-align: center; padding-right: 2px; box-sizing: border-box; font-size: 11px; font-weight: 700; color: #1565c0; }
+  .exit-chip { display: inline-flex; justify-content: center; min-width: 36px; flex: none; }
   .exit-note { font-size: 11px; color: #666; }
 
   @media (max-width: 640px) {
@@ -517,7 +528,7 @@ __NAV__
   <h2>__REGION_NAME__</h2>
   <div class="content" id="infoContent"><div id="welcomeInfo">
     <p style="color:#888">Click a trail or intersection marker for details.</p>
-    <p style="margin-top:6px;font-size:12px"><a href="location-help.html">Location not working?</a></p>
+    <p style="margin-top:6px;font-size:12px"><a onclick="showDriveList()" style="cursor:pointer">Directions to an entrance</a> &nbsp;&middot;&nbsp; <a href="location-help.html">Location not working?</a></p>
     <p style="margin-top:8px;color:#888;font-size:11px">__N_INTS__ numbered intersections across __N_ZONES__ zones.<br>
     __N_TRAILS__ trail segments, __N_NAMES__ named trails.</p></div>
   </div>
@@ -701,7 +712,33 @@ var POST_COLOR = "#9c7a4f", POST_SIZE = 15;
 
 function intName(label) {
   var p = intFeatures[label].properties;
-  return p.junction ? "unmarked junction" : p.landmark || (p.no_sign ? "Post " + p.post : label);
+  return p.junction ? "unmarked junction" : p.landmark || p.lot || (p.no_sign ? "Post " + p.post : label);
+}
+
+// A parking lot (lot: its name) that isn't at an intersection and isn't in a zone: no
+// sign or number, a routing point for the trail that leads in from it. It shows as a P.
+function lotBadgeHtml() { return '<span class="lot-badge">P</span>'; }
+
+// A place in a list of entrances or exits: its pill, or for a lot, just its P, centered
+// in a column as wide as the pills so the distances after it line up
+function entryChipHtml(label) {
+  var p = intFeatures[label].properties;
+  return '<span class="exit-chip">' + (p.lot ? lotBadgeHtml()
+    : '<span class="int-link" style="background:' + ZONE_COLORS[p.zone] + '">' + label + '</span>') + '</span>';
+}
+
+// A fixed-width slot for the P of a place with parking (empty without), so the notes after
+// it line up from row to row
+function parkSlotHtml(label) {
+  return '<span class="park-slot">' + (intFeatures[label].properties.parking ? 'P' : '') + '</span>';
+}
+
+// The light note after the distance: where an entrance leads ("from" or "to" it; the
+// short form if it has one, connects_short), or a lot's name
+function entryNoteHtml(label, word) {
+  var p = intFeatures[label].properties, to = p.connects_short || p.connects;
+  return p.lot ? '<span class="exit-note">' + esc(p.lot) + '</span>'
+    : to ? '<span class="exit-note">' + word + ' ' + esc(to) + '</span>' : '';
 }
 
 // Unsigned junctions (junction: true) are where trails meet with no sign: routing points
@@ -719,7 +756,7 @@ function rockSvg(size) {
 // A dot's resting look. Signless points (Post 4, Teetering Rock) hide their dot behind
 // their badge or icon; it still shows when selected or hovered.
 function restStyle(m) {
-  return {radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[m._zone],
+  return {radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[m._zone] || "#1565c0",
           fillOpacity: m._hidden ? 0 : 0.85, opacity: m._hidden ? 0 : 1};
 }
 
@@ -747,7 +784,7 @@ intData.features.forEach(function(f) {
   var ll = [f.geometry.coordinates[1], f.geometry.coordinates[0]];
   var color = ZONE_COLORS[zone];
 
-  if (f.properties.entry) {
+  if (f.properties.entry && !f.properties.lot) {
     var em = L.marker(ll, {
       pane: "entryPane", interactive: false,
       icon: L.divIcon({className: "", iconSize: [34, 34], iconAnchor: [17, 17],
@@ -774,6 +811,13 @@ intData.features.forEach(function(f) {
   marker._onTap = onTap;
   intMarkers[label] = marker;
   intFeatures[label] = f;
+
+  if (f.properties.lot) {
+    L.marker(ll, {
+      icon: L.divIcon({className: "", html: lotBadgeHtml(), iconSize: [18, 18], iconAnchor: [9, 9]}),
+      title: f.properties.lot, keyboard: false
+    }).on("click", onTap).addTo(map);
+  }
 
   if (f.properties.landmark) {
     var mark = f.properties.mark ? [f.properties.mark[1], f.properties.mark[0]] : ll;
@@ -832,12 +876,14 @@ function showIntInfo(feature, marker) {
   var pubTag = p.is_public
     ? '<span class="tag tag-public">Public</span>'
     : '<span class="tag tag-private">Private</span>';
-  var zoneTag = (REGION.zonesPage ? '<a href="zones.html#zone-' + p.zone + '"' : '<span') + ' class="tag tag-zone" style="background:' +
+  var zoneTag = !ZONE_COLORS[p.zone] ? '' : (REGION.zonesPage ? '<a href="zones.html#zone-' + p.zone + '"' : '<span') + ' class="tag tag-zone" style="background:' +
     ZONE_COLORS[p.zone] + '">' + p.zone + ': ' + ZONE_NAMES[p.zone] + (REGION.zonesPage ? '</a>' : '</span>');
   var ownerHref = p.owner ? 'owners.html#' + ownerSlug(p.owner) : '';
 
   var html = '<table>' +
-    (p.landmark
+    (p.lot
+      ? '<tr><td>Parking</td><td>' + lotBadgeHtml() + ' <strong style="font-size:16px;vertical-align:middle">' + esc(p.lot) + '</strong></td></tr>'
+      : p.landmark
       ? '<tr><td>Landmark</td><td>' + rockSvg(20) + ' <strong style="font-size:16px;vertical-align:middle">' + esc(p.landmark) + '</strong> ' + zoneTag + '</td></tr>'
       : p.no_sign
       ? '<tr><td>Post</td><td>' + postBadgeHtml(p.post) + ' ' + zoneTag + '<div class="connects-tag">No sign here</div></td></tr>'
@@ -1152,7 +1198,10 @@ map.on("zoomend", function() { if (plan) drawRoute(); });
 // ft (optional): distance to the next step shown, if quiet steps are skipped in between
 function stepRowHtml(step, state, ft) {
   var html = '<div class="route-step' + (state === "passed" ? ' passed' : '') + '">' +
-    (state === "here" ? '<span class="you-badge">You</span>' : '') + intPill(step.label, state);
+    (state === "here" ? '<span class="you-badge">You</span>' : '') +
+    // The pill (or a signless place's icon, unnamed: it says what it is when tapped)
+    // centered in a column, so what follows lines up from row to row
+    '<span class="exit-chip">' + pillIcon(step.label, state) + '</span>';
   if (step.nextTrail) {
     html += '<span class="route-arrow">→</span>' +
       '<span class="route-trail-name">' + esc(step.nextTrail) + '</span>' + blazeChipsHtml(step.nextBlazes || []) +
@@ -1633,10 +1682,9 @@ function pickEntrance(destLabel, roundTrip, all) {
     opts.slice(0, all ? opts.length : ENTRANCE_CHOICES).forEach(function(o) {
       var p = intFeatures[o.label].properties;
       html += '<button class="exit-btn" onclick="routeFromEntrance(\'' + o.label + '\', \'' + destLabel + '\', ' + roundTrip + ')">' +
-        '<span class="int-link" style="background:' + ZONE_COLORS[p.zone] + '">' + o.label + '</span>' +
-        (p.parking ? '<span class="parking-tag" style="margin-left:0">P</span>' : '') +
-        '<span class="exit-dist">' + formatDist(roundTrip ? 2 * o.len : o.len) + '</span>' +
-        (p.connects ? '<span class="exit-note">from ' + esc(p.connects) + '</span>' : '') + '</button>';
+        entryChipHtml(o.label) +
+        '<span class="exit-dist">' + formatDist(roundTrip ? 2 * o.len : o.len) + '</span>' + parkSlotHtml(o.label) +
+        entryNoteHtml(o.label, "from") + '</button>';
     });
     if (!all && opts.length > ENTRANCE_CHOICES)
       html += '<div class="plan-link"><a onclick="pickEntrance(\'' + destLabel + '\', ' + roundTrip + ', true)">More entrances (' +
@@ -1960,7 +2008,7 @@ function hoverOwner(ownerName, field) {
     var f = intFeatures[label];
     var m = intMarkers[label];
     if (f.properties[field || "owner"] === ownerName && m && m !== selectedMarker && !f.properties.junction) {
-      m.setStyle({radius: 11, weight: 4, color: "#111", fillColor: ZONE_COLORS[m._zone], fillOpacity: 1, opacity: 1});
+      m.setStyle({radius: 11, weight: 4, color: "#111", fillColor: ZONE_COLORS[m._zone] || "#1565c0", fillOpacity: 1, opacity: 1});
       m.bringToFront();
       hoverOwnerMarkers.push(label);
     }
@@ -2470,8 +2518,8 @@ try { panelStartsCompact = localStorage.getItem(PANEL_KEY) === "1"; } catch (e) 
 setPanelCompact(panelStartsCompact);
 
 var defaultInfo = '<div id="welcomeInfo"><p style="color:#888">Click a trail or intersection marker for details.</p>' +
-  '<p style="margin-top:6px;font-size:12px"><a href="location-help.html' + (/iPhone|iPad|iPod/.test(navigator.userAgent) ? '#iphone' : '') +
-  '">Location not working?</a></p>' +
+  '<p style="margin-top:6px;font-size:12px"><a onclick="showDriveList()" style="cursor:pointer">Directions to an entrance</a> &nbsp;·&nbsp; ' +
+  '<a href="location-help.html' + (/iPhone|iPad|iPod/.test(navigator.userAgent) ? '#iphone' : '') + '">Location not working?</a></p>' +
   '<p class="full-only" style="margin-top:8px;color:#888;font-size:11px">__N_INTS__ numbered intersections across __N_ZONES__ zones.<br>' +
   '__N_TRAILS__ trail segments, __N_NAMES__ named trails.</p></div>';
 
@@ -2980,20 +3028,32 @@ function routeFromMe(destLabel) {
   }
 }
 
-// state (optional): "passed" greys the pill, "here" rings it. A landmark is its icon,
-// with its name beside it in the large view only.
+// state (optional): "passed" greys the pill, "here" rings it. A place with no sign (a
+// post, a landmark, a parking lot) is its small map icon, with its name beside it in the
+// large view only.
 function intPill(label, state) {
+  return pillIcon(label, state) + pillName(label, state);
+}
+
+function isSignless(p) { return !!(p.landmark || p.lot || p.no_sign); }
+
+// The pill, or a signless place's icon, alone
+function pillIcon(label, state) {
   var p = intFeatures[label].properties;
   if (p.junction) {
     return '<span class="junction-dot' + (state === "passed" ? ' passed' : '') + '" title="Unmarked junction"></span>';
   }
-  var kind = p.landmark ? ' rock-pill' : p.no_sign ? ' post-pill' : '';
-  var cls = kind + (state === "passed" || state === "here" ? ' ' + state : '');
-  var bg = p.landmark ? 'transparent' : p.no_sign ? POST_COLOR : ZONE_COLORS[p.zone];
+  var cls = (isSignless(p) ? ' icon-pill' : '') + (state === "passed" || state === "here" ? ' ' + state : '');
+  var bg = isSignless(p) ? 'transparent' : ZONE_COLORS[p.zone];
   return '<a class="int-link' + cls + '" style="background:' + bg + '" title="' + esc(intName(label)) + '" onmouseover="hoverInt(\'' + label + '\')" onmouseout="unhover()" onclick="selectIntFromTrail(\'' + label + '\')">' +
-    (p.landmark ? rockSvg(18) + '<span class="rock-name full-only">' + esc(p.landmark) + '</span>' : p.no_sign ? esc(String(p.post)) : intName(label)) + '</a>' +
-    // A post with no sign is just its number, named beside it (like a landmark)
-    (p.no_sign && !p.landmark ? '<span class="rock-name full-only' + (state === "passed" ? ' passed' : '') + '">' + esc(intName(label)) + '</span>' : '');
+    (p.landmark ? rockSvg(18) : p.lot ? lotBadgeHtml() : p.no_sign ? postBadgeHtml(p.post) : intName(label)) + '</a>';
+}
+
+// A signless place's name, for beside its icon (large view only)
+function pillName(label, state) {
+  var p = intFeatures[label].properties;
+  return p.junction || !isSignless(p) ? ''
+    : '<span class="rock-name full-only' + (state === "passed" ? ' passed' : '') + '">' + esc(intName(label)) + '</span>';
 }
 
 // Where the user is: at an intersection, on a segment between two ends, or off trail
@@ -3078,6 +3138,7 @@ function locateHtml(place) {
   }
   if (plan) html += '<div style="margin-top:2px">' + backToRouteBtn() + '</div>';
   else if (!awayFromTrails()) html += exitsHtml();
+  else html += driveLinkHtml();
   // (Only on phones: a computer without GPS is always this vague, and has no such setting)
   if (userAccuracy > ROUGH_FIX_M && (IS_IOS || /Android/.test(navigator.userAgent))) {
     html += '<div class="estimated-tag" style="margin-top:6px">Your phone is only sharing a rough location (within ' +
@@ -3089,6 +3150,109 @@ function locateHtml(place) {
 
 var ENTRY_NEAR_M = 60;   // crumbs this close to an entry point count as passing it
 var showAllExits = false;
+
+// --- Directions to an entrance: the entrances you can get to by road (with parking, or a
+// road-end like C12's; drive_to is where to go), nearest first. Tapping one hands it to
+// the phone: on Android a geo: link, which opens your default maps app or asks which
+// (Maps, Waze, ...); on iPhones, which have no such chooser for websites, Apple Maps,
+// Google Maps or Waze, as you pick (remembered); on a computer, Google Maps. The app
+// picks walking or driving. Share sends the place to any app (messages, the car, ...).
+var NAV_KEY = REGION.storagePrefix + "NavApp";
+var DRIVE_CHOICES = 8;   // nearest entrances listed before "More"
+var IS_ANDROID = /Android/.test(navigator.userAgent);
+var NAV_APPS = {apple: "Apple Maps", google: "Google Maps", waze: "Waze"};
+
+function navApp() {
+  var pick = null;
+  try { pick = localStorage.getItem(NAV_KEY); } catch (e) {}
+  return NAV_APPS[pick] ? pick : "apple";
+}
+
+function setNavApp(app) {
+  try { localStorage.setItem(NAV_KEY, app); } catch (e) {}
+  showDriveList(driveListAll);
+}
+
+function driveLatLng(label) {
+  var p = intFeatures[label].properties;
+  return p.drive_to ? L.latLng(p.drive_to[1], p.drive_to[0]) : intMarkers[label].getLatLng();
+}
+
+function placeName(label) {
+  var p = intFeatures[label].properties;
+  return p.parking_name || p.lot || p.connects_short || p.connects || intName(label);
+}
+
+function googleMapsUrl(label) {
+  var ll = driveLatLng(label);
+  return "https://www.google.com/maps/dir/?api=1&destination=" + ll.lat.toFixed(6) + "," + ll.lng.toFixed(6);
+}
+
+function directionsUrl(label) {
+  var ll = driveLatLng(label), at = ll.lat.toFixed(6) + "," + ll.lng.toFixed(6);
+  // (the name's own parentheses encoded, as the label is wrapped in them)
+  if (IS_ANDROID) return "geo:" + at + "?q=" + at + "(" + encodeURIComponent(placeName(label)).replace(/\(/g, "%28").replace(/\)/g, "%29") + ")";
+  if (!IS_IOS) return googleMapsUrl(label);
+  var app = navApp();
+  return app === "google" ? googleMapsUrl(label)
+    : app === "waze" ? "https://waze.com/ul?ll=" + at + "&navigate=yes"
+    : "https://maps.apple.com/?daddr=" + at;
+}
+
+// The phone's share sheet (or, without one, the link copied)
+function shareEntrance(label) {
+  var name = placeName(label), url = googleMapsUrl(label);
+  if (navigator.share) {
+    navigator.share({title: name, text: name + " (" + REGION.name + ")", url: url}).catch(function() {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function() { showPanelMsg("Copied a map link to " + esc(name) + "."); });
+  } else {
+    window.prompt("Map link to " + name + ":", url);
+  }
+}
+
+var driveListAll = false;
+function showDriveList(all) {
+  driveListAll = !!all;
+  clearSelection(true);
+  // Nearest you first; without your location, nearest the middle of the map (no distances)
+  var from = userLatLng || map.getCenter();
+  var places = entryLabels().filter(function(l) {
+    var p = intFeatures[l].properties;
+    return p.parking || p.drive_to;
+  }).map(function(l) {
+    return {label: l, d: from.distanceTo(driveLatLng(l)), dist: userLatLng ? userLatLng.distanceTo(driveLatLng(l)) : null};
+  });
+  places.sort(function(a, b) { return a.d - b.d; });
+  var opens = IS_ANDROID ? "your maps app" : IS_IOS ? NAV_APPS[navApp()] : "Google Maps";
+  var html = '<div class="route-msg" style="margin-top:0">Directions to an entrance' +
+    '<div style="font-size:12px;color:#666;margin-top:2px">Tap one for directions in ' + opens + ', or share it.</div></div><div class="exits">';
+  places.slice(0, all ? places.length : DRIVE_CHOICES).forEach(function(o) {
+    html += '<div class="drive-row"><a class="exit-btn" href="' + esc(directionsUrl(o.label)) + '"' + (IS_ANDROID ? '' : ' target="_blank" rel="noopener"') + '>' +
+      entryChipHtml(o.label) + (o.dist !== null ? '<span class="exit-dist">' + formatDist(o.dist) + '</span>' : '') +
+      parkSlotHtml(o.label) +
+      '<span class="exit-note">' + esc(placeName(o.label)) + '</span></a>' +
+      '<button class="share-btn" title="Share" aria-label="Share" onclick="shareEntrance(' + jsArg(o.label) + ')">' + SHARE_ICON + '</button></div>';
+  });
+  if (!all && places.length > DRIVE_CHOICES) {
+    html += '<div class="plan-link"><a onclick="showDriveList(true)">More entrances (' + (places.length - DRIVE_CHOICES) + ')</a></div>';
+  }
+  html += '</div>';
+  if (IS_IOS) {
+    html += '<div class="plan-link">Open in: ' + Object.keys(NAV_APPS).map(function(k) {
+      return k === navApp() ? '<strong>' + NAV_APPS[k] + '</strong>' : '<a onclick="setNavApp(\'' + k + '\')">' + NAV_APPS[k] + '</a>';
+    }).join(' · ') + '</div>';
+  }
+  html += '<div style="margin-top:8px"><button class="route-btn" style="background:#888" onclick="clearSelection();showHome()">Back</button></div>';
+  document.getElementById("infoContent").innerHTML = html;
+}
+
+var SHARE_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+  '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
+
+function driveLinkHtml() {
+  return '<div class="plan-link"><a onclick="showDriveList()">Directions to an entrance</a></div>';
+}
 
 function entryLabels() {
   return Object.keys(intFeatures).filter(function(label) { return intFeatures[label].properties.entry; });
@@ -3113,10 +3277,10 @@ function inferEntrance() {
 function exitBtnHtml(e) {
   var p = intFeatures[e.label].properties;
   return '<button class="exit-btn" onclick="routeFromMe(\'' + e.label + '\')">' +
-    '<span class="int-link" style="background:' + ZONE_COLORS[p.zone] + '">' + e.label + '</span>' +
+    entryChipHtml(e.label) +
     '<span class="exit-dist">' + formatDist(e.dist) + '</span>' +
-    (p.parking ? '<span class="parking-tag" style="margin-left:0">P</span>' : '') +
-    (p.connects ? '<span class="exit-note">to ' + esc(p.connects) + '</span>' : '') + '</button>';
+    parkSlotHtml(e.label) +
+    entryNoteHtml(e.label, "to") + '</button>';
 }
 
 // Large view only, when not navigating and out on the trails: quick routes out to the

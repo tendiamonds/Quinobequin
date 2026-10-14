@@ -579,6 +579,11 @@ def main():
             name = lot_name(lot, ll)
             if name and not p.get("connects"):
                 p["connects"] = name
+            # Driving directions go to the lot itself (the first lot found for this entry)
+            if not p.get("drive_to"):
+                p["drive_to"] = [round(ll[0], 6), round(ll[1], 6)]
+                if name:
+                    p["parking_name"] = name[0].upper() + name[1:]
 
     # Trails, and which intersections lie along each, straight from the shared points
     blazes = blaze_runs(ways, nodes, load("pdf_blazes.json"))

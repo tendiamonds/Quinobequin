@@ -435,7 +435,12 @@
         "zone": "C",
         "entry": true,
         "parking": true,
-        "sign": "C1"
+        "sign": "C1",
+        "drive_to": [
+          -71.499676,
+          42.195294
+        ],
+        "parking_name": "College Rock Park parking"
       },
       "geometry": {
         "type": "Point",
@@ -1136,7 +1141,11 @@
         "zone": "B",
         "entry": true,
         "connects": "Upper Charles Rail Trail",
-        "sign": "B1"
+        "sign": "B1",
+        "drive_to": [
+          -71.505632,
+          42.179639
+        ]
       },
       "geometry": {
         "type": "Point",
@@ -1956,7 +1965,14 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "C",
-        "sign": "C12"
+        "sign": "C12",
+        "entry": true,
+        "connects": "Adams Street through Ridgetop Farm (public right of way)",
+        "drive_to": [
+          -71.490718,
+          42.188624
+        ],
+        "connects_short": "Adams Street via Ridgetop Farm"
       },
       "geometry": {
         "type": "Point",
@@ -2997,7 +3013,12 @@
         "zone": "F",
         "entry": true,
         "parking": true,
-        "sign": "F1"
+        "sign": "F1",
+        "drive_to": [
+          -71.487549,
+          42.170561
+        ],
+        "parking_name": "End of Dunster Road"
       },
       "geometry": {
         "type": "Point",
@@ -3015,7 +3036,12 @@
         "zone": "A",
         "entry": true,
         "parking": true,
-        "sign": "A1"
+        "sign": "A1",
+        "drive_to": [
+          -71.484379,
+          42.178185
+        ],
+        "parking_name": "Adams Street parking"
       },
       "geometry": {
         "type": "Point",
@@ -3033,7 +3059,11 @@
         "zone": "C",
         "entry": true,
         "connects": "Upper Charles Rail Trail",
-        "sign": "C37"
+        "sign": "C37",
+        "drive_to": [
+          -71.504678,
+          42.183923
+        ]
       },
       "geometry": {
         "type": "Point",
@@ -4142,6 +4172,29 @@
         "coordinates": [
           -71.5064101,
           42.1672175
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "code": "L1",
+        "lot": "Rail Trail Parking (Route 85)",
+        "no_sign": true,
+        "entry": true,
+        "parking": true,
+        "zone": "",
+        "connects": "Route 85 (Cedar Street), Milford",
+        "drive_to": [
+          -71.504753,
+          42.188244
+        ]
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5047409,
+          42.1878299
         ]
       }
     }
