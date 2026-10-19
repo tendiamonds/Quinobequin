@@ -1588,7 +1588,15 @@
         "id": "tf_17",
         "name": "Bumblebee",
         "pdf_name": "Bumblebee",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "blue",
+            0.0,
+            210.3,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -3772,7 +3780,15 @@
         "id": "tf_39",
         "name": "Deer Way",
         "pdf_name": "Deer Way",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "blue",
+            0.0,
+            296.9,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -4822,7 +4838,15 @@
         "id": "tf_44",
         "name": "Do You Feel Lucky",
         "pdf_name": "Do You Feel Lucky",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "blue",
+            224.2,
+            314.6,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -5562,7 +5586,33 @@
         "id": "tf_51",
         "name": "Fairbanks Trail",
         "pdf_name": "Fairbanks Trail",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "orange",
+            0.0,
+            268.4,
+            0
+          ],
+          [
+            "red",
+            0.0,
+            532.2,
+            0
+          ],
+          [
+            "yellow",
+            197.6,
+            347.8,
+            0
+          ],
+          [
+            "green",
+            351.7,
+            532.2,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -6796,7 +6846,15 @@
         "id": "tf_58",
         "name": "Gulley",
         "pdf_name": "Gulley",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "red",
+            267.0,
+            475.0,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -8203,7 +8261,27 @@
         "id": "tf_69",
         "name": "Knee Jerk",
         "pdf_name": "Knee Jerk",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "green",
+            43.9,
+            126.5,
+            0
+          ],
+          [
+            "red",
+            43.9,
+            582.3,
+            0
+          ],
+          [
+            "green",
+            203.0,
+            582.3,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -9525,7 +9603,21 @@
         "id": "tf_74",
         "name": "Log Run",
         "pdf_name": "Log Run",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "green",
+            0.0,
+            407.9,
+            0
+          ],
+          [
+            "red",
+            0.0,
+            407.9,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -12337,7 +12429,15 @@
         "id": "tf_90",
         "name": "New Trail",
         "pdf_name": "New Trail",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "blue",
+            784.4,
+            861.2,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -13015,7 +13115,21 @@
         "id": "tf_95",
         "name": "Number Eight",
         "pdf_name": "Number Eight",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "red",
+            2.7,
+            115.8,
+            0
+          ],
+          [
+            "yellow",
+            2.7,
+            115.8,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -13117,7 +13231,21 @@
         "id": "tf_96",
         "name": "Number Five.",
         "pdf_name": "Number Five.",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "red",
+            0.0,
+            162.7,
+            0
+          ],
+          [
+            "green",
+            55.5,
+            162.7,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -14455,7 +14583,15 @@
         "id": "tf_109",
         "name": "Right Turn Clyde",
         "pdf_name": "Right Turn Clyde",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "blue",
+            4.2,
+            101.0,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -14955,7 +15091,15 @@
         "id": "tf_116",
         "name": "Sneaky Quickie",
         "pdf_name": "Sneaky Quickie",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "orange",
+            0.0,
+            170.5,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -15427,7 +15571,15 @@
         "id": "tf_120",
         "name": "Sudden Impact",
         "pdf_name": "Sudden Impact",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "blue",
+            0.0,
+            98.9,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -15720,7 +15872,21 @@
         "id": "tf_122",
         "name": "Swampside",
         "pdf_name": "Swampside",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "red",
+            0.0,
+            520.5,
+            0
+          ],
+          [
+            "green",
+            57.5,
+            520.5,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -15986,7 +16152,27 @@
         "id": "tf_123",
         "name": "Teetering Rock",
         "pdf_name": "Teetering Rock",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "green",
+            0.0,
+            154.9,
+            0
+          ],
+          [
+            "red",
+            0.0,
+            556.2,
+            0
+          ],
+          [
+            "green",
+            227.4,
+            427.9,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -18860,7 +19046,21 @@
         "id": "tf_136",
         "name": "Toejam",
         "pdf_name": "Toejam",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "orange",
+            0.0,
+            337.3,
+            0
+          ],
+          [
+            "red",
+            0.0,
+            385.3,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -19142,7 +19342,21 @@
         "id": "tf_137",
         "name": "Tonto",
         "pdf_name": "Tonto",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "red",
+            0.0,
+            467.3,
+            0
+          ],
+          [
+            "blue",
+            41.3,
+            467.3,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -19454,7 +19668,15 @@
         "id": "tf_139",
         "name": "Town Forest Trail",
         "pdf_name": "Town Forest Trail",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "orange",
+            167.7,
+            703.0,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -22116,7 +22338,21 @@
         "name": "",
         "pdf_name": "",
         "source": "gpx 2026-10-11",
-        "geometry_note": "first 17 m shares Fairbanks Trail's line out of F12"
+        "geometry_note": "first 17 m shares Fairbanks Trail's line out of F12",
+        "blazes": [
+          [
+            "red",
+            0.0,
+            108.9,
+            0
+          ],
+          [
+            "yellow",
+            0.0,
+            108.9,
+            0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",

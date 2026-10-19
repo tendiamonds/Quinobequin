@@ -65,6 +65,9 @@ OSM_WIDTH = {"track": "wide", "bridleway": "wide", "service": "road", "path": "n
 BLAZE_SNAP_M = 45        # a symbol this close to a trail point is marking it
 BLAZE_LINK_M = {"skyline": 30, "dots": 80, "arrows": 450}   # neighboring symbols are this close
 BLAZE_DETOUR = 1.6       # the trail between neighbors is at most this much longer than straight
+BLAZE_DETOUR_ARROWS = 3.1   # ...or for triangles, joined only to the next one they point at, this
+                            # much, on trails (not roads): enough for a hairpin between two
+                            # (2129 to 2135, by 2132)
 BLAZE_GAP_M = 60         # an unmarked gap this short inside a blazed stretch is blazed too
 BLAZE_MIN_M = 30         # shorter blazed stretches are dropped
 
@@ -311,8 +314,9 @@ def blaze_runs(ways, nodes, symbols):
         best = min(near, default=None)
         return best[1] if best and best[0] <= BLAZE_SNAP_M else None
 
-    def between(a, b, limit):
-        """The trail edges from a to b, [(way, edge, direction)], if no longer than limit"""
+    def between(a, b, limit, trails_only=False):
+        """The trail edges from a to b, [(way, edge, direction)], if no longer than limit
+        (and with trails_only, not along a road)"""
         best, prev, queue = {a: 0}, {}, [(0, a)]
         while queue:
             d, u = heapq.heappop(queue)
@@ -325,6 +329,8 @@ def blaze_runs(ways, nodes, symbols):
             if d > best.get(u, math.inf):
                 continue
             for v, w, wi, k, sign in graph[u]:
+                if trails_only and ways[wi].get("road"):
+                    continue
                 if d + w <= limit and d + w < best.get(v, math.inf):
                     best[v], prev[v] = d + w, (u, (wi, k, sign))
                     heapq.heappush(queue, (d + w, v))
@@ -349,7 +355,10 @@ def blaze_runs(ways, nodes, symbols):
             else:
                 near = near[:2]
             for d, j in near:
-                steps = between(at[i], at[j], max(BLAZE_DETOUR * d, d + 60))
+                limit = max(BLAZE_DETOUR * d, d + 60)
+                steps = between(at[i], at[j], limit)
+                if steps is None and style == "arrows":
+                    steps = between(at[i], at[j], max(BLAZE_DETOUR_ARROWS * d, limit), trails_only=True)
                 for wi, k, sign in steps or []:
                     marked[(blaze, wi)][k] += sign if style == "arrows" else 0
                     marked[(blaze, wi)].setdefault(k, 0)

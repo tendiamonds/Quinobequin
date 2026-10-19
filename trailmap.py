@@ -2552,7 +2552,8 @@ function showTrailInfo(feature, layer, ll, k) {
   }
   html += '</div>';
   if (plan && !seg) html += '<div style="margin-top:6px">' + backToRouteBtn() + '</div>';
-  html += reportLinkHtml("trail", name || "Unnamed trail", seg && (seg.a + "–" + seg.b));
+  html += reportLinkHtml("trail", name || "Unnamed trail", seg && (seg.a + "–" + seg.b),
+                         blazed.map(function(k) { return REGION.blazes[k].marks; }).join(", "));
 
   document.getElementById("infoContent").innerHTML = html;
 }
@@ -2583,9 +2584,11 @@ function clearSelection(keepRoute) {
 // fills in a message for the phone's mail app, with the details needed to act on it.
 // REGION.report: {email, signReports}; signReports adds "I'm standing at this sign".
 
-function reportLinkHtml(what, ref, extra) {
+// blazes (optional, for a trail): the blazes the map shows on it, for the report to say
+function reportLinkHtml(what, ref, extra, blazes) {
   return REGION.report
-    ? '<div class="report-link full-only"><a onclick="showReport(' + jsArg(what) + ', ' + jsArg(ref) + ', ' + jsArg(extra || "") + ')">Report a problem</a></div>'
+    ? '<div class="report-link full-only"><a onclick="showReport(' + jsArg(what) + ', ' + jsArg(ref) + ', ' + jsArg(extra || "") + ', ' +
+      jsArg(blazes || "") + ')">Report a problem</a></div>'
     : '';
 }
 
@@ -2595,19 +2598,26 @@ var REPORT_KINDS = {
   here: ["A trail here is missing from the map", "Something's wrong with the map here", "Other"]
 };
 var AT_SIGN = "I'm standing at this sign";
+// Offered for trails where the region maps blazes, to collect what's really out there
+var BLAZE_KIND = "Blaze color wrong or missing";
+var REPORT_HINTS = {};
+REPORT_HINTS[BLAZE_KIND] = "What blazes do you see? The colors, and where along the trail they start and stop";
+var NOTE_HINT = "Anything else? (optional)";
 
-function showReport(what, ref, extra) {
+function showReport(what, ref, extra, blazes) {
   var kinds = REPORT_KINDS[what].slice();
   var p = what === "int" ? intFeatures[ref].properties : null;
   if (what === "int" && REGION.report.signReports && !p.no_sign) kinds.unshift(AT_SIGN);
+  if (what === "trail" && Object.keys(REGION.blazes || {}).length) kinds.splice(kinds.length - 1, 0, BLAZE_KIND);
   var subject = what === "int" ? intName(ref) : what === "trail" ? ref + (extra ? " (" + extra + ")" : "") : "where I am";
   var html = '<div class="report"><div class="report-head">Report a problem with <strong>' + esc(subject) + '</strong></div>';
   kinds.forEach(function(k, i) {
-    html += '<label class="report-kind"><input type="radio" name="reportKind" value="' + esc(k) + '"' + (i === 0 ? ' checked' : '') + '> ' + esc(k) + '</label>';
+    html += '<label class="report-kind"><input type="radio" name="reportKind" value="' + esc(k) + '"' + (i === 0 ? ' checked' : '') +
+      ' onchange="document.getElementById(\'reportNote\').placeholder = ' + jsArg(REPORT_HINTS[k] || NOTE_HINT) + '"> ' + esc(k) + '</label>';
   });
-  html += '<textarea id="reportNote" rows="3" placeholder="Anything else? (optional)"></textarea>' +
+  html += '<textarea id="reportNote" rows="3" placeholder="' + esc(NOTE_HINT) + '"></textarea>' +
     '<div id="reportWarn" class="report-warn"></div>' +
-    '<button class="route-btn" onclick="sendReport(' + jsArg(what) + ', ' + jsArg(ref) + ', ' + jsArg(extra || "") + ')">Send report</button> ' +
+    '<button class="route-btn" onclick="sendReport(' + jsArg(what) + ', ' + jsArg(ref) + ', ' + jsArg(extra || "") + ', ' + jsArg(blazes || "") + ')">Send report</button> ' +
     '<button class="route-btn" style="background:#888" onclick="closeReport(' + jsArg(what) + ', ' + jsArg(ref) + ')">Cancel</button>' +
     '<div class="report-fine">Opens your mail app with the report filled in, including your location if it\'s on. Send it from there.</div></div>';
   document.getElementById("infoContent").innerHTML = html;
@@ -2622,7 +2632,7 @@ function closeReport(what, ref) {
   else showHome();
 }
 
-function sendReport(what, ref, extra) {
+function sendReport(what, ref, extra, blazes) {
   var picked = document.querySelector('input[name="reportKind"]:checked');
   var kind = picked ? picked.value : "Other";
   var note = document.getElementById("reportNote").value.trim();
@@ -2641,6 +2651,7 @@ function sendReport(what, ref, extra) {
       if (kind === AT_SIGN) lines.push("Sign is " + Math.round(userLatLng.distanceTo(at)) + " m from where the map has it");
     } else if (what === "trail") {
       lines.push("Trail: " + ref + (extra ? ", between " + extra : ""));
+      if (Object.keys(REGION.blazes || {}).length) lines.push("Blazes on the map: " + (blazes || "none"));
     }
     lines.push(userLatLng
       ? "My location: " + userLatLng.lat.toFixed(6) + ", " + userLatLng.lng.toFixed(6) + " (+/- " + Math.round(userAccuracy) + " m)"
@@ -2818,11 +2829,12 @@ trailData.features.forEach(function(f, ti) {
   });
 });
 trailData.features.forEach(function(f, ti) {
+  // Blazes sharing a stretch take turns along it, each a step on from the one before
+  var keysHere = blazeKeys.filter(function(k) { return (f.properties.blazes || []).some(function(r) { return r[0] === k; }); });
   (f.properties.blazes || []).forEach(function(r) {
     var b = REGION.blazes[r[0]], pts = sliceTrail(ti, r[1], r[2]);
     var rect = b.style === "blazes";
-    // Blazes sharing a stretch take turns along it
-    var line = {dashArray: rect ? "4,12" : "0.1,10", dashOffset: String(blazeKeys.indexOf(r[0]) * 5),
+    var line = {dashArray: rect ? "4,12" : "0.1,10", dashOffset: String(keysHere.indexOf(r[0]) * 5),
                 lineCap: rect ? "butt" : "round", interactive: false, opacity: 1};
     if (b.style !== "arrows") {
       blazeLayer.addLayer(L.polyline(pts, L.extend({}, line, {color: rect ? "#fff" : "#333", weight: rect ? 8 : 5})));

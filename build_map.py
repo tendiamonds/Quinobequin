@@ -68,6 +68,16 @@ def region():
         "otherMaps": [{"name": "Blue Hills", "href": "bluehills/map.html"}],
         "zonesPage": True,
         "nav": nav_html("map"),
+        # Blazed trails, from NEMBA's 2012 map (uc_blazes.py), corrected from the ground;
+        # which stretches each marks is in trails_selected.geojson ("blazes", as for the
+        # Blue Hills)
+        "blazes": {
+            "red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"},
+            "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"},
+            "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"},
+            "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"},
+            "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"},
+        },
     }
 
 

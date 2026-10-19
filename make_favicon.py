@@ -55,7 +55,9 @@ def make_icons(out_dir, label, color, name, short_name):
         "start_url": "map.html",
         "scope": "./",
         "display": "standalone",
-        "background_color": "#ffffff",
+        # Android colors the installed app's bottom bar from background_color but draws its
+        # buttons to suit theme_color, so the two match (white buttons on white otherwise)
+        "background_color": NAVY,
         "theme_color": NAVY,
         "icons": [
             {"src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
