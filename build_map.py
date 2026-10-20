@@ -78,6 +78,10 @@ def region():
             "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"},
             "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"},
         },
+        # Double or single track, also from the 2012 map (trails_selected.geojson "widths");
+        # the map app calls double track easy going and single track moderate
+        "widths": {"wide": "Double track", "narrow": "Single track"},
+        "terrain": ["Easy", "Moderate", "Challenging", "Difficult"],
     }
 
 

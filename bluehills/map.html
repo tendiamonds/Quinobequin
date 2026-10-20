@@ -135,10 +135,12 @@
     box-shadow: 0 0 0 1.5px #222; }
   .legend-diamond { width: 12px; height: 12px; margin: 2px 6px 2px 2px; border-width: 2px; display: inline-block; box-shadow: none; }
   .entry-tag { font-size: 11px; font-weight: 700; color: #333; }
-  .parking-badge { position: absolute; left: -9px; top: 22px; width: 15px; height: 15px;
+  /* The P centered in the box, as in .lot-badge (a 15px line in a 12px box sat low) */
+  .parking-badge { position: absolute; left: -9px; top: 22px; width: 15px; height: 15px; box-sizing: border-box;
+    display: flex; align-items: center; justify-content: center;
     border-radius: 3px; background: #1565c0; color: #fff; border: 1.5px solid #fff;
-    font: 700 11px/15px sans-serif; text-align: center; box-shadow: 0 0 0 1px #0d3c78; }
-  .legend-row .parking-badge { position: static; display: inline-block; margin: 0 6px 0 1px; vertical-align: middle; }
+    font: 700 11px/1 sans-serif; box-shadow: 0 0 0 1px #0d3c78; }
+  .legend-row .parking-badge { position: static; display: inline-flex; margin: 0 6px 0 1px; vertical-align: middle; }
   .parking-tag { font-size: 11px; font-weight: 700; color: #1565c0; margin-left: 6px; }
   .lot-badge { display: inline-flex; align-items: center; justify-content: center;
     width: 16px; height: 16px; box-sizing: border-box; border-radius: 3px; background: #1565c0; color: #fff;
@@ -609,8 +611,6 @@ function showIntInfo(feature, marker) {
       ? '<tr><td>Post</td><td>' + postBadgeHtml(p.post) + ' ' + zoneTag + '<div class="connects-tag">No sign here</div></td></tr>'
       : '<tr><td>Label</td><td><strong style="font-size:16px">' + p.label + '</strong> ' + zoneTag + '</td></tr>' +
         (p.post ? '<tr><td>Post</td><td>' + postBadgeHtml(p.post) + '</td></tr>' : '')) +
-    (p.estimated ? '<tr><td></td><td><div class="estimated-tag">Location estimated from the park map' +
-      (REGION.report && REGION.report.signReports ? '. If you\'re at this sign, please report it.' : '.') + '</div></td></tr>' : '') +
     (p.ele !== undefined && REGION.eleStep ? '<tr class="full-only"><td>Elevation</td><td>' + feet(p.ele) + '</td></tr>' : '') +
     (p.entry ? '<tr><td>Access</td><td><span class="entry-tag">◆ Entry point</span>' +
       (p.parking ? '<span class="parking-tag">P Parking</span>' : '') +
@@ -2082,6 +2082,8 @@ function chainStops(chain) {
   return stops;
 }
 
+var TERRAIN_MIN_M = 20;   // less of a terrain than this in a stretch goes unmentioned
+
 // Terrain over some stretches: [[terrain, meters]], roughest first
 function terrainMix(slices) {
   var len = [];
@@ -2224,7 +2226,9 @@ function showTrailInfo(feature, layer, ll, k) {
     }).join('') + '</td></tr>';
   }
 
-  var mix = terrainMix(slices);
+  // A few meters of another terrain where a stretch begins or ends isn't worth saying
+  var mix = terrainMix(slices), worth = mix.filter(function(m) { return m[1] >= TERRAIN_MIN_M; });
+  if (worth.length) mix = worth;
   if (mix.length) {
     var main = mix.slice().sort(function(a, b) { return b[1] - a[1]; })[0];
     var widths = {};

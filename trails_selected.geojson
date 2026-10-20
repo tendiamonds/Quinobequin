@@ -7,7 +7,14 @@
         "id": "tf_0",
         "name": "\"BB\"",
         "pdf_name": "\"BB\"",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            63.8
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -57,7 +64,14 @@
         "id": "tf_1",
         "name": "207",
         "pdf_name": "207",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            80.2,
+            280.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -167,7 +181,14 @@
         "id": "tf_2",
         "name": "495 -Milford Rock Run",
         "pdf_name": "495 -Milford Rock Run",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            1032.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -557,7 +578,14 @@
         "id": "tf_3",
         "name": "495 Run B",
         "pdf_name": "495 Run B",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            47.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -587,7 +615,14 @@
         "id": "tf_4",
         "name": "50 Yards the Hard Way",
         "pdf_name": "50 Yards the Hard Way",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            316.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -701,7 +736,14 @@
         "id": "tf_5",
         "name": "7-11",
         "pdf_name": "7-11",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            99.1
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -739,7 +781,14 @@
         "id": "tf_6",
         "name": "7-11 Drop",
         "pdf_name": "7-11 Drop",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            67.8
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -803,7 +852,22 @@
         "id": "tf_8",
         "name": "Adams Lot Trail",
         "pdf_name": "Adams Lot Trail",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "blue",
+            101.7,
+            211.3,
+            0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            323.4
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -909,7 +973,14 @@
         "id": "tf_9",
         "name": "Adams Street Parking Access",
         "pdf_name": "Adams Street Parking Access",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            140.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -943,7 +1014,24 @@
         "id": "tf_10",
         "name": "Armageddon",
         "pdf_name": "Armageddon",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            120.8
+          ],
+          [
+            "wide",
+            120.8,
+            232.2
+          ],
+          [
+            "narrow",
+            275.2,
+            321.7
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -1107,7 +1195,14 @@
         "id": "tf_12",
         "name": "B Bypass",
         "pdf_name": "B Bypass",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            361.1
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -1185,7 +1280,14 @@
         "id": "tf_13",
         "name": "B-Line",
         "pdf_name": "B-Line",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            89.8
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -1235,7 +1337,14 @@
         "id": "tf_14",
         "name": "Battle Scar",
         "pdf_name": "Battle Scar",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            343.0,
+            391.1
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -1362,7 +1471,14 @@
         "name": "Beaver Brook Way",
         "pdf_name": "Beaver Brook Way",
         "source": "trailforks",
-        "geometry_note": "C26-C21-J1 from OpenStreetMap, 2026-10-12"
+        "geometry_note": "C26-C21-J1 from OpenStreetMap, 2026-10-12",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            790.8
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -1595,6 +1711,13 @@
             0.0,
             210.3,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            210.3
           ]
         ]
       },
@@ -2116,7 +2239,14 @@
         "id": "tf_19",
         "name": "Burnt Ends",
         "pdf_name": "Burnt Ends",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            205.2,
+            258.6
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -2406,7 +2536,14 @@
         "id": "tf_20",
         "name": "C4",
         "pdf_name": "C4",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            292.2
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -2738,7 +2875,14 @@
         "id": "tf_22",
         "name": "Cell Tower Trail",
         "pdf_name": "Cell Tower Trail",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            133.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -2776,7 +2920,14 @@
         "id": "tf_25",
         "name": "Charles River Loop",
         "pdf_name": "Charles River Loop",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            107.4
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -2870,7 +3021,14 @@
         "id": "tf_26",
         "name": "Charles River Tow Road Lower",
         "pdf_name": "Charles River Tow Road Lower",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            51.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -2928,7 +3086,19 @@
         "id": "tf_27",
         "name": "Charles River Tow Road Middle",
         "pdf_name": "Charles River Tow Road Middle",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            40.0
+          ],
+          [
+            "narrow",
+            449.2,
+            524.5
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -2974,7 +3144,14 @@
         "id": "tf_28",
         "name": "Charles River Tow Road Upper",
         "pdf_name": "Charles River Tow Road Upper",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            395.2
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -3016,7 +3193,14 @@
         "id": "tf_29",
         "name": "Charles River Trail",
         "pdf_name": "Charles River Trail",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            380.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -3106,7 +3290,14 @@
         "id": "tf_30",
         "name": "Chattering Rock",
         "pdf_name": "Chattering Rock",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            334.9,
+            627.2
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -3270,7 +3461,19 @@
         "id": "tf_32",
         "name": "Chicken Run",
         "pdf_name": "Chicken Run",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            90.5
+          ],
+          [
+            "narrow",
+            90.5,
+            262.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -3422,7 +3625,14 @@
         "id": "tf_34",
         "name": "Cliffwalk",
         "pdf_name": "Cliffwalk",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            232.9,
+            277.4
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -3594,7 +3804,14 @@
         "id": "tf_36",
         "name": "College Rock Lot Trail",
         "pdf_name": "College Rock Lot Trail",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            272.6
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -3656,7 +3873,14 @@
         "id": "tf_37",
         "name": "College Rock Run",
         "pdf_name": "College Rock Run",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            529.6
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -3784,9 +4008,16 @@
         "blazes": [
           [
             "blue",
-            0.0,
+            0.9,
             296.9,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            296.9
           ]
         ]
       },
@@ -4052,7 +4283,19 @@
         "id": "tf_41",
         "name": "Dirty Little Secret",
         "pdf_name": "Dirty Little Secret",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            309.8,
+            377.6
+          ],
+          [
+            "narrow",
+            453.3,
+            636.6
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -4842,9 +5085,16 @@
         "blazes": [
           [
             "blue",
-            224.2,
-            314.6,
+            229.1,
+            308.7,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            198.6,
+            356.5
           ]
         ]
       },
@@ -4952,7 +5202,14 @@
         "id": "tf_45",
         "name": "Don't Ask, Don't Tell",
         "pdf_name": "Don't Ask, Don't Tell",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            338.8
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -5182,7 +5439,19 @@
         "id": "tf_49",
         "name": "Eagle's Nest",
         "pdf_name": "Eagle's Nest",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            118.5
+          ],
+          [
+            "narrow",
+            279.4,
+            461.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -5512,7 +5781,14 @@
         "id": "tf_50",
         "name": "F16",
         "pdf_name": "F16",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            183.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -5589,28 +5865,47 @@
         "source": "trailforks",
         "blazes": [
           [
+            "red",
+            0.0,
+            165.6,
+            0
+          ],
+          [
             "orange",
             0.0,
-            268.4,
+            165.6,
             0
           ],
           [
             "red",
-            0.0,
-            532.2,
+            197.6,
+            505.4,
+            0
+          ],
+          [
+            "orange",
+            197.6,
+            268.4,
             0
           ],
           [
             "yellow",
             197.6,
-            347.8,
+            355.9,
             0
           ],
           [
             "green",
-            351.7,
-            532.2,
+            355.9,
+            505.4,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            801.6
           ]
         ]
       },
@@ -6166,7 +6461,19 @@
         "id": "tf_52",
         "name": "Farm Way",
         "pdf_name": "Farm Way",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            122.3
+          ],
+          [
+            "narrow",
+            122.3,
+            525.5
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -6330,7 +6637,14 @@
         "id": "tf_54",
         "name": "Firewall",
         "pdf_name": "Firewall",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            59.4
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -6372,7 +6686,14 @@
         "id": "tf_55",
         "name": "Found",
         "pdf_name": "Found",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            269.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -6712,7 +7033,14 @@
         "id": "tf_57",
         "name": "Gintro",
         "pdf_name": "Gintro",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            56.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -6849,10 +7177,23 @@
         "source": "trailforks",
         "blazes": [
           [
+            "green",
+            96.5,
+            267.0,
+            0
+          ],
+          [
             "red",
             267.0,
             475.0,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            477.6
           ]
         ]
       },
@@ -6956,7 +7297,14 @@
         "id": "tf_59",
         "name": "Highway Connector",
         "pdf_name": "Highway Connector",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            296.4
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -7046,7 +7394,14 @@
         "id": "tf_60",
         "name": "Hob Knob",
         "pdf_name": "Hob Knob",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            48.6
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -7238,7 +7593,24 @@
         "id": "tf_62",
         "name": "Holliston Highway",
         "pdf_name": "Holliston Highway",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            148.9
+          ],
+          [
+            "narrow",
+            148.9,
+            319.3
+          ],
+          [
+            "wide",
+            319.3,
+            2103.2
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -7637,7 +8009,14 @@
         "name": "Holliston Highway - Driveway Access Trail",
         "pdf_name": "Holliston Highway - Driveway Access Trail",
         "source": "trailforks",
-        "route_cost": 1.5
+        "route_cost": 1.5,
+        "widths": [
+          [
+            "wide",
+            55.0,
+            228.7
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -7753,7 +8132,14 @@
         "id": "tf_65",
         "name": "It Wasn't Me",
         "pdf_name": "It Wasn't Me",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            97.3,
+            212.7
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -8045,7 +8431,14 @@
         "id": "tf_67",
         "name": "Just the sink",
         "pdf_name": "Just the sink",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            325.7
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -8187,7 +8580,14 @@
         "id": "tf_68",
         "name": "Kitchen",
         "pdf_name": "Kitchen",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            275.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -8264,22 +8664,23 @@
         "source": "trailforks",
         "blazes": [
           [
-            "green",
-            43.9,
-            126.5,
-            0
-          ],
-          [
             "red",
             43.9,
-            582.3,
+            594.2,
             0
           ],
           [
             "green",
-            203.0,
-            582.3,
+            43.9,
+            594.2,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            769.5
           ]
         ]
       },
@@ -9081,7 +9482,14 @@
         "id": "tf_71",
         "name": "Leftovers",
         "pdf_name": "Leftovers",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            64.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -9557,7 +9965,14 @@
         "id": "tf_73",
         "name": "Linkin Logs",
         "pdf_name": "Linkin Logs",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            83.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -9606,16 +10021,23 @@
         "source": "trailforks",
         "blazes": [
           [
-            "green",
+            "red",
             0.0,
             407.9,
             0
           ],
           [
-            "red",
+            "green",
             0.0,
             407.9,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            407.9
           ]
         ]
       },
@@ -9715,7 +10137,14 @@
         "id": "tf_75",
         "name": "Lost Trail",
         "pdf_name": "Lost Trail",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            526.2
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -9885,7 +10314,14 @@
         "id": "tf_76",
         "name": "Lower Three Ledges",
         "pdf_name": "Lower Three Ledges",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            553.2
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -10335,7 +10771,14 @@
         "id": "tf_77",
         "name": "Middle Child",
         "pdf_name": "Middle Child",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            730.2
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -10717,7 +11160,14 @@
         "id": "tf_78",
         "name": "Middle Earth",
         "pdf_name": "Middle Earth",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            613.5
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -10831,7 +11281,14 @@
         "id": "tf_79",
         "name": "Middle Relief",
         "pdf_name": "Middle Relief",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            136.6
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -10881,7 +11338,14 @@
         "id": "tf_80",
         "name": "Middle Sister",
         "pdf_name": "Middle Sister",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            558.1
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -11039,7 +11503,22 @@
         "id": "tf_81",
         "name": "Milford Byway",
         "pdf_name": "Milford Byway",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "green",
+            329.7,
+            679.0,
+            0
+          ]
+        ],
+        "widths": [
+          [
+            "wide",
+            0.0,
+            1195.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -11301,7 +11780,14 @@
         "id": "tf_82",
         "name": "Mind The Climb",
         "pdf_name": "Mind The Climb",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            119.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -11355,7 +11841,14 @@
         "id": "tf_83",
         "name": "Mind the Gap",
         "pdf_name": "Mind the Gap",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            174.8
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -11473,7 +11966,14 @@
         "id": "tf_84",
         "name": "NEMBA Connector",
         "pdf_name": "NEMBA Connector",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            344.7
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -11591,7 +12091,19 @@
         "id": "tf_85",
         "name": "NEMBA Loop",
         "pdf_name": "NEMBA Loop",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            162.4
+          ],
+          [
+            "wide",
+            162.4,
+            202.5
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -11681,7 +12193,14 @@
         "id": "tf_86",
         "name": "NEMBA Loop",
         "pdf_name": "NEMBA Loop",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            979.7
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -12015,7 +12534,14 @@
         "id": "tf_87",
         "name": "Nemba Square",
         "pdf_name": "Nemba Square",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            156.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -12081,7 +12607,14 @@
         "id": "tf_88",
         "name": "NEMBA Trail",
         "pdf_name": "NEMBA Trail",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            698.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -12283,7 +12816,14 @@
         "id": "tf_89",
         "name": "Nemba Way",
         "pdf_name": "Nemba Way",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            506.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -12434,8 +12974,15 @@
           [
             "blue",
             784.4,
-            861.2,
+            860.5,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            788.0,
+            983.7
           ]
         ]
       },
@@ -12631,7 +13178,14 @@
         "id": "tf_91",
         "name": "No Ledges",
         "pdf_name": "No Ledges",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            96.4,
+            163.4
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -12749,7 +13303,14 @@
         "id": "tf_92",
         "name": "No Name",
         "pdf_name": "No Name",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            343.7
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -12959,7 +13520,14 @@
         "id": "tf_93",
         "name": "No Name 2",
         "pdf_name": "No Name 2",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            184.5
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -13119,15 +13687,22 @@
         "blazes": [
           [
             "red",
-            2.7,
+            0.0,
             115.8,
             0
           ],
           [
             "yellow",
-            2.7,
+            0.0,
             115.8,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            115.8
           ]
         ]
       },
@@ -13236,14 +13811,21 @@
           [
             "red",
             0.0,
-            162.7,
+            52.6,
             0
           ],
           [
             "green",
-            55.5,
+            55.4,
             162.7,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            165.0
           ]
         ]
       },
@@ -13375,7 +13957,14 @@
         "id": "tf_97",
         "name": "Old Farm Way",
         "pdf_name": "Old Farm Way",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            198.1
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -13421,7 +14010,24 @@
         "id": "tf_98",
         "name": "One Ledges",
         "pdf_name": "One Ledges",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            67.4
+          ],
+          [
+            "narrow",
+            67.4,
+            142.9
+          ],
+          [
+            "narrow",
+            244.3,
+            291.7
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -13607,7 +14213,14 @@
         "id": "tf_101",
         "name": "Pot o' Totters",
         "pdf_name": "Pot o' Totters",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            310.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -13677,7 +14290,19 @@
         "id": "tf_102",
         "name": "Powerline",
         "pdf_name": "Powerline",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            138.0
+          ],
+          [
+            "narrow",
+            196.9,
+            312.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -13783,7 +14408,14 @@
         "id": "tf_103",
         "name": "Powerlines",
         "pdf_name": "Powerlines",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            154.3,
+            1538.4
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -14029,7 +14661,14 @@
         "id": "tf_104",
         "name": "Quarry Loop 1",
         "pdf_name": "Quarry Loop 1",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            168.6
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -14083,7 +14722,14 @@
         "id": "tf_105",
         "name": "Quarry Loop 2",
         "pdf_name": "Quarry Loop 2",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            104.8
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -14129,7 +14775,14 @@
         "id": "tf_106",
         "name": "Quick Way Out",
         "pdf_name": "Quick Way Out",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            349.5
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -14219,7 +14872,14 @@
         "id": "tf_107",
         "name": "Rib Breaker",
         "pdf_name": "Rib Breaker",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            531.4
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -14389,7 +15049,14 @@
         "id": "tf_108",
         "name": "Rib Shaker",
         "pdf_name": "Rib Shaker",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            355.1
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -14588,8 +15255,15 @@
           [
             "blue",
             4.2,
-            101.0,
+            279.1,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            310.4
           ]
         ]
       },
@@ -14897,7 +15571,14 @@
         "id": "tf_112",
         "name": "Rubber branch?",
         "pdf_name": "Rubber branch?",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            293.5
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -14971,7 +15652,14 @@
         "id": "tf_114",
         "name": "SI Connector",
         "pdf_name": "SI Connector",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            16.7
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -14993,7 +15681,14 @@
         "id": "tf_115",
         "name": "Sister #3",
         "pdf_name": "Sister #3",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            187.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -15096,8 +15791,15 @@
           [
             "orange",
             0.0,
-            170.5,
+            85.2,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            170.5
           ]
         ]
       },
@@ -15335,7 +16037,19 @@
         "id": "tf_118",
         "name": "Splatidocious",
         "pdf_name": "Splatidocious",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            104.5,
+            149.3
+          ],
+          [
+            "narrow",
+            401.3,
+            466.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -15574,10 +16288,23 @@
         "source": "trailforks",
         "blazes": [
           [
+            "green",
+            0.0,
+            170.7,
+            0
+          ],
+          [
             "blue",
             0.0,
-            98.9,
+            170.7,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            170.7
           ]
         ]
       },
@@ -15654,7 +16381,19 @@
         "name": "Swamp Bypass",
         "pdf_name": "Swamp Bypass",
         "source": "trailforks",
-        "geometry_note": "F21-F20 from OpenStreetMap, 2026-10-12"
+        "geometry_note": "F21-F20 from OpenStreetMap, 2026-10-12",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            511.2
+          ],
+          [
+            "narrow",
+            1123.1,
+            1534.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -15882,9 +16621,16 @@
           ],
           [
             "green",
-            57.5,
+            0.0,
             520.5,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            520.5
           ]
         ]
       },
@@ -16155,22 +16901,23 @@
         "source": "trailforks",
         "blazes": [
           [
-            "green",
-            0.0,
-            154.9,
-            0
-          ],
-          [
             "red",
             0.0,
-            556.2,
+            554.0,
             0
           ],
           [
             "green",
-            227.4,
-            427.9,
+            0.0,
+            554.0,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            556.2
           ]
         ]
       },
@@ -16676,7 +17423,14 @@
         "id": "tf_125",
         "name": "The Gigg",
         "pdf_name": "The Gigg",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            416.7,
+            472.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -16810,7 +17564,19 @@
         "id": "tf_126",
         "name": "The Intro",
         "pdf_name": "The Intro",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            500.0
+          ],
+          [
+            "narrow",
+            579.4,
+            701.2
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -16980,7 +17746,27 @@
         "id": "tf_127",
         "name": "The Main Trail",
         "pdf_name": "The Main Trail",
-        "source": "trailforks"
+        "source": "trailforks",
+        "blazes": [
+          [
+            "red",
+            1500.4,
+            1993.8,
+            0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            69.6
+          ],
+          [
+            "wide",
+            69.6,
+            1993.8
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -18034,7 +18820,29 @@
         "id": "tf_128",
         "name": "The Maine Line",
         "pdf_name": "The Maine Line",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            190.6
+          ],
+          [
+            "narrow",
+            352.1,
+            440.9
+          ],
+          [
+            "narrow",
+            516.3,
+            574.3
+          ],
+          [
+            "narrow",
+            674.3,
+            732.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -18336,7 +19144,14 @@
         "id": "tf_129",
         "name": "The Maine Return",
         "pdf_name": "The Maine Return",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            46.0,
+            253.8
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -18434,7 +19249,14 @@
         "id": "tf_130",
         "name": "The Wall",
         "pdf_name": "The Wall",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            77.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -18472,7 +19294,14 @@
         "id": "tf_131",
         "name": "Three Ledges",
         "pdf_name": "Three Ledges",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            397.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -18598,7 +19427,14 @@
         "id": "tf_132",
         "name": "Three Sisters East",
         "pdf_name": "Three Sisters East",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            637.1
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -18840,7 +19676,14 @@
         "id": "tf_133",
         "name": "Three Sisters West",
         "pdf_name": "Three Sisters West",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            380.1
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -18962,7 +19805,14 @@
         "id": "tf_134",
         "name": "To East Main Street",
         "pdf_name": "To East Main Street",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            99.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -19049,16 +19899,23 @@
         "source": "trailforks",
         "blazes": [
           [
-            "orange",
-            0.0,
-            337.3,
-            0
-          ],
-          [
             "red",
             0.0,
             385.3,
             0
+          ],
+          [
+            "orange",
+            0.0,
+            385.3,
+            0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            385.3
           ]
         ]
       },
@@ -19352,9 +20209,16 @@
           ],
           [
             "blue",
-            41.3,
+            0.0,
             467.3,
             0
+          ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            467.3
           ]
         ]
       },
@@ -19550,7 +20414,14 @@
         "id": "tf_138",
         "name": "Top Down",
         "pdf_name": "Top Down",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            573.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -19672,9 +20543,27 @@
         "blazes": [
           [
             "orange",
-            167.7,
+            108.8,
             703.0,
             0
+          ],
+          [
+            "blue",
+            108.8,
+            703.0,
+            0
+          ]
+        ],
+        "widths": [
+          [
+            "wide",
+            0.0,
+            59.0
+          ],
+          [
+            "narrow",
+            59.0,
+            1268.0
           ]
         ]
       },
@@ -19894,7 +20783,14 @@
         "id": "tf_140",
         "name": "Trail to Quarry",
         "pdf_name": "Trail to Quarry",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            720.4
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -20100,7 +20996,14 @@
         "id": "tf_141",
         "name": "Uberberm",
         "pdf_name": "Uberberm",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            55.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -20332,7 +21235,19 @@
         "id": "tf_143",
         "name": "Vacationland",
         "pdf_name": "Vacationland",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            160.2
+          ],
+          [
+            "narrow",
+            204.3,
+            324.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -20568,7 +21483,24 @@
         "id": "tf_145",
         "name": "Access road via Milford Rock Quarry",
         "pdf_name": "Access road via Milford Rock Quarry",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            208.9
+          ],
+          [
+            "narrow",
+            208.9,
+            260.8
+          ],
+          [
+            "wide",
+            260.8,
+            1023.0
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -20850,7 +21782,14 @@
         "id": "tf_146",
         "name": "Walker Trail",
         "pdf_name": "Walker Trail",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            246.9
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -20904,7 +21843,14 @@
         "id": "tf_147",
         "name": "Whaleback Rock",
         "pdf_name": "Whaleback Rock",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            176.1
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -21022,7 +21968,14 @@
         "id": "tf_148",
         "name": "While We Can",
         "pdf_name": "While We Can",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            483.1
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -21286,7 +22239,14 @@
         "id": "tf_152",
         "name": "Widowmaker",
         "pdf_name": "Widowmaker",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            184.7
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -21372,7 +22332,14 @@
         "id": "tf_153",
         "name": "Wooden Stamps",
         "pdf_name": "Wooden Stamps",
-        "source": "trailforks"
+        "source": "trailforks",
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            77.3
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -21426,7 +22393,14 @@
         "access": "",
         "_idx": 295,
         "source": "added_from_old",
-        "pdf_name": "Gigg Bail"
+        "pdf_name": "Gigg Bail",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            40.8
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -21687,7 +22661,14 @@
         "surface": "",
         "access": "",
         "pdf_name": "Challenger",
-        "source": "added_from_old"
+        "source": "added_from_old",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            50.1
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -22352,6 +23333,13 @@
             108.9,
             0
           ]
+        ],
+        "widths": [
+          [
+            "narrow",
+            0.0,
+            108.9
+          ]
         ]
       },
       "geometry": {
@@ -22446,7 +23434,19 @@
         "source": "osm",
         "highway": "cycleway",
         "surface": "asphalt",
-        "geometry_note": "OSM Upper Charles Trail (ways 171002908, 1267285478, 184366734) from the Route 85 parking lot south past C37, ending at B1"
+        "geometry_note": "OSM Upper Charles Trail (ways 171002908, 1267285478, 184366734) from the Route 85 parking lot south past C37, ending at B1",
+        "widths": [
+          [
+            "wide",
+            0.0,
+            293.9
+          ],
+          [
+            "wide",
+            343.9,
+            487.7
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
