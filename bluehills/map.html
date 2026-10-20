@@ -128,6 +128,8 @@
   .route-step { display: flex; align-items: center; gap: 6px; margin: 4px 0; font-size: 12px; }
   .route-arrow { color: #0d47a1; font-weight: 700; }
   .turn-icon { flex: none; }
+  .int-link.shape-pill { background: transparent; padding: 0; min-width: 0; line-height: 0; border-radius: 50%; }
+  .shape-head { display: flex; align-items: center; gap: 10px; }
   .route-step.passed .turn-icon { opacity: 0.45; }
   .route-trail-name { color: #555; font-style: italic; }
   .entry-diamond { width: 24px; height: 24px; margin: 5px; transform: rotate(45deg);
@@ -434,7 +436,19 @@ var POST_COLOR = "#9c7a4f", POST_SIZE = 15;
 
 function intName(label) {
   var p = intFeatures[label].properties;
-  return p.junction ? "unmarked junction" : p.landmark || p.lot || (p.no_sign ? "Post " + p.post : label);
+  return p.junction ? "unmarked junction" : p.shape ? shapeName(label) : p.landmark || p.lot || (p.no_sign ? "Post " + p.post : label);
+}
+
+// --- Unnumbered intersections (shape: true, as build_saratoga.py makes them): each is a small picture of the trails
+// meeting there (junctionIconHtml), named by them: "Main Trail & Sybil"
+function shapeName(label) {
+  var names = [], p = intFeatures[label].properties;
+  (intTrailMap[label] || []).forEach(function(c) {
+    if (c[0] && !/^(unnamed|road)\b/i.test(c[0]) && names.indexOf(c[0]) < 0) names.push(c[0]);
+  });
+  if (!names.length) return p.parking_name || (p.entry ? "Trailhead" : "Trail junction");
+  if (names.length === 1) return names[0];
+  return names.slice(0, -1).join(", ") + " & " + names[names.length - 1];
 }
 
 // A parking lot (lot: its name) that isn't at an intersection and isn't in a zone: no
@@ -445,7 +459,7 @@ function lotBadgeHtml() { return '<span class="lot-badge">P</span>'; }
 // in a column as wide as the pills so the distances after it line up
 function entryChipHtml(label) {
   var p = intFeatures[label].properties;
-  return '<span class="exit-chip">' + (p.lot ? lotBadgeHtml()
+  return '<span class="exit-chip">' + (p.lot ? lotBadgeHtml() : p.shape ? junctionIconHtml(label, 26)
     : '<span class="int-link" style="background:' + ZONE_COLORS[p.zone] + '">' + label + '</span>') + '</span>';
 }
 
@@ -558,7 +572,7 @@ intData.features.forEach(function(f) {
       title: "Post " + f.properties.post, keyboard: false
     }).on("click", onTap).addTo(map);
   }
-  if (f.properties.no_sign) return;
+  if (f.properties.no_sign || f.properties.shape) return;
 
   var lbl = L.marker(ll, {
     icon: L.divIcon({
@@ -609,6 +623,9 @@ function showIntInfo(feature, marker) {
       ? '<tr><td>Landmark</td><td>' + rockSvg(20) + ' <strong style="font-size:16px;vertical-align:middle">' + esc(p.landmark) + '</strong> ' + zoneTag + '</td></tr>'
       : p.no_sign
       ? '<tr><td>Post</td><td>' + postBadgeHtml(p.post) + ' ' + zoneTag + '<div class="connects-tag">No sign here</div></td></tr>'
+      : p.shape
+      ? '<tr><td>Junction</td><td><div class="shape-head">' + junctionIconHtml(p.label, 64) + '<div><strong style="font-size:15px">' +
+        esc(intName(p.label)) + '</strong><div style="margin-top:4px">' + zoneTag + '</div></div></div></td></tr>'
       : '<tr><td>Label</td><td><strong style="font-size:16px">' + p.label + '</strong> ' + zoneTag + '</td></tr>' +
         (p.post ? '<tr><td>Post</td><td>' + postBadgeHtml(p.post) + '</td></tr>' : '')) +
     (p.ele !== undefined && REGION.eleStep ? '<tr class="full-only"><td>Elevation</td><td>' + feet(p.ele) + '</td></tr>' : '') +
@@ -1024,6 +1041,57 @@ function turnIconSvg(i) {
     '<path d="' + others + '" stroke="#9aa5ab" stroke-width="2"/>' +
     '<path d="' + pathD(way) + '" stroke="#0d47a1" stroke-width="2.6"/></g>' +
     '<path d="' + pathD(head) + 'Z" fill="#0d47a1"/></svg>';
+}
+
+// An unnumbered intersection's picture: the trails within SHAPE_R_M of it, north up, each
+// in its blaze's color (grey if it has none), no arrow. Drawn once, at px across.
+var SHAPE_R_M = 30, shapeIcons = {};
+
+function junctionIconHtml(label, px) {
+  if (shapeIcons[label] === undefined) shapeIcons[label] = junctionIconSvg(label);
+  return shapeIcons[label].replace(/SIZE/g, px).replace(/CLIP_ID/g, 'turn-clip-' + (turnClipId++));
+}
+
+function junctionIconSvg(label) {
+  var c = intMarkers[label].getLatLng(), r = SHAPE_R_M, k = (TURN_HALF_PX - 1) / r;
+  function xy(lng, lat) { return [(lng - c.lng) * 82000 * k, -(lat - c.lat) * 111000 * k]; }
+  var grey = '', colored = '';
+  trailData.features.forEach(function(f, ti) {
+    var pts = flatCoords(f.geometry), run = [];
+    function flush() {
+      if (run.length > 1) {
+        var mid = run[Math.floor(run.length / 2)], at = trailCum[ti][mid.i];
+        var on = blazesOn(ti, Math.max(at - 5, 0), at + 5);
+        var d = run.map(function(q, n) { return (n ? 'L' : 'M') + q.x.toFixed(1) + ' ' + q.y.toFixed(1); }).join('');
+        if (on.length) {
+          colored += '<path d="' + d + '" stroke="' + REGION.blazes[on[0].key].color + '" stroke-width="3"/>';
+          if (on.length > 1) colored += '<path d="' + d + '" stroke="' + REGION.blazes[on[1].key].color + '" stroke-width="3" stroke-dasharray="3,3"/>';
+        } else {
+          grey += '<path d="' + d + '" stroke="' + (f.properties.road ? "#b0bec5" : "#78909c") + '" stroke-width="2.2"/>';
+        }
+      }
+      run = [];
+    }
+    for (var i = 0; i < pts.length; i++) {
+      var dx = (pts[i][0] - c.lng) * 82000, dy = (pts[i][1] - c.lat) * 111000;
+      var near = Math.abs(dx) < 2 * r && Math.abs(dy) < 2 * r;
+      var nextNear = i + 1 < pts.length && Math.abs((pts[i + 1][0] - c.lng) * 82000) < 2 * r && Math.abs((pts[i + 1][1] - c.lat) * 111000) < 2 * r;
+      var prevNear = i > 0 && Math.abs((pts[i - 1][0] - c.lng) * 82000) < 2 * r && Math.abs((pts[i - 1][1] - c.lat) * 111000) < 2 * r;
+      if (near || nextNear || prevNear) {
+        var q = xy(pts[i][0], pts[i][1]);
+        run.push({x: q[0], y: q[1], i: i});
+      } else {
+        flush();
+      }
+    }
+    flush();
+  });
+  var h = TURN_HALF_PX;
+  return '<svg class="turn-icon" width="SIZE" height="SIZE" viewBox="' + -h + ' ' + -h + ' ' + 2 * h + ' ' + 2 * h + '">' +
+    '<defs><clipPath id="CLIP_ID"><circle r="' + (h - 1) + '"/></clipPath></defs>' +
+    '<circle r="' + (h - 0.5) + '" fill="#f4f6f7" stroke="#cfd8dc"/>' +
+    '<g clip-path="url(#CLIP_ID)" fill="none" stroke-linecap="round" stroke-linejoin="round">' + grey + colored + '</g>' +
+    '<circle r="1.8" fill="#263238"/></svg>';
 }
 
 // ft (optional): distance to the next step shown, if quiet steps are skipped in between;
@@ -2946,6 +3014,10 @@ function isSignless(p) { return !!(p.landmark || p.lot || p.no_sign); }
 // The pill, or a signless place's icon, alone
 function pillIcon(label, state) {
   var p = intFeatures[label].properties;
+  if (p.shape) {
+    return '<a class="int-link shape-pill' + (state === "passed" || state === "here" ? ' ' + state : '') + '" title="' + esc(intName(label)) +
+      '" onmouseover="hoverInt(' + jsArg(label) + ')" onmouseout="unhover()" onclick="selectIntFromTrail(' + jsArg(label) + ')">' + junctionIconHtml(label, 26) + '</a>';
+  }
   if (p.junction) {
     return '<span class="junction-dot' + (state === "passed" ? ' passed' : '') + '" title="Unmarked junction"></span>';
   }

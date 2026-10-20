@@ -1,0 +1,556 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-10-20T14:19:10Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 1319465852,
+  "lat": 43.0934741,
+  "lon": -73.8050266,
+  "tags": {
+    "amenity": "parking",
+    "name": "Ingram Park Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 142997635,
+  "center": {
+    "lat": 43.0956868,
+    "lon": -73.7817378
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Arts Quad Parking A"
+  }
+},
+{
+  "type": "way",
+  "id": 142998571,
+  "center": {
+    "lat": 43.0972265,
+    "lon": -73.7810978
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Arts Quad Parking B"
+  }
+},
+{
+  "type": "way",
+  "id": 146302476,
+  "center": {
+    "lat": 43.1014447,
+    "lon": -73.7874868
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Cane Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 146302614,
+  "center": {
+    "lat": 43.0949325,
+    "lon": -73.7869407
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Tang Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 339254711,
+  "center": {
+    "lat": 43.0873700,
+    "lon": -73.7991083
+  },
+  "tags": {
+    "access": "customers",
+    "amenity": "parking",
+    "fee": "no",
+    "parking": "surface"
+  }
+},
+{
+  "type": "way",
+  "id": 638258319,
+  "center": {
+    "lat": 43.0878482,
+    "lon": -73.7788383
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 804893352,
+  "center": {
+    "lat": 43.0882207,
+    "lon": -73.7956121
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 804893361,
+  "center": {
+    "lat": 43.0887277,
+    "lon": -73.7956585
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 804893362,
+  "center": {
+    "lat": 43.0892784,
+    "lon": -73.7956296
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 814207092,
+  "center": {
+    "lat": 43.0886977,
+    "lon": -73.7765745
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 814207094,
+  "center": {
+    "lat": 43.0883406,
+    "lon": -73.7779139
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 814207108,
+  "center": {
+    "lat": 43.0892550,
+    "lon": -73.7766191
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 814953337,
+  "center": {
+    "lat": 43.0880660,
+    "lon": -73.7761612
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 814953344,
+  "center": {
+    "lat": 43.0881110,
+    "lon": -73.7765877
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 815803028,
+  "center": {
+    "lat": 43.0894135,
+    "lon": -73.7738413
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 815803029,
+  "center": {
+    "lat": 43.0891622,
+    "lon": -73.7740278
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 815803032,
+  "center": {
+    "lat": 43.0889575,
+    "lon": -73.7752633
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 815803036,
+  "center": {
+    "lat": 43.0888822,
+    "lon": -73.7747485
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 815803038,
+  "center": {
+    "lat": 43.0885631,
+    "lon": -73.7753366
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 927299520,
+  "center": {
+    "lat": 43.0895067,
+    "lon": -73.7724375
+  },
+  "tags": {
+    "access": "yes",
+    "amenity": "parking",
+    "description": "Parking for Spring Run Trail",
+    "fee": "no",
+    "parking": "surface",
+    "surface": "gravel"
+  }
+},
+{
+  "type": "way",
+  "id": 947562440,
+  "center": {
+    "lat": 43.0898968,
+    "lon": -73.7698346
+  },
+  "tags": {
+    "access": "customers",
+    "amenity": "parking",
+    "fee": "no",
+    "parking": "surface"
+  }
+},
+{
+  "type": "way",
+  "id": 1036984695,
+  "center": {
+    "lat": 43.0939186,
+    "lon": -73.7867677
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Sports Center Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 1036984696,
+  "center": {
+    "lat": 43.0941075,
+    "lon": -73.7860113
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Lodge Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 1036984738,
+  "center": {
+    "lat": 43.0979370,
+    "lon": -73.7803654
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "North Hall East lot"
+  }
+},
+{
+  "type": "way",
+  "id": 1036984740,
+  "center": {
+    "lat": 43.0993756,
+    "lon": -73.7809240
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Falstaff's Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 1036984743,
+  "center": {
+    "lat": 43.0984106,
+    "lon": -73.7817749
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "North Hall Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 1036984744,
+  "center": {
+    "lat": 43.0964464,
+    "lon": -73.7857896
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Case Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 1036984745,
+  "center": {
+    "lat": 43.0957213,
+    "lon": -73.7880781
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "West Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 1036984746,
+  "center": {
+    "lat": 43.0981421,
+    "lon": -73.7872286
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Tower Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 1036984747,
+  "center": {
+    "lat": 43.0988803,
+    "lon": -73.7869824
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Wait Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 1036984748,
+  "center": {
+    "lat": 43.0985668,
+    "lon": -73.7831569
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Palamountian Lot"
+  }
+},
+{
+  "type": "way",
+  "id": 1038310906,
+  "center": {
+    "lat": 43.1110376,
+    "lon": -73.7880452
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 1124003416,
+  "center": {
+    "lat": 43.0954330,
+    "lon": -73.8212661
+  },
+  "tags": {
+    "amenity": "parking",
+    "parking": "surface",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1124003417,
+  "center": {
+    "lat": 43.0947540,
+    "lon": -73.8210712
+  },
+  "tags": {
+    "amenity": "parking",
+    "parking": "surface",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1124003418,
+  "center": {
+    "lat": 43.0942669,
+    "lon": -73.8201588
+  },
+  "tags": {
+    "amenity": "parking",
+    "parking": "surface",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1124003419,
+  "center": {
+    "lat": 43.0943283,
+    "lon": -73.8185141
+  },
+  "tags": {
+    "amenity": "parking",
+    "parking": "surface",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1124003425,
+  "center": {
+    "lat": 43.0952147,
+    "lon": -73.8180127
+  },
+  "tags": {
+    "amenity": "parking",
+    "parking": "surface",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1180077804,
+  "center": {
+    "lat": 43.1049406,
+    "lon": -73.7947578
+  },
+  "tags": {
+    "amenity": "parking",
+    "capacity": "6",
+    "parking": "surface",
+    "surface": "unpaved"
+  }
+},
+{
+  "type": "way",
+  "id": 1189918894,
+  "center": {
+    "lat": 43.0895263,
+    "lon": -73.7773509
+  },
+  "tags": {
+    "amenity": "parking"
+  }
+},
+{
+  "type": "way",
+  "id": 1189918895,
+  "center": {
+    "lat": 43.0888104,
+    "lon": -73.7785799
+  },
+  "tags": {
+    "access": "customers",
+    "amenity": "parking",
+    "parking": "surface"
+  }
+},
+{
+  "type": "way",
+  "id": 1233876029,
+  "center": {
+    "lat": 43.1395052,
+    "lon": -73.7685918
+  },
+  "tags": {
+    "amenity": "parking",
+    "bicycle": "yes",
+    "foot": "yes",
+    "parking": "surface",
+    "surface": "gravel"
+  }
+},
+{
+  "type": "way",
+  "id": 1339145473,
+  "center": {
+    "lat": 43.0904269,
+    "lon": -73.7931653
+  },
+  "tags": {
+    "access": "private",
+    "amenity": "parking",
+    "parking": "surface",
+    "surface": "asphalt"
+  }
+},
+{
+  "type": "way",
+  "id": 1382754056,
+  "center": {
+    "lat": 43.0983301,
+    "lon": -73.7715792
+  },
+  "tags": {
+    "amenity": "parking",
+    "parking": "surface"
+  }
+},
+{
+  "type": "relation",
+  "id": 13887199,
+  "center": {
+    "lat": 43.0982426,
+    "lon": -73.7883776
+  },
+  "tags": {
+    "amenity": "parking",
+    "name": "Sussman Lots",
+    "type": "multipolygon"
+  }
+}
+
+  ]
+}
