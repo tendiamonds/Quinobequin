@@ -49,12 +49,28 @@ LEFT_OUT = {
     1018910711: "a campus footway along Perimeter Road, past the parking lots (each made an entrance)",
 }
 # Parking OpenStreetMap doesn't have: (lon, lat), name
-EXTRA_LOTS = [((-73.77806, 43.09949), "North Broadway lot")]   # where North Broadway ends
+EXTRA_LOTS = [((-73.77806, 43.09949), "North Broadway lot"),     # where North Broadway ends
+              ((-73.772149, 43.118), "Artisanal Brew Works")]        # its lot behind the building (Gupthill Road, Wilton)
 # Lots OpenStreetMap has that aren't the way in they seem: no parking for the trails there
-NOT_TRAIL_PARKING = {"North Hall Lot"}   # nearest the Red Trail's dead end at Falstaff's, but not its parking
+NOT_TRAIL_PARKING = {"North Hall Lot",   # nearest the Red Trail's dead end at Falstaff's, but not its parking
+                     "Falstaff's Lot"}   # its way in, where the Red and Green Trails meet, isn't worth it
 # Ways in on foot, without parking: (lon, lat) near the trail's end, what it connects to
-ACCESS_POINTS = [((-73.782664, 43.099376), "Falstaff's"),                   # the Red Trail's dead end at the building
-                 ((-73.784872, 43.098929), "Campus, by Wilson Chapel")]      # the Spirit in Nature Trail's
+ACCESS_POINTS = [((-73.782664, 43.099376), "Falstaff Lane"),                # the Red Trail's dead end, by Falstaff's
+                 ((-73.784872, 43.098929), "Campus, by Wilson Chapel"),      # the Spirit in Nature Trail's
+                 ((-73.784819, 43.101758), "Northwoods Village, by Building 4")]  # the Red Trail's bend north
+# The entrances' names (in place of the trails they're on), by where they are: (lon, lat), name
+ENTRANCE_NAMES = [
+    ((-73.76868, 43.13961), "Graphite Range lot (Route 9)"),
+    ((-73.78799, 43.11107), "State Forest lot"),
+    ((-73.79484, 43.10496), "Carriage Trail at Clinton St"),
+    ((-73.78716, 43.10202), "Cane Lot"),
+    ((-73.77806, 43.09949), "North Broadway lot"),
+    ((-73.78266, 43.09938), "Falstaff's"),   # at Falstaff Lane, by Falstaff's (the building)
+    ((-73.78487, 43.09893), "Wilson Chapel"),
+    ((-73.784819, 43.101758), "Northwoods Village"),
+    ((-73.772149, 43.118), "Artisanal Brew Works lot"),        # the Eileen Phillips Trail's end, at the lot behind it
+]
+ENTRANCE_NAME_M = 40     # an entrance this close to a named spot takes its name
 LABEL_BUILDING_M = 40    # a building this close to where Skidmore puts a name is the one it names
 LABEL_ALONG = 0.55       # ...and the name goes this far from its middle toward an end
 ENTRY_LOT_M = 150        # a parking lot this close to a trail point makes it an entrance
@@ -316,6 +332,10 @@ def main():
             props = {"label": label[n], "code": label[n], "zone": z, "no_sign": True, "junction": True, "number": n}
         if n in access:
             props.update({"entry": True, "connects": access[n]})
+        if n in access or n in entries:
+            here = min(ENTRANCE_NAMES, key=lambda e: dist_m(*e[0], *nodes[n]))
+            if dist_m(*here[0], *nodes[n]) <= ENTRANCE_NAME_M:
+                props["place_name"] = here[1]
         if n in entries:
             (lon, lat), name = entries[n]
             props.update({"entry": True, "parking": True, "drive_to": [round(lon, 6), round(lat, 6)]})

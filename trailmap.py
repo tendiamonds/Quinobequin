@@ -744,7 +744,7 @@ var POST_COLOR = "#9c7a4f", POST_SIZE = 15;
 
 function intName(label) {
   var p = intFeatures[label].properties;
-  return p.junction ? "unmarked junction" : p.shape ? shapeName(label) : p.landmark || p.lot || (p.no_sign ? "Post " + p.post : label);
+  return p.junction ? "unmarked junction" : p.shape ? p.place_name || shapeName(label) : p.landmark || p.lot || (p.no_sign ? "Post " + p.post : label);
 }
 
 // --- Unnumbered intersections (shape: true, as build_saratoga.py makes them): each is a small picture of the trails
@@ -781,7 +781,9 @@ function parkSlotHtml(label) {
 // short form if it has one, connects_short), or a lot's name
 function entryNoteHtml(label, word) {
   var p = intFeatures[label].properties, to = p.connects_short || p.connects;
+  // (an entrance with a name of its own, place_name, goes by it)
   return p.lot ? '<span class="exit-note">' + esc(p.lot) + '</span>'
+    : p.place_name ? '<span class="exit-note">' + esc(p.place_name) + '</span>'
     : to ? '<span class="exit-note">' + word + ' ' + esc(to) + '</span>' : '';
 }
 
@@ -3481,7 +3483,7 @@ function driveLatLng(label) {
 
 function placeName(label) {
   var p = intFeatures[label].properties;
-  return p.parking_name || p.lot || p.connects_short || p.connects || intName(label);
+  return p.place_name || p.parking_name || p.lot || p.connects_short || p.connects || intName(label);
 }
 
 function googleMapsUrl(label) {
