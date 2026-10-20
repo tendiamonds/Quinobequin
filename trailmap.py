@@ -104,9 +104,12 @@ def maps_menu_html(here, root):
     """A drop-down of the other maps, for the right end of a page's top bar. here: this
     site's key in SITE_MAPS; root: the way from this page to the sites' root ("" or "../")."""
     opts = "".join('<option value="%s%s">%s</option>' % (root, path, name) for key, name, path in SITE_MAPS if key != here)
+    # Narrow (it would be as wide as its longest name), so a phone's top bar stays one row;
+    # the phone's own picker shows the names in full
     return ('<select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;'
-            'background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 4px">'
-            '<option value="">Other maps&hellip;</option>' + opts + '</select>')
+            'width:62px;flex:none;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;'
+            'font:500 13px sans-serif;padding:3px 2px">'
+            '<option value="">Maps</option>' + opts + '</select>')
 
 
 def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
@@ -218,6 +221,7 @@ LOCATION_HELP = r"""<!DOCTYPE html>
 <style>
   body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #222; line-height: 1.5; }
   nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  @media (max-width: 420px) { nav.topnav { gap: 12px; padding: 10px 12px; } nav.topnav a { font-size: 13px; } }   /* one row on a phone */
   nav.topnav a { color: #ecf0f1; font-size: 14px; font-weight: 500; text-decoration: none; }
   .container { max-width: 720px; margin: 0 auto; padding: 20px; }
   h1 { font-size: 22px; margin: 4px 0 6px; }
@@ -316,6 +320,7 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   a:hover { text-decoration: underline; }
   nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px;
                align-items: center; flex-wrap: wrap; position: relative; z-index: 1001; }
+  @media (max-width: 420px) { nav.topnav { gap: 12px; padding: 10px 12px; } nav.topnav a { font-size: 13px; } }   /* one row on a phone */
   nav.topnav a { color: #ecf0f1; font-size: 14px; font-weight: 500; }
   nav.topnav a:hover { color: white; text-decoration: none; }
   nav.topnav .brand { font-weight: 700; font-size: 15px; margin-right: 12px; }

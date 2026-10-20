@@ -10,6 +10,7 @@
 <style>
   body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #222; line-height: 1.5; }
   nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  @media (max-width: 420px) { nav.topnav { gap: 12px; padding: 10px 12px; } nav.topnav a { font-size: 13px; } }   /* one row on a phone */
   nav.topnav a { color: #ecf0f1; font-size: 14px; font-weight: 500; text-decoration: none; }
   .container { max-width: 720px; margin: 0 auto; padding: 20px; }
   h1 { font-size: 22px; margin: 4px 0 6px; }
@@ -26,7 +27,7 @@
 </style>
 </head>
 <body>
-<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a><a href="checks.html" style="color:#ecf0f1;font-size:14px">Checks</a><select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 4px"><option value="">Other maps&hellip;</option><option value="../map.html">Upper Charles Forest</option><option value="../saratoga/map.html">Saratoga Woods</option></select></nav>
+<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a><a href="checks.html" style="color:#ecf0f1;font-size:14px">Checks</a><select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;width:62px;flex:none;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 2px"><option value="">Maps</option><option value="../map.html">Upper Charles Forest</option><option value="../saratoga/map.html">Saratoga Woods</option></select></nav>
 <div class="container">
 <h1>Turning on location</h1>
 <p class="lead">The map can show where you are, follow you along a route, and tell you which way to turn. For that, your

@@ -376,6 +376,7 @@ PAGE_CSS = COMMON_CSS + """
   h2 { font-size: 18px; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #eee; }
   nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px;
                align-items: center; flex-wrap: wrap; }
+  @media (max-width: 420px) { nav.topnav { gap: 12px; padding: 10px 12px; } nav.topnav a { font-size: 13px; } }   /* one row on a phone */
   nav.topnav a { color: #ecf0f1; font-size: 14px; font-weight: 500; }
   nav.topnav a:hover { color: white; text-decoration: none; }
   nav.topnav .brand { font-weight: 700; font-size: 15px; margin-right: 12px; }

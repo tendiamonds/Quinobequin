@@ -145,6 +145,7 @@ CHECKS_CSS = """
   h1 { font-size: 22px; margin: 4px 0; }
   .subtitle { color: #666; margin-bottom: 18px; font-size: 14px; }
   nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px; align-items: center; flex-wrap: wrap; }
+  @media (max-width: 420px) { nav.topnav { gap: 12px; padding: 10px 12px; } nav.topnav a { font-size: 13px; } }   /* one row on a phone */
   nav.topnav a { text-decoration: none; }
 """
 
