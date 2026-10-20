@@ -1,0 +1,115 @@
+{
+ "source": "Skidmore College sustainability map (map.concept3d.com/?id=545): each building's geothermal system, labeled with the building's name, beside it",
+ "buildings": [
+  {
+   "name": "1 Moore",
+   "lat": 43.100616,
+   "lon": -73.786819
+  },
+  {
+   "name": "10 Whitman",
+   "lat": 43.09988,
+   "lon": -73.788849
+  },
+  {
+   "name": "11 Cane",
+   "lat": 43.100719,
+   "lon": -73.786423
+  },
+  {
+   "name": "12 Whitman",
+   "lat": 43.100353,
+   "lon": -73.789291
+  },
+  {
+   "name": "14 Whitman",
+   "lat": 43.100838,
+   "lon": -73.788757
+  },
+  {
+   "name": "2 Moore",
+   "lat": 43.100494,
+   "lon": -73.787582
+  },
+  {
+   "name": "3 Dayton",
+   "lat": 43.100361,
+   "lon": -73.788162
+  },
+  {
+   "name": "4 Cane",
+   "lat": 43.101944,
+   "lon": -73.785339
+  },
+  {
+   "name": "5 Dayton",
+   "lat": 43.10025,
+   "lon": -73.78791
+  },
+  {
+   "name": "6 Cane",
+   "lat": 43.101376,
+   "lon": -73.785744
+  },
+  {
+   "name": "7 Dayton",
+   "lat": 43.100323,
+   "lon": -73.786652
+  },
+  {
+   "name": "8 Cane",
+   "lat": 43.101265,
+   "lon": -73.785896
+  },
+  {
+   "name": "9 Dayton",
+   "lat": 43.100494,
+   "lon": -73.786201
+  },
+  {
+   "name": "Sussman A",
+   "lat": 43.097179,
+   "lon": -73.788803
+  },
+  {
+   "name": "Sussman B",
+   "lat": 43.097691,
+   "lon": -73.788536
+  },
+  {
+   "name": "Sussman F",
+   "lat": 43.099091,
+   "lon": -73.788132
+  },
+  {
+   "name": "Sussman G",
+   "lat": 43.09819,
+   "lon": -73.78894
+  },
+  {
+   "name": "Sussman H",
+   "lat": 43.098595,
+   "lon": -73.788895
+  },
+  {
+   "name": "Sussman I",
+   "lat": 43.098633,
+   "lon": -73.788574
+  },
+  {
+   "name": "Sussman J",
+   "lat": 43.099045,
+   "lon": -73.788483
+  },
+  {
+   "name": "Sussman K",
+   "lat": 43.09935,
+   "lon": -73.788002
+  },
+  {
+   "name": "Sussman L",
+   "lat": 43.099548,
+   "lon": -73.787552
+  }
+ ]
+}

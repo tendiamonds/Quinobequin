@@ -18,7 +18,7 @@ from collections import OrderedDict, defaultdict
 
 from checks import build_checks_page
 from crs import CRS, holders_text, sign_checks, sign_crs
-from trailmap import build_map_page, build_trail_int_map, dist_m
+from trailmap import build_map_page, build_trail_int_map, dist_m, maps_menu_html
 
 PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
 TOWNS = {136: "Holliston", 139: "Hopkinton", 185: "Milford"}
@@ -412,7 +412,7 @@ def nav_html(active):
     for href, label in items:
         style = "color:white;text-decoration:underline" if label.lower() == active else ""
         parts.append('<a href="%s" style="%s">%s</a>' % (href, style, label))
-    parts.append('<a href="bluehills/map.html" style="margin-left:auto;opacity:0.8">Blue Hills &rarr;</a>')
+    parts.append(maps_menu_html("uc", ""))
     parts.append("</nav>")
     return "\n".join(parts)
 

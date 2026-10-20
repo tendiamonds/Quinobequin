@@ -21,10 +21,11 @@ NAVY = "#2c3e50"    # the sites' top bar
 FONT = r"C:\Windows\Fonts\arialbd.ttf"
 
 
-def draw_icon(size, shape, ink_width, label, color):
+def draw_icon(size, shape, ink_width, label, color, ink="white"):
     """Draw at 4x and scale down, for smooth edges.
     shape: "rounded" (inset rounded square) or "square" (full bleed).
-    ink_width: width of the letters as a fraction of the icon."""
+    ink_width: width of the letters as a fraction of the icon (or, for a label taller
+    than it's wide, like a lone "S", its height)."""
     big = size * 4
     im = Image.new("RGBA", (big, big), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
@@ -36,17 +37,18 @@ def draw_icon(size, shape, ink_width, label, color):
     # Size the font so the letters' ink is the requested width
     probe = ImageFont.truetype(FONT, 100)
     l, t, r, b = d.textbbox((0, 0), label, font=probe)
-    font = ImageFont.truetype(FONT, round(100 * ink_width * big / (r - l)))
+    font = ImageFont.truetype(FONT, round(100 * ink_width * big / max(r - l, b - t)))
     # Center the ink of the text, not its line box
     l, t, r, b = d.textbbox((0, 0), label, font=font)
-    d.text(((big - (r - l)) / 2 - l, (big - (b - t)) / 2 - t), label, font=font, fill="white")
+    d.text(((big - (r - l)) / 2 - l, (big - (b - t)) / 2 - t), label, font=font, fill=ink)
     return im.resize((size, size), Image.LANCZOS), ((r - l) / big, (b - t) / big)
 
 
-def make_icons(out_dir, label, color, name, short_name):
+def make_icons(out_dir, label, color, name, short_name, ink="#fff"):
+    """ink: the letters' color (white unless a site's colors say otherwise)"""
     svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
 <rect x="2" y="2" width="60" height="60" rx="14" fill="{color}"/>
-<text x="32" y="47" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="40" fill="#fff" letter-spacing="-1">{label}</text>
+<text x="32" y="47" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="40" fill="{ink}" letter-spacing="-1">{label}</text>
 </svg>
 """
     manifest = {
@@ -69,12 +71,14 @@ def make_icons(out_dir, label, color, name, short_name):
     path = lambda f: os.path.join(out_dir, f)
     with open(path("favicon.svg"), "w", encoding="utf-8") as f:
         f.write(svg)
-    draw_icon(48, "rounded", 0.72, label, color)[0].save(path("favicon.ico"), sizes=[(16, 16), (32, 32), (48, 48)])
-    draw_icon(180, "square", 0.68, label, color)[0].convert("RGB").save(path("apple-touch-icon.png"))
+    draw_icon(48, "rounded", 0.72, label, color, ink)[0].save(path("favicon.ico"), sizes=[(16, 16), (32, 32), (48, 48)])
+    draw_icon(180, "square", 0.68, label, color, ink)[0].convert("RGB").save(path("apple-touch-icon.png"))
     for px in (192, 512):
-        draw_icon(px, "rounded", 0.68, label, color)[0].save(path("icon-%d.png" % px))
-        im, (w, h) = draw_icon(px, "square", 0.64, label, color)
-        # The letters' corners must stay inside the safe circle
+        draw_icon(px, "rounded", 0.68, label, color, ink)[0].save(path("icon-%d.png" % px))
+        im, (w, h) = draw_icon(px, "square", 0.64, label, color, ink)
+        # The letters' corners must stay inside the safe circle (a tall lone letter is drawn smaller)
+        if (w * w + h * h) ** 0.5 > 0.78:
+            im, (w, h) = draw_icon(px, "square", 0.64 * 0.78 / (w * w + h * h) ** 0.5, label, color, ink)
         assert (w * w + h * h) ** 0.5 <= 0.8, (w, h)
         im.convert("RGB").save(path("icon-maskable-%d.png" % px))
     with open(path("manifest.webmanifest"), "w", encoding="utf-8") as f:

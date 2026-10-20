@@ -26,7 +26,7 @@ import math
 import os
 
 from checks import build_checks_page
-from trailmap import build_map_page, dist_m
+from trailmap import build_map_page, dist_m, maps_menu_html
 import make_favicon
 
 PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
@@ -644,7 +644,7 @@ def main():
         "terrain": TERRAIN,
         "nav": ('<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a>'
                 '<a href="checks.html" style="color:#ecf0f1;font-size:14px">Checks</a>'
-                '<a href="../map.html" style="margin-left:auto;opacity:0.8">Upper Charles &rarr;</a></nav>'),
+                + maps_menu_html("bh", "../") + '</nav>'),
     }
     os.makedirs(OUT, exist_ok=True)
     build_map_page(ints_fc, trails_fc, region, OUT, trail_int_map=tim)

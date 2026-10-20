@@ -7,6 +7,8 @@ Graphite Range Community Forest, all from OpenStreetMap (saratoga_data/, from Ov
   osm_roads.json     roads, for short walks along them between trails
   osm_parking.json   parking lots, for entrances
   osm_areas.json     the three areas' boundaries
+  osm_campus_buildings.json   Skidmore's buildings, and its 815 North Broadway address points
+  building_labels.json        the residence buildings' names, from Skidmore's sustainability map
 
 None of these trails have numbered intersections, so the map draws each intersection as a
 small picture of the trails meeting there, and names it by them (shape: true; trailmap.py).
@@ -23,7 +25,7 @@ import os
 
 import make_favicon
 from build_bluehills import dist_m, road_links, name_continuations, join_continuations
-from trailmap import build_map_page
+from trailmap import build_map_page, maps_menu_html
 
 PROJ = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(PROJ, "saratoga_data")
@@ -31,8 +33,8 @@ OUT = os.path.join(PROJ, "saratoga")
 
 # The areas: their letter (for labels), name, map color, and OpenStreetMap boundary
 AREAS = {
-    "N": ("North Woods", "#7b1fa2", "Skidmore North Woods"),
-    "D": ("Daniels Road", "#00796b", "Daniels Road State Forest"),
+    "N": ("North Woods", "#006a52", "Skidmore North Woods"),   # Skidmore's green
+    "D": ("Daniels Road", "#455a64", "Daniels Road State Forest"),
     "G": ("Graphite Range", "#5d4037", "Graphite Range Community Forest"),
 }
 TRAIL_KINDS = {"path", "track", "bridleway", "cycleway"}   # grown out from the areas
@@ -48,20 +50,27 @@ LEFT_OUT = {
 }
 # Parking OpenStreetMap doesn't have: (lon, lat), name
 EXTRA_LOTS = [((-73.77806, 43.09949), "North Broadway lot")]   # where North Broadway ends
+# Lots OpenStreetMap has that aren't the way in they seem: no parking for the trails there
+NOT_TRAIL_PARKING = {"North Hall Lot"}   # nearest the Red Trail's dead end at Falstaff's, but not its parking
+# Ways in on foot, without parking: (lon, lat) near the trail's end, what it connects to
+ACCESS_POINTS = [((-73.782664, 43.099376), "Falstaff's"),                   # the Red Trail's dead end at the building
+                 ((-73.784872, 43.098929), "Campus, by Wilson Chapel")]      # the Spirit in Nature Trail's
+LABEL_BUILDING_M = 40    # a building this close to where Skidmore puts a name is the one it names
+LABEL_ALONG = 0.55       # ...and the name goes this far from its middle toward an end
 ENTRY_LOT_M = 150        # a parking lot this close to a trail point makes it an entrance
 MIN_NETWORK_M = 400      # smaller cut-off bits of trail are left out
 ROAD_COST = 1.5
 
 # The North Woods trails are named for their blazes
 NAMED_BLAZES = {"Red Trail": "red", "Blue Trail": "blue", "Orange Trail": "orange", "Green Trail": "green",
-                "Spirit in Nature Trail": "pink"}
+                "Spirit in Nature Trail": "purple"}
 BLAZES = {
     "red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"},
     "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"},
     "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"},
     "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"},
     "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"},
-    "pink": {"name": "Spirit Trail", "marks": "pink blazes", "color": "#d81b60", "style": "blazes"},
+    "purple": {"name": "Purple-blazed trail", "marks": "purple blazes", "color": "#8e24aa", "style": "blazes"},
     # The SMBA map's brown singletrack and black trails, colored as if blazed
     "brown": {"name": "Brown trail (SMBA map)", "marks": "shown brown on the SMBA map", "color": "#a0522d", "style": "blazes"},
     "black": {"name": "Black trail (SMBA map)", "marks": "shown black on the SMBA map", "color": "#212121", "style": "blazes"},
@@ -195,6 +204,64 @@ def trail_zones(ways, nodes, rings):
     return {n: k for n, (_, k) in best.items()}
 
 
+def building_labels():
+    """Names for the campus residences next to the North Woods, which OpenStreetMap has no
+    names for (saratoga_data/building_labels.json, from Skidmore's sustainability map), each
+    on the OSM building nearest the point Skidmore gives. The map tiles print Skidmore's one
+    street address (815) in each building, at its middle or at an address point inside it, so
+    the name goes along the building's length, toward the end away from that."""
+    names = load("building_labels.json")["buildings"]
+    els = load("osm_campus_buildings.json")["elements"]
+    addr = [(e["lon"], e["lat"]) for e in els if e["type"] == "node"]
+    blds = []
+    for e in els:
+        if e["type"] == "way" and e.get("geometry") and not e["tags"].get("name"):
+            ring = [(p["lon"], p["lat"]) for p in e["geometry"]]
+            blds.append((ring, centroid(ring)))
+    pairs = sorted((dist_m(b["lon"], b["lat"], c[1], c[2]), i, j) for i, b in enumerate(names) for j, (_, c) in enumerate(blds))
+    at, used = {}, set()
+    for d, i, j in pairs:   # nearest pairs first, each building once
+        if d <= LABEL_BUILDING_M and i not in at and j not in used:
+            at[i] = j
+            used.add(j)
+    # On the map, just Sussman's letters and Northwoods' numbers (unique across its streets)
+    short = lambda n: n.split()[-1] if n.startswith("Sussman") else n.split()[0]
+    out = []
+    for i, b in enumerate(names):
+        lon, lat = b["lon"], b["lat"]
+        if i in at:
+            ring, (_, cx, cy) = blds[at[i]]
+            pts = [((x - cx) * 81300, (y - cy) * 111000) for x, y in ring[:-1]]
+            # the long way along the building, and how far its ends are from the middle
+            sxx = sum(x * x for x, _ in pts); syy = sum(y * y for _, y in pts); sxy = sum(x * y for x, y in pts)
+            ang = 0.5 * math.atan2(2 * sxy, sxx - syy)
+            ux, uy = math.cos(ang), math.sin(ang)
+            reach = max(x * ux + y * uy for x, y in pts)
+            # the 815: an address point inside, or else the middle
+            inner = [((x - cx) * 81300, (y - cy) * 111000) for x, y in addr if inside((x, y), ring)]
+            side = -1 if inner and inner[0][0] * ux + inner[0][1] * uy > 0 else 1
+            k = LABEL_ALONG * reach * side
+            lon, lat = cx + k * ux / 81300, cy + k * uy / 111000
+        out.append({"name": short(b["name"]), "lat": round(lat, 6), "lon": round(lon, 6)})
+    return out
+
+
+def centroid(ring):
+    """A polygon's area (square meters) and center (lon, lat), as the map tiles place a name.
+    (Worked out from the first corner: whole coordinates lose too much to rounding.)"""
+    x0, y0 = ring[0]
+    ring = [(x - x0, y - y0) for x, y in ring]
+    a = cx = cy = 0.0
+    for (x1, y1), (x2, y2) in zip(ring, ring[1:]):
+        cross = x1 * y2 - x2 * y1
+        a += cross
+        cx += (x1 + x2) * cross
+        cy += (y1 + y2) * cross
+    if abs(a) < 1e-15:
+        return 0.0, x0, y0
+    return abs(a / 2) * 81300 * 111000, x0 + cx / (3 * a), y0 + cy / (3 * a)
+
+
 def main():
     rings = area_rings()
     ways, nodes = area_ways(load("osm_trails.json")["elements"], rings)
@@ -223,16 +290,23 @@ def main():
         if ll[0] is None:
             continue
         n = min(trail_pts, key=lambda q: dist_m(*ll, *nodes[q]))
-        if dist_m(*ll, *nodes[n]) <= ENTRY_LOT_M and n not in entries:
-            entries[n] = (ll, lot.get("tags", {}).get("name"))
+        name = lot.get("tags", {}).get("name")
+        if dist_m(*ll, *nodes[n]) <= ENTRY_LOT_M and n not in entries and name not in NOT_TRAIL_PARKING:
+            entries[n] = (ll, name)
             points.add(n)
+    access = {}
+    for ll, connects in ACCESS_POINTS:
+        n = min(trail_pts, key=lambda q: dist_m(*ll, *nodes[q]))
+        access[n] = connects
+        points.add(n)
+        entries.pop(n, None)   # a way in on foot, whatever lot is nearby
 
     zones = trail_zones(ways, nodes, rings)
     count = collections.Counter()
     label, features = {}, []
     for n in sorted(points, key=lambda q: (-nodes[q][1], nodes[q][0])):   # north to south
         z = zones.get(n) or zone_of(nodes[n], rings)
-        if degree[n] >= 3 or n in entries:
+        if degree[n] >= 3 or n in entries or n in access:
             count[z] += 1
             label[n] = "%s%d" % (z, count[z])
             props = {"label": label[n], "code": label[n], "zone": z, "shape": True, "number": n}
@@ -240,6 +314,8 @@ def main():
             count["J"] += 1
             label[n] = "J%d" % count["J"]
             props = {"label": label[n], "code": label[n], "zone": z, "no_sign": True, "junction": True, "number": n}
+        if n in access:
+            props.update({"entry": True, "connects": access[n]})
         if n in entries:
             (lon, lat), name = entries[n]
             props.update({"entry": True, "parking": True, "drive_to": [round(lon, 6), round(lat, 6)]})
@@ -290,8 +366,9 @@ def main():
         "zonesPage": False,
         "dem": os.path.join(PROJ, "elevation_cache", "saratoga.tif"),
         "blazes": BLAZES,
+        "placeLabels": building_labels(),
         "nav": ('<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Saratoga Woods</a>'
-                '<a href="../map.html" style="margin-left:auto;opacity:0.8">Upper Charles &rarr;</a></nav>'),
+                + maps_menu_html("sar", "../") + '</nav>'),
     }
     os.makedirs(OUT, exist_ok=True)
     build_map_page({"type": "FeatureCollection", "features": features}, {"type": "FeatureCollection", "features": trail_feats},
@@ -299,7 +376,8 @@ def main():
     with open(os.path.join(OUT, "index.html"), "w", encoding="utf-8") as f:
         f.write('<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=map.html">'
                 '<title>Saratoga Woods</title><a href="map.html">Saratoga Woods trail map</a>\n')
-    make_favicon.make_icons(OUT, label="SW", color="#00796b", name="Saratoga Woods", short_name="Saratoga")
+    # Skidmore's green and yellow
+    make_favicon.make_icons(OUT, label="S", color="#006A52", ink="#FFD100", name="Saratoga Woods", short_name="Saratoga")
 
     by_zone = collections.Counter(f["properties"]["zone"] for f in features if f["properties"].get("shape"))
     km = collections.Counter()

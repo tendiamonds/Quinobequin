@@ -130,6 +130,9 @@
   .turn-icon { flex: none; }
   .int-link.shape-pill { background: transparent; padding: 0; min-width: 0; line-height: 0; border-radius: 50%; }
   .shape-head { display: flex; align-items: center; gap: 10px; }
+  /* Centered on its point (Leaflet places the marker itself by its transform, so the span moves) */
+  .place-label span { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; font: 600 11px sans-serif;
+    color: #455a64; text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff; }
   .route-step.passed .turn-icon { opacity: 0.45; }
   .route-trail-name { color: #555; font-style: italic; }
   .entry-diamond { width: 24px; height: 24px; margin: 5px; transform: rotate(45deg);
@@ -245,7 +248,7 @@
 </style>
 </head>
 <body>
-<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a><a href="checks.html" style="color:#ecf0f1;font-size:14px">Checks</a><a href="../map.html" style="margin-left:auto;opacity:0.8">Upper Charles &rarr;</a></nav>
+<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a><a href="checks.html" style="color:#ecf0f1;font-size:14px">Checks</a><select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 4px"><option value="">Other maps&hellip;</option><option value="../map.html">Upper Charles Forest</option><option value="../saratoga/map.html">Saratoga Woods</option></select></nav>
 <div id="map"></div>
 <div id="searchBadge"></div>
 
@@ -273,7 +276,7 @@
 
 <script>
 // The region this map is for: name, zones, starting view, bounds, and so on (trailmap.py)
-var REGION = {"name": "Blue Hills Reservation", "zones": {"1": {"name": "Great Blue Hill", "color": "#1565c0"}, "2": {"name": "Houghton's Pond", "color": "#00897b"}, "3": {"name": "Chickatawbut", "color": "#6d4c41"}, "4": {"name": "Quincy", "color": "#8e24aa"}, "5": {"name": "Ponkapoag", "color": "#2e7d32"}, "6": {"name": "Fowl Meadow", "color": "#ef6c00"}}, "view": {"center": [42.2161416, -71.08377680000001], "zoom": 13}, "bounds": [[42.1860491, -71.1390432], [42.2462341, -71.0285104]], "storagePrefix": "bh", "report": {"email": "tendiamonds@gmail.com", "signReports": true}, "otherMaps": [{"name": "Upper Charles Forest", "href": "../map.html"}], "zonesPage": false, "blazes": {"skyline": {"name": "Skyline Trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes", "terrain": 3}, "yellow_dots": {"name": "Yellow Dot Loop", "marks": "yellow dots", "color": "#fdd835", "style": "dots", "terrain": 0}, "green_dots": {"name": "Green Dot Loop", "marks": "green dots", "color": "#43a047", "style": "dots", "terrain": 1}, "red_dots": {"name": "Red Dot Loop", "marks": "red dots", "color": "#e53935", "style": "dots", "terrain": 2}, "white_arrows": {"name": "Forest Path Loop", "marks": "white triangles", "color": "#ffffff", "style": "arrows", "one_way": true, "terrain": 1}, "yellow_arrows": {"name": "Breakneck Ledge Loop", "marks": "yellow triangles", "color": "#fdd835", "style": "arrows", "one_way": true, "terrain": 2}}, "widths": {"road": "Unpaved road", "wide": "Wide trail", "narrow": "Narrow trail"}, "terrain": ["Easy", "Moderate", "Challenging", "Difficult"], "eleStep": 10};
+var REGION = {"name": "Blue Hills Reservation", "zones": {"1": {"name": "Great Blue Hill", "color": "#1565c0"}, "2": {"name": "Houghton's Pond", "color": "#00897b"}, "3": {"name": "Chickatawbut", "color": "#6d4c41"}, "4": {"name": "Quincy", "color": "#8e24aa"}, "5": {"name": "Ponkapoag", "color": "#2e7d32"}, "6": {"name": "Fowl Meadow", "color": "#ef6c00"}}, "view": {"center": [42.2161416, -71.08377680000001], "zoom": 13}, "bounds": [[42.1860491, -71.1390432], [42.2462341, -71.0285104]], "storagePrefix": "bh", "report": {"email": "tendiamonds@gmail.com", "signReports": true}, "otherMaps": [{"name": "Upper Charles Forest", "href": "../map.html"}], "zonesPage": false, "placeLabels": [], "blazes": {"skyline": {"name": "Skyline Trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes", "terrain": 3}, "yellow_dots": {"name": "Yellow Dot Loop", "marks": "yellow dots", "color": "#fdd835", "style": "dots", "terrain": 0}, "green_dots": {"name": "Green Dot Loop", "marks": "green dots", "color": "#43a047", "style": "dots", "terrain": 1}, "red_dots": {"name": "Red Dot Loop", "marks": "red dots", "color": "#e53935", "style": "dots", "terrain": 2}, "white_arrows": {"name": "Forest Path Loop", "marks": "white triangles", "color": "#ffffff", "style": "arrows", "one_way": true, "terrain": 1}, "yellow_arrows": {"name": "Breakneck Ledge Loop", "marks": "yellow triangles", "color": "#fdd835", "style": "arrows", "one_way": true, "terrain": 2}}, "widths": {"road": "Unpaved road", "wide": "Wide trail", "narrow": "Narrow trail"}, "terrain": ["Easy", "Moderate", "Challenging", "Difficult"], "eleStep": 10};
 var ZONE_COLORS = {}, ZONE_NAMES = {};
 Object.keys(REGION.zones).forEach(function(z) {
   ZONE_COLORS[z] = REGION.zones[z].color;
@@ -585,6 +588,21 @@ intData.features.forEach(function(f) {
   labelMarkers[label] = lbl;
   lbl._zone = zone;
 });
+
+// Names the map tiles don't show (REGION.placeLabels), once you're close enough to see buildings
+var PLACE_LABEL_ZOOM = 17, placeLabels = L.layerGroup();
+REGION.placeLabels.forEach(function(p) {
+  placeLabels.addLayer(L.marker([p.lat, p.lon], {interactive: false, keyboard: false,
+    icon: L.divIcon({className: "place-label", html: '<span>' + esc(p.name) + '</span>', iconSize: [0, 0], iconAnchor: [0, 0]})}));
+});
+function showPlaceLabels() {
+  if (map.getZoom() >= PLACE_LABEL_ZOOM) placeLabels.addTo(map);
+  else placeLabels.remove();
+}
+if (REGION.placeLabels.length) {
+  map.on("zoomend", showPlaceLabels);
+  showPlaceLabels();
+}
 
 function ownerSlug(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

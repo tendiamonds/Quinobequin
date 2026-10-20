@@ -130,6 +130,9 @@
   .turn-icon { flex: none; }
   .int-link.shape-pill { background: transparent; padding: 0; min-width: 0; line-height: 0; border-radius: 50%; }
   .shape-head { display: flex; align-items: center; gap: 10px; }
+  /* Centered on its point (Leaflet places the marker itself by its transform, so the span moves) */
+  .place-label span { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; font: 600 11px sans-serif;
+    color: #455a64; text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff; }
   .route-step.passed .turn-icon { opacity: 0.45; }
   .route-trail-name { color: #555; font-style: italic; }
   .entry-diamond { width: 24px; height: 24px; margin: 5px; transform: rotate(45deg);
@@ -251,7 +254,7 @@
 <a href="zones.html" style="">Zones</a>
 <a href="owners.html" style="">Owners</a>
 <a href="checks.html" style="">Checks</a>
-<a href="bluehills/map.html" style="margin-left:auto;opacity:0.8">Blue Hills &rarr;</a>
+<select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 4px"><option value="">Other maps&hellip;</option><option value="bluehills/map.html">Blue Hills</option><option value="saratoga/map.html">Saratoga Woods</option></select>
 </nav>
 <div id="map"></div>
 <div id="searchBadge"></div>
@@ -281,7 +284,7 @@
 
 <script>
 // The region this map is for: name, zones, starting view, bounds, and so on (trailmap.py)
-var REGION = {"name": "Upper Charles Forest", "zones": {"A": {"name": "Adams Town Forest", "color": "#e74c3c"}, "B": {"name": "Beaver Brook Woods", "color": "#3498db"}, "C": {"name": "College Rock Park", "color": "#2ecc71"}, "D": {"name": "Rocky Woods", "color": "#f39c12"}, "E": {"name": "NEMBA Land", "color": "#9b59b6"}, "F": {"name": "Fairbanks", "color": "#1abc9c"}}, "view": {"center": [42.178, -71.498], "zoom": 14}, "bounds": [[42.156, -71.518], [42.201, -71.483]], "storagePrefix": "vtn", "report": {"email": "tendiamonds@gmail.com", "signReports": false}, "otherMaps": [{"name": "Blue Hills", "href": "bluehills/map.html"}], "zonesPage": true, "blazes": {"red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}, "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"}, "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"}, "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}}, "widths": {"wide": "Double track", "narrow": "Single track"}, "terrain": ["Easy", "Moderate", "Challenging", "Difficult"], "eleStep": 10};
+var REGION = {"name": "Upper Charles Forest", "zones": {"A": {"name": "Adams Town Forest", "color": "#e74c3c"}, "B": {"name": "Beaver Brook Woods", "color": "#3498db"}, "C": {"name": "College Rock Park", "color": "#2ecc71"}, "D": {"name": "Rocky Woods", "color": "#f39c12"}, "E": {"name": "NEMBA Land", "color": "#9b59b6"}, "F": {"name": "Fairbanks", "color": "#1abc9c"}}, "view": {"center": [42.178, -71.498], "zoom": 14}, "bounds": [[42.156, -71.518], [42.201, -71.483]], "storagePrefix": "vtn", "report": {"email": "tendiamonds@gmail.com", "signReports": false}, "otherMaps": [{"name": "Blue Hills", "href": "bluehills/map.html"}], "zonesPage": true, "placeLabels": [], "blazes": {"red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}, "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"}, "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"}, "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}}, "widths": {"wide": "Double track", "narrow": "Single track"}, "terrain": ["Easy", "Moderate", "Challenging", "Difficult"], "eleStep": 10};
 var ZONE_COLORS = {}, ZONE_NAMES = {};
 Object.keys(REGION.zones).forEach(function(z) {
   ZONE_COLORS[z] = REGION.zones[z].color;
@@ -593,6 +596,21 @@ intData.features.forEach(function(f) {
   labelMarkers[label] = lbl;
   lbl._zone = zone;
 });
+
+// Names the map tiles don't show (REGION.placeLabels), once you're close enough to see buildings
+var PLACE_LABEL_ZOOM = 17, placeLabels = L.layerGroup();
+REGION.placeLabels.forEach(function(p) {
+  placeLabels.addLayer(L.marker([p.lat, p.lon], {interactive: false, keyboard: false,
+    icon: L.divIcon({className: "place-label", html: '<span>' + esc(p.name) + '</span>', iconSize: [0, 0], iconAnchor: [0, 0]})}));
+});
+function showPlaceLabels() {
+  if (map.getZoom() >= PLACE_LABEL_ZOOM) placeLabels.addTo(map);
+  else placeLabels.remove();
+}
+if (REGION.placeLabels.length) {
+  map.on("zoomend", showPlaceLabels);
+  showPlaceLabels();
+}
 
 function ownerSlug(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

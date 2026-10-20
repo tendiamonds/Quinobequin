@@ -12,6 +12,8 @@ build_map_page(ints, trails, region, out_dir) writes out_dir/map.html. region is
   report         where reports go and which kinds this region offers (see the app)
   zonesPage      whether the site has a zones.html for zone tags to link to
   otherMaps      [{"name": ..., "href": ...}] links to the other regions' maps
+  placeLabels    (optional) [{"name", "lat", "lon"}] names for places the map tiles don't
+                 label (Skidmore's residence buildings), shown up close
   nav            the page's top navigation bar (HTML)
   dem            (optional) where to keep the region's elevation grid (elevation.py); with
                  it, trails get elevation profiles
@@ -93,6 +95,20 @@ def build_trail_int_map(ints, trails):
     return result
 
 
+# The sites' maps, for each one's menu of the others: (key, name, path from the site's root)
+SITE_MAPS = [("uc", "Upper Charles Forest", "map.html"), ("bh", "Blue Hills", "bluehills/map.html"),
+             ("sar", "Saratoga Woods", "saratoga/map.html")]
+
+
+def maps_menu_html(here, root):
+    """A drop-down of the other maps, for the right end of a page's top bar. here: this
+    site's key in SITE_MAPS; root: the way from this page to the sites' root ("" or "../")."""
+    opts = "".join('<option value="%s%s">%s</option>' % (root, path, name) for key, name, path in SITE_MAPS if key != here)
+    return ('<select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;'
+            'background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 4px">'
+            '<option value="">Other maps&hellip;</option>' + opts + '</select>')
+
+
 def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     """Write out_dir/map.html for a region (see the module docstring for its config).
     trail_int_map (optional): which intersections lie along each trail, as from
@@ -149,6 +165,7 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     int_trail_json = json.dumps(int_trail_map)
 
     client = {k: region[k] for k in ("name", "zones", "view", "bounds", "storagePrefix", "report", "otherMaps", "zonesPage")}
+    client["placeLabels"] = region.get("placeLabels", [])
     client["blazes"] = region.get("blazes", {})
     client["widths"] = region.get("widths", {})
     client["terrain"] = region.get("terrain", [])
@@ -411,6 +428,9 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .turn-icon { flex: none; }
   .int-link.shape-pill { background: transparent; padding: 0; min-width: 0; line-height: 0; border-radius: 50%; }
   .shape-head { display: flex; align-items: center; gap: 10px; }
+  /* Centered on its point (Leaflet places the marker itself by its transform, so the span moves) */
+  .place-label span { position: absolute; transform: translate(-50%, -50%); white-space: nowrap; font: 600 11px sans-serif;
+    color: #455a64; text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff; }
   .route-step.passed .turn-icon { opacity: 0.45; }
   .route-trail-name { color: #555; font-style: italic; }
   .entry-diamond { width: 24px; height: 24px; margin: 5px; transform: rotate(45deg);
@@ -868,6 +888,21 @@ intData.features.forEach(function(f) {
   labelMarkers[label] = lbl;
   lbl._zone = zone;
 });
+
+// Names the map tiles don't show (REGION.placeLabels), once you're close enough to see buildings
+var PLACE_LABEL_ZOOM = 17, placeLabels = L.layerGroup();
+REGION.placeLabels.forEach(function(p) {
+  placeLabels.addLayer(L.marker([p.lat, p.lon], {interactive: false, keyboard: false,
+    icon: L.divIcon({className: "place-label", html: '<span>' + esc(p.name) + '</span>', iconSize: [0, 0], iconAnchor: [0, 0]})}));
+});
+function showPlaceLabels() {
+  if (map.getZoom() >= PLACE_LABEL_ZOOM) placeLabels.addTo(map);
+  else placeLabels.remove();
+}
+if (REGION.placeLabels.length) {
+  map.on("zoomend", showPlaceLabels);
+  showPlaceLabels();
+}
 
 function ownerSlug(s) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
