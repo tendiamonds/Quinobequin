@@ -6,36 +6,6 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.045687,
-          42.223661
-        ]
-      },
-      "properties": {
-        "intersection": "3153",
-        "question": "What number is on the sign at this junction?",
-        "why": "OpenStreetMap numbers this sign 5153, but 5xxx is the Ponkapoag section, south of I-93. This junction is in Chickatawbut (3xxx), next to 3151 and 3152, and the park map has 3153 here."
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.045101,
-          42.223442
-        ]
-      },
-      "properties": {
-        "intersection": "3157",
-        "question": "What number is on the sign at this junction?",
-        "why": "OpenStreetMap numbers this sign 5157; the park map has 3157 here, about 50 m from 3153."
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
           -71.074663,
           42.198533
         ]

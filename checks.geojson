@@ -6,59 +6,14 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.498145,
-          42.171993
-        ]
-      },
-      "properties": {
-        "intersection": "D5",
-        "question": "Is the post for D5 on the Fairbanks land (held by The Trustees and DCR)?",
-        "why": "11 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map."
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.498519,
-          42.172307
-        ]
-      },
-      "properties": {
-        "intersection": "D6",
-        "question": "Is the post for D6 on the Fairbanks land (held by The Trustees and DCR)?",
-        "why": "5 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map."
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.498707,
-          42.172633
+          -71.498049,
+          42.170416
         ]
       },
       "properties": {
         "intersection": "D7",
         "question": "Is the post for D7 on the Fairbanks land (held by The Trustees and DCR)?",
-        "why": "2 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map; the town parcel map puts it on Town of Milford land, which would mean no CR."
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.497621,
-          42.168954
-        ]
-      },
-      "properties": {
-        "intersection": "E11",
-        "question": "Is the post for E11 on the Fairbanks land (held by The Trustees and DCR)?",
-        "why": "15 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map."
+        "why": "Seen on the ground (2026-10-21) as on the Fairbanks land, and the town's parcel map puts it 10 m inside the Fairbanks parcel, but The Trustees' 2013 CR map has it outside; sources disagree here; this follows The Trustees' own CR map."
       }
     },
     {
@@ -71,54 +26,9 @@
         ]
       },
       "properties": {
-        "intersection": "E19",
-        "question": "Is the post for E19 on the Fairbanks land (held by The Trustees and DCR)?",
+        "intersection": "E11",
+        "question": "Is the post for E11 on the Fairbanks land (held by The Trustees and DCR)?",
         "why": "3 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands."
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.497788,
-          42.167846
-        ]
-      },
-      "properties": {
-        "intersection": "E23",
-        "question": "Is the post for E23 on the Fairbanks land (held by The Trustees and DCR)?",
-        "why": "9 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands."
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.497738,
-          42.167464
-        ]
-      },
-      "properties": {
-        "intersection": "E28",
-        "question": "Is the post for E28 on the Fairbanks land (held by The Trustees and DCR)?",
-        "why": "12 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands."
-      }
-    },
-    {
-      "type": "Feature",
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.487705,
-          42.170569
-        ]
-      },
-      "properties": {
-        "intersection": "F1",
-        "question": "Is the post for F1 on the Fairbanks land (held by The Trustees and DCR)?",
-        "why": "9 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands."
       }
     }
   ]

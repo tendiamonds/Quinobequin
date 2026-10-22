@@ -55,7 +55,7 @@ LOOK_FOR = ("small boundary signs on trees (The Trustees may post signs up to a 
 
 def sign_checks():
     """Signs close to a CR line, to check in the field (sign_logos.csv check_on_ground), for
-    checks.build_checks_page"""
+    the map and the Reports page (reports.py)"""
     out = []
     with open(os.path.join(PROJ, "sign_logos.csv"), encoding="utf-8") as f:
         for row in csv.DictReader(f):

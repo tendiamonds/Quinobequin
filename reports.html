@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2c3e50">
+<title>Reports — Upper Charles Forest</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+         color: #222; line-height: 1.5; }
+  a { color: #2980b9; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  .container { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
+  h1 { font-size: 24px; margin-bottom: 4px; }
+  .subtitle { color: #666; margin-bottom: 24px; font-size: 14px; }
+  h2 { font-size: 18px; margin: 28px 0 12px; padding-bottom: 6px; border-bottom: 2px solid #eee; }
+  nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px;
+               align-items: center; flex-wrap: wrap; }
+  @media (max-width: 420px) { nav.topnav { gap: 12px; padding: 10px 12px; } nav.topnav a { font-size: 13px; } }   /* one row on a phone */
+  nav.topnav a { color: #ecf0f1; font-size: 14px; font-weight: 500; }
+  nav.topnav a:hover { color: white; text-decoration: none; }
+  nav.topnav .brand { font-weight: 700; font-size: 15px; margin-right: 12px; }
+  table.report { width: 100%; border-collapse: collapse; margin: 12px 0 24px; font-size: 13px; }
+  table.report th { text-align: left; padding: 8px 10px; background: #f7f7f7;
+                    border-bottom: 2px solid #ddd; font-size: 12px; color: #555;
+                    text-transform: uppercase; letter-spacing: 0.5px; }
+  table.report td { padding: 7px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+  table.report tr:hover { background: #fafafa; }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 10px;
+         font-size: 11px; font-weight: 600; }
+  .tag-public { background: #d5f5e3; color: #1e8449; }
+  .tag-private { background: #fadbd8; color: #922b21; }
+  .tag-zone { color: white; padding: 2px 10px; border-radius: 10px;
+              font-size: 11px; font-weight: 600; }
+  .int-links { display: flex; flex-wrap: wrap; gap: 4px; }
+  .int-links a { display: inline-block; padding: 1px 6px; border-radius: 4px;
+                 font-size: 12px; font-weight: 600; background: #eee; color: #333; }
+  .int-links a:hover { background: #d5e8f7; text-decoration: none; }
+  .section-public { }
+  .section-private { margin-top: 32px; }
+
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 4px 0 14px; }
+  .bar .progress { font-weight: 600; margin-right: auto; }
+  .btn2 { border: none; border-radius: 6px; padding: 9px 14px; font-size: 14px; font-weight: 600; cursor: pointer;
+          background: #0d47a1; color: white; }
+  .btn2.quiet { background: #eceff1; color: #263238; }
+  .btn2:disabled { opacity: 0.45; cursor: default; }
+  .where { font-size: 12px; color: #607d8b; margin: 0 0 12px; }
+  .msg { font-size: 13px; color: #2e7d32; margin: -6px 0 12px; }
+  h2 { font-size: 17px; margin: 22px 0 8px; }
+  .card { border: 1px solid #dde3e7; border-radius: 10px; padding: 12px 14px; margin: 0 0 12px; background: #fff; }
+  .card.done { background: #f3f8f4; border-color: #b9dcc0; }
+  .card.sent { background: #f7f8f9; color: #546e7a; }
+  .card-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; }
+  .card-head .lbl { font-size: 15px; font-weight: 700; }
+  .card-head .dist, .card-head .when { margin-left: auto; font-size: 12px; color: #546e7a; white-space: nowrap; }
+  .card-head a { font-size: 13px; }
+  .detail { font-size: 13px; color: #455a64; margin: 2px 0; }
+  .card-actions { margin-top: 8px; display: flex; gap: 10px; font-size: 13px; }
+  .card-actions a { cursor: pointer; color: #0277bd; }
+  .picks { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 10px; }
+  .pick { display: inline-flex; align-items: center; gap: 6px; border: 1px solid #b0bec5; border-radius: 18px;
+          padding: 7px 12px; font-size: 14px; background: #fff; cursor: pointer; }
+  .pick:active { background: #e3f2fd; }
+  .q { font-size: 15px; font-weight: 600; margin: 4px 0 6px; }
+  .why, .look { font-size: 13px; color: #455a64; margin: 4px 0; }
+  .look b, .why b { color: #263238; }
+  .choices { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 8px; }
+  .choices label { border: 1px solid #b0bec5; border-radius: 18px; padding: 7px 13px; font-size: 14px; cursor: pointer; }
+  .choices input { margin-right: 5px; }
+  .choices label.on { background: #e3f2fd; border-color: #1565c0; }
+  textarea { width: 100%; font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid #cfd8dc; border-radius: 6px; }
+  .saved { font-size: 13px; color: #2e7d32; margin-top: 8px; }
+  .warn { font-size: 13px; color: #c62828; margin-top: 6px; }
+  .empty { font-size: 13px; color: #78909c; margin: 4px 0 12px; }
+  details summary { cursor: pointer; font-size: 15px; font-weight: 600; margin: 22px 0 8px; }
+  .desk { margin-top: 28px; }
+  .desk h2 { font-size: 18px; margin-bottom: 8px; }
+  .desk p { font-size: 13px; color: #455a64; margin: 6px 0; }
+  .desk table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 10px 0; }
+  .desk th, .desk td { border: 1px solid #dde3e7; padding: 5px 8px; text-align: left; vertical-align: top; }
+  .desk th { background: #eceff1; }
+  .desk td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+</style>
+</head>
+<body>
+<nav class="topnav">
+<a href="index.html" style="">Home</a>
+<a href="map.html" style="">Map</a>
+<a href="zones.html" style="">Zones</a>
+<a href="owners.html" style="">Owners</a>
+<a href="reports.html" style="color:white;text-decoration:underline">Reports</a>
+<select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;width:62px;flex:none;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 2px"><option value="">Maps</option><option value="bluehills/map.html">Blue Hills</option><option value="saratoga/map.html">Saratoga Woods</option></select>
+</nav>
+<div class="container">
+<h1>Reports</h1>
+<p class="subtitle">Everything you report is kept on this phone until you send it. Out on the trail, the map's
+Report button is the quickest way: a tap on a blaze's color records it right where you are.</p>
+<div class="bar">
+  <span class="progress" id="progress"></span>
+  <button class="btn2 quiet" onclick="copyAll()">Copy</button>
+  <button class="btn2" id="sendBtn" onclick="sendAll()">Send all</button>
+</div>
+<div class="msg" id="msg"></div>
+<div class="where" id="where">Finding where you are… (allow location so reports record where you are)</div>
+
+<div class="card" id="new">
+  <div class="card-head"><span class="lbl">New report</span></div>
+  <div id="newBlazes"></div>
+  <textarea id="newNote" rows="2" placeholder="Something else? What did you see?"></textarea>
+  <div style="margin-top:8px"><button class="btn2" onclick="saveNote()">Save note</button></div>
+  <div class="warn" id="newWarn"></div>
+</div>
+
+<h2>Not sent yet</h2>
+<div id="unsent"></div>
+
+<div id="checksWrap">
+<h2 id="checks">Field checks</h2>
+<p class="subtitle" style="margin-top:-4px">Signs to check on the next walk, nearest first. On the map, they have a ? badge.</p>
+<div id="cards"></div>
+</div>
+
+<details id="sentWrap"><summary id="sentHead">Sent</summary><div id="sent"></div>
+  <button class="btn2 quiet" onclick="clearSent()">Clear sent reports</button></details>
+<div class="desk" id="desk">
+<h2>For a desk review</h2>
+<p>Where the map has each of these. They're the mapped positions of the trail
+intersections, not surveyed post locations, so expect them to be off by several meters.</p>
+<p><button class="btn2 quiet" onclick="copyTable()">Copy table</button>
+  <a href="checks.csv" download>Download CSV</a> &middot; <a href="checks.geojson" download>Download GeoJSON</a>
+  <span id="deskCopied" style="color:#2e7d32;margin-left:6px"></span></p>
+<table id="deskTable">
+<tr><th>Intersection</th><th>Latitude</th><th>Longitude</th><th>Why it's in question</th><th></th></tr>
+<tr><td>D7</td><td class="num">42.170416</td><td class="num">-71.498049</td><td>Seen on the ground (2026-10-21) as on the Fairbanks land, and the town&#x27;s parcel map puts it 10 m inside the Fairbanks parcel, but The Trustees&#x27; 2013 CR map has it outside; sources disagree here; this follows The Trustees&#x27; own CR map.</td><td><a href="map.html?int=D7">map</a></td></tr>
+<tr><td>E11</td><td class="num">42.168168</td><td class="num">-71.497790</td><td>3 m outside the CR line on The Trustees&#x27; 2013 map; confirm which side the post stands.</td><td><a href="map.html?int=E11">map</a></td></tr>
+</table>
+</div>
+</div>
+<script>
+var REPORTS_KEY = "vtnReports", REPORT_EMAIL = "tendiamonds@gmail.com", REPORT_TITLE = "Upper Charles Forest";
+var REPORT_BLAZES = {"red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}, "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"}, "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"}, "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}}, REPORT_CHECKS = [{"id": "cr-D7", "label": "D7", "lat": 42.170416, "lon": -71.498049, "question": "Is the post for D7 on the Fairbanks land (held by The Trustees and DCR)?", "choices": ["On CR land", "Not on CR land", "Can't tell"], "why": "Seen on the ground (2026-10-21) as on the Fairbanks land, and the town's parcel map puts it 10 m inside the Fairbanks parcel, but The Trustees' 2013 CR map has it outside; sources disagree here; this follows The Trustees' own CR map.", "look_for": "small boundary signs on trees (The Trustees may post signs up to a foot square on the CR's edge), painted blazes or survey pins along the line, or a stone wall or old fence line that follows it. Stand at the post when you save, so the answer records where it is."}, {"id": "cr-E11", "label": "E11", "lat": 42.168168, "lon": -71.49779, "question": "Is the post for E11 on the Fairbanks land (held by The Trustees and DCR)?", "choices": ["On CR land", "Not on CR land", "Can't tell"], "why": "3 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands.", "look_for": "small boundary signs on trees (The Trustees may post signs up to a foot square on the CR's edge), painted blazes or survey pins along the line, or a stone wall or old fence line that follows it. Stand at the post when you save, so the answer records where it is."}];
+
+// --- Saved reports (reports.py), shared by the map and the Reports page through the
+// phone's storage. A report: {id, when, kind ("blaze", "note", "check" or "sign"),
+// blaze (a blaze key, "other" or "none"), check (its id), answer, text, at ({lat, lon,
+// acc} or null), heading (degrees or null), about ({what: "int" or "trail", ref, extra}
+// or null), ctx (what the map had there: {trail, stretch, expect: [blaze keys], near,
+// nearM}), sent (when, or null)}
+function loadReports() {
+  try { return JSON.parse(localStorage.getItem(REPORTS_KEY)) || []; } catch (e) { return []; }
+}
+function storeReports(list) { try { localStorage.setItem(REPORTS_KEY, JSON.stringify(list)); } catch (e) {} }
+function addReport(r) {
+  var list = loadReports();
+  r.id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  r.when = new Date().toISOString();
+  r.sent = null;
+  list.push(r);
+  storeReports(list);
+  return r;
+}
+function changeReport(id, fn) {
+  var list = loadReports();
+  list.forEach(function(r) { if (r.id === id) fn(r); });
+  storeReports(list);
+}
+function dropReport(id) { storeReports(loadReports().filter(function(r) { return r.id !== id; })); }
+function unsentReports() { return loadReports().filter(function(r) { return !r.sent; }); }
+function checkById(id) { return REPORT_CHECKS.filter(function(c) { return c.id === id; })[0] || null; }
+// The latest answer saved for a check, or null
+function checkAnswer(id) {
+  var hits = loadReports().filter(function(r) { return r.kind === "check" && r.check === id; });
+  return hits.length ? hits[hits.length - 1] : null;
+}
+
+function blazeWords(key) {
+  return key === "none" ? "no blaze here" : key === "other" ? "another color"
+    : REPORT_BLAZES[key] ? REPORT_BLAZES[key].pick || REPORT_BLAZES[key].marks : key;
+}
+function reportHeadline(r) {
+  // Another color: the color is what was typed for it ("purple"), if anything
+  if (r.kind === "blaze" && r.blaze === "other") return "Blaze: " + (r.text || "another color (not said which)");
+  if (r.kind === "blaze") return "Blaze: " + blazeWords(r.blaze);
+  if (r.kind === "check") {
+    var c = checkById(r.check);
+    return "Check" + (c ? " at " + c.label : "") + ": " + r.answer;
+  }
+  if (r.kind === "sign") return "Standing at sign " + (r.about ? r.about.ref : "");
+  return "Note";
+}
+function fmtCoords(at) { return at.lat.toFixed(6) + ", " + at.lon.toFixed(6); }
+// The lines under a report's headline, for the list and the email
+function reportDetails(r) {
+  var out = [];
+  if (r.kind === "check") {
+    var c = checkById(r.check);
+    if (c) out.push(c.question);
+  }
+  if (r.about && r.kind !== "check") out.push("About: " + (r.about.what === "trail" ? "trail " : "") + r.about.ref + (r.about.extra ? " (" + r.about.extra + ")" : ""));
+  var x = r.ctx;
+  if (x && x.trail) {
+    out.push("On " + x.trail + ", " + x.stretch +
+             (r.kind === "blaze" ? " (the map has " + (x.expect && x.expect.length ? x.expect.map(blazeWords).join(", ") : "no blaze") + ")" : ""));
+  } else if (x && x.near) {
+    out.push(x.nearM ? "Off trail, " + x.nearM + " m from " + x.near : "At " + x.near);
+  }
+  out.push(r.at ? "At " + fmtCoords(r.at) + " (+/- " + r.at.acc + " m)" + (r.heading !== null && r.heading !== undefined ? ", heading " + r.heading + "°" : "")
+                : "Location not available");
+  if (r.text && !(r.kind === "blaze" && r.blaze === "other")) out.push("Note: " + r.text);
+  return out;
+}
+function reportsText(list) {
+  var lines = [REPORT_TITLE + " — " + list.length + " report" + (list.length === 1 ? "" : "s"), ""];
+  list.forEach(function(r, i) {
+    lines.push((i + 1) + ". " + reportHeadline(r) + " — " + new Date(r.when).toLocaleString());
+    reportDetails(r).forEach(function(l) { lines.push("   " + l); });
+  });
+  lines.push("", "Device: " + navigator.userAgent, "", "--- data (for the map's tools) ---", JSON.stringify(list));
+  return lines.join("\n");
+}
+// Opens the mail app with the unsent reports, and marks them sent. Returns how many.
+function sendReports() {
+  var list = unsentReports();
+  if (list.length) {
+    location.href = "mailto:" + REPORT_EMAIL + "?subject=" + encodeURIComponent(REPORT_TITLE + ": " + list.length + " report" +
+      (list.length === 1 ? "" : "s")) + "&body=" + encodeURIComponent(reportsText(list));
+    var now = new Date().toISOString(), all = loadReports();
+    all.forEach(function(r) { if (!r.sent) r.sent = now; });
+    storeReports(all);
+  }
+  return list.length;
+}
+
+// Once: answers saved on the old Checks page become reports (already sent from there)
+(function() {
+  var oldKey = REPORTS_KEY.replace(/Reports$/, "Checks"), moved = REPORTS_KEY + "MovedChecks";
+  try {
+    if (localStorage.getItem(moved)) return;
+    var old = JSON.parse(localStorage.getItem(oldKey) || "{}"), list = loadReports();
+    Object.keys(old).forEach(function(id) {
+      var s = old[id];
+      list.push({id: "old-" + id, when: s.when, kind: "check", check: id, answer: s.answer, text: s.note || "",
+                 at: s.lat ? {lat: s.lat, lon: s.lon, acc: Math.round(s.acc)} : null, heading: null, about: null, ctx: null,
+                 sent: s.when});
+    });
+    storeReports(list);
+    localStorage.setItem(moved, "1");
+  } catch (e) {}
+})();
+
+var here = null;   // {lat, lon, acc}
+var drafts = {};   // check answers picked and notes typed but not saved yet, kept through redraws
+
+function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+function jsq(s) { return "'" + String(s).replace(/\\/g, "\\\\").replace(/'/g, "\\'") + "'"; }
+function distM(a, b) { var dx = (a.lon - b.lon) * 82000, dy = (a.lat - b.lat) * 111000; return Math.sqrt(dx * dx + dy * dy); }
+function fmtDist(m) { var ft = m * 3.28084; return ft < 1000 ? Math.round(ft / 10) * 10 + " ft" : (m / 1609.344).toFixed(1) + " mi"; }
+function say(t) { document.getElementById("msg").textContent = t || ""; }
+function where() { return here ? {lat: +here.lat.toFixed(6), lon: +here.lon.toFixed(6), acc: Math.round(here.acc)} : null; }
+
+// A blaze's mark, small: a bar for paint blazes, a dot, or a triangle
+function blazeSwatch(key) {
+  var b = REPORT_BLAZES[key], c = b.color, edge = c.toLowerCase() === "#ffffff" ? "#555" : "#0d47a1";
+  var shape = b.style === "dots" ? '<circle cx="7" cy="7" r="5" fill="' + c + '" stroke="' + edge + '"/>'
+    : b.style === "arrows" ? '<path d="M7 1 L13 13 L1 13 Z" fill="' + c + '" stroke="' + edge + '"/>'
+    : '<rect x="4" y="1" width="6" height="12" fill="' + c + '" stroke="' + edge + '"/>';
+  return '<svg width="14" height="14" viewBox="0 0 14 14">' + shape + '</svg>';
+}
+
+function newReportHtml() {
+  var keys = Object.keys(REPORT_BLAZES);
+  if (!keys.length) return '';
+  return '<div class="detail">A blaze you can see here:</div><div class="picks">' +
+    keys.map(function(k) { return '<button class="pick" onclick="saveBlaze(' + jsq(k) + ')">' + blazeSwatch(k) + esc(blazeWords(k)) + '</button>'; }).join('') +
+    '<button class="pick" onclick="saveBlaze(\'other\')">Another color</button>' +
+    '<button class="pick" onclick="saveBlaze(\'none\')">No blaze here</button></div>';
+}
+
+function saveBlaze(key) {
+  var note = document.getElementById("newNote").value.trim();
+  if (key === "other" && !note) {
+    document.getElementById("newWarn").textContent = "Say which color in the note, then tap Another color again.";
+    return;
+  }
+  addReport({kind: "blaze", blaze: key, text: note, at: where(), heading: null, about: null, ctx: null});
+  document.getElementById("newNote").value = "";
+  document.getElementById("newWarn").textContent = "";
+  say("Saved: " + blazeWords(key) + (here ? "" : " (no location: it's off)"));
+  render();
+}
+
+function saveNote() {
+  var note = document.getElementById("newNote").value.trim();
+  if (!note) { document.getElementById("newWarn").textContent = "Type what you saw first."; return; }
+  addReport({kind: "note", text: note, at: where(), heading: null, about: null, ctx: null});
+  document.getElementById("newNote").value = "";
+  document.getElementById("newWarn").textContent = "";
+  say("Saved." + (here ? "" : " (No location: it's off.)"));
+  render();
+}
+
+function reportCardHtml(r) {
+  var map = r.at ? 'https://www.google.com/maps/search/?api=1&query=' + r.at.lat + ',' + r.at.lon : null;
+  return '<div class="card' + (r.sent ? ' sent' : '') + '"><div class="card-head"><span class="lbl">' + esc(reportHeadline(r)) + '</span>' +
+    '<span class="when">' + esc(new Date(r.when).toLocaleString()) + '</span></div>' +
+    reportDetails(r).map(function(l) { return '<div class="detail">' + esc(l) + '</div>'; }).join('') +
+    '<div class="card-actions">' + (map ? '<a href="' + map + '">Open in maps</a>' : '') +
+    (r.sent ? '<a onclick="unsend(' + jsq(r.id) + ')">Mark not sent</a>'
+            : '<a onclick="editNote(' + jsq(r.id) + ')">' + (r.text ? 'Edit note' : 'Add a note') + '</a>') +
+    '<a onclick="removeIt(' + jsq(r.id) + ')">Delete</a></div></div>';
+}
+
+function editNote(id) {
+  var r = loadReports().filter(function(x) { return x.id === id; })[0];
+  var t = window.prompt("Note:", r && r.text || "");
+  if (t !== null) { changeReport(id, function(x) { x.text = t.trim(); }); render(); }
+}
+function removeIt(id) { if (window.confirm("Delete this report?")) { dropReport(id); render(); } }
+function unsend(id) { changeReport(id, function(x) { x.sent = null; }); render(); }
+function clearSent() {
+  if (window.confirm("Delete every sent report from this phone?")) { storeReports(unsentReports()); render(); }
+}
+
+function sendAll() {
+  var n = sendReports();
+  say(n ? "Your mail app should open with " + n + " report" + (n === 1 ? "" : "s") + "; send it from there. They're now under Sent." : "Nothing to send.");
+  render();
+}
+function copyAll() {
+  var list = unsentReports(), text = reportsText(list);
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function() {
+    say("Copied " + list.length + " report" + (list.length === 1 ? "" : "s") + "; paste them anywhere.");
+  }, function() { window.prompt("Copy the reports:", text); });
+}
+
+// --- Field checks
+function checkCardHtml(c) {
+  var s = checkAnswer(c.id), d = drafts[c.id] || {};
+  var html = '<div class="card' + (s ? ' done' : '') + '" id="check-' + esc(c.label) + '">' +
+    '<div class="card-head"><span class="lbl">' + esc(c.label) + '</span><a href="map.html?int=' + encodeURIComponent(c.label) + '">map</a>' +
+    '<span class="dist" id="dist-' + esc(c.id) + '"></span></div>' +
+    '<div class="detail">Map has it at <a href="https://www.google.com/maps/search/?api=1&query=' + c.lat + ',' + c.lon + '">' +
+      c.lat.toFixed(6) + ', ' + c.lon.toFixed(6) + '</a></div>' +
+    '<div class="q">' + esc(c.question) + '</div>' +
+    (c.why ? '<div class="why"><b>Why:</b> ' + esc(c.why) + '</div>' : '') +
+    (c.look_for ? '<div class="look"><b>Look for:</b> ' + esc(c.look_for) + '</div>' : '') +
+    '<div class="choices">';
+  c.choices.forEach(function(ch) {
+    var on = d.answer !== undefined ? d.answer === ch : !!s && s.answer === ch;
+    html += '<label class="' + (on ? 'on' : '') + '"><input type="radio" name="ch-' + esc(c.id) + '" value="' + esc(ch) + '"' +
+      (on ? ' checked' : '') + ' onchange="pick(this, ' + jsq(c.id) + ')">' + esc(ch) + '</label>';
+  });
+  html += '</div><textarea id="note-' + esc(c.id) + '" rows="2" placeholder="Notes (optional): what you saw" oninput="draft(' + jsq(c.id) +
+    ').note = this.value">' + esc(d.note || '') + '</textarea>' +
+    '<div style="margin-top:8px"><button class="btn2" onclick="saveCheck(' + jsq(c.id) + ')">' + (s ? 'Save another answer' : 'Save') + '</button></div>' +
+    '<div class="warn" id="warn-' + esc(c.id) + '"></div>' +
+    (s ? '<div class="saved">✓ ' + esc(s.answer) + ', saved ' + esc(new Date(s.when).toLocaleString()) +
+      (s.at ? ', ' + fmtDist(distM(s.at, c)) + ' from the map\'s spot' : ', location not available') + (s.sent ? ' (sent)' : '') + '</div>' : '') +
+    '</div>';
+  return html;
+}
+function draft(id) { return drafts[id] || (drafts[id] = {}); }
+function pick(input, id) {
+  input.closest(".choices").querySelectorAll("label").forEach(function(l) { l.classList.toggle("on", l.contains(input)); });
+  draft(id).answer = input.value;
+}
+function saveCheck(id) {
+  var c = checkById(id), picked = document.querySelector('input[name="ch-' + id + '"]:checked');
+  if (!picked) { document.getElementById("warn-" + id).textContent = "Pick an answer first."; return; }
+  addReport({kind: "check", check: id, answer: picked.value, text: document.getElementById("note-" + id).value.trim(),
+             at: where(), heading: null, about: {what: "int", ref: c.label, extra: ""}, ctx: null});
+  delete drafts[id];
+  say("Saved your answer for " + c.label + ".");
+  render();
+}
+function showDistances() {
+  REPORT_CHECKS.forEach(function(c) {
+    var el = document.getElementById("dist-" + c.id);
+    if (el) el.textContent = here ? fmtDist(distM(here, c)) + " away" : "";
+  });
+}
+
+function render() {
+  var all = loadReports(), unsent = all.filter(function(r) { return !r.sent; }), sent = all.filter(function(r) { return r.sent; });
+  document.getElementById("progress").textContent = unsent.length + " not sent yet";
+  document.getElementById("sendBtn").disabled = !unsent.length;
+  document.getElementById("newBlazes").innerHTML = newReportHtml();
+  document.getElementById("unsent").innerHTML = unsent.length ? unsent.slice().reverse().map(reportCardHtml).join('')
+    : '<div class="empty">Nothing waiting to be sent.</div>';
+  document.getElementById("sentWrap").style.display = sent.length ? "" : "none";
+  document.getElementById("sentHead").textContent = "Sent (" + sent.length + ")";
+  document.getElementById("sent").innerHTML = sent.slice().reverse().map(reportCardHtml).join('');
+  document.getElementById("checksWrap").style.display = REPORT_CHECKS.length ? "" : "none";
+  var checks = REPORT_CHECKS.slice();
+  if (here) checks.sort(function(a, b) { return distM(here, a) - distM(here, b); });
+  document.getElementById("cards").innerHTML = checks.map(checkCardHtml).join('');
+  showDistances();
+}
+
+// The desk table, tab-separated, for a spreadsheet or GIS
+function copyTable() {
+  var text = [...document.querySelectorAll("#deskTable tr")].map(function(tr) {
+    return [...tr.children].slice(0, 4).map(function(td) { return td.innerText.trim(); }).join("\t");
+  }).join("\n");
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function() {
+    document.getElementById("deskCopied").textContent = "Copied.";
+  }, function() { window.prompt("Copy the table:", text); });
+}
+
+if (navigator.geolocation) {
+  var first = true;
+  navigator.geolocation.watchPosition(function(pos) {
+    here = {lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy};
+    document.getElementById("where").textContent = "You're at " + here.lat.toFixed(5) + ", " + here.lon.toFixed(5) +
+      " (± " + Math.round(here.acc) + " m). Reports record this spot.";
+    if (first) { first = false; render(); } else { showDistances(); }
+  }, function() {
+    document.getElementById("where").textContent = "Location is off, so reports won't record where you are.";
+  }, {enableHighAccuracy: true, maximumAge: 5000});
+}
+render();
+if (location.hash) { var el = document.getElementById(decodeURIComponent(location.hash.slice(1))); if (el) el.scrollIntoView(); }
+</script>
+</body>
+</html>

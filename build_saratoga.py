@@ -24,7 +24,8 @@ import math
 import os
 
 import make_favicon
-from build_bluehills import dist_m, road_links, name_continuations, join_continuations
+from build_bluehills import dist_m, road_links, name_continuations, join_continuations, CHECKS_CSS
+from reports import build_reports_page
 from trailmap import build_map_page, maps_menu_html
 
 PROJ = os.path.dirname(os.path.abspath(__file__))
@@ -87,9 +88,10 @@ BLAZES = {
     "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"},
     "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"},
     "purple": {"name": "Purple-blazed trail", "marks": "purple blazes", "color": "#8e24aa", "style": "blazes"},
-    # The SMBA map's brown singletrack and black trails, colored as if blazed
-    "brown": {"name": "Brown trail (SMBA map)", "marks": "shown brown on the SMBA map", "color": "#a0522d", "style": "blazes"},
-    "black": {"name": "Black trail (SMBA map)", "marks": "shown black on the SMBA map", "color": "#212121", "style": "blazes"},
+    # The SMBA map's brown singletrack and black trails, colored as if blazed (pick: what
+    # the Report sheet calls them, for someone who sees one)
+    "brown": {"name": "Brown trail (SMBA map)", "marks": "shown brown on the SMBA map", "pick": "brown blazes", "color": "#a0522d", "style": "blazes"},
+    "black": {"name": "Black trail (SMBA map)", "marks": "shown black on the SMBA map", "pick": "black blazes", "color": "#212121", "style": "blazes"},
 }
 
 
@@ -388,6 +390,7 @@ def main():
         "blazes": BLAZES,
         "placeLabels": building_labels(),
         "nav": ('<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Saratoga Woods</a>'
+                '<a href="reports.html" style="color:#ecf0f1;font-size:14px">Reports</a>'
                 + maps_menu_html("sar", "../") + '</nav>'),
     }
     os.makedirs(OUT, exist_ok=True)
@@ -398,6 +401,9 @@ def main():
                 '<title>Saratoga Woods</title><a href="map.html">Saratoga Woods trail map</a>\n')
     # Skidmore's green and yellow
     make_favicon.make_icons(OUT, label="S", color="#006A52", ink="#FFD100", name="Saratoga Woods", short_name="Saratoga")
+    build_reports_page(os.path.join(OUT, "reports.html"), title="Reports — Saratoga Woods", css=CHECKS_CSS,
+                       nav=region["nav"], storage_prefix=region["storagePrefix"], email=region["report"]["email"],
+                       blazes=BLAZES, checks=[])
 
     by_zone = collections.Counter(f["properties"]["zone"] for f in features if f["properties"].get("shape"))
     km = collections.Counter()

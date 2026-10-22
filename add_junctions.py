@@ -8,12 +8,14 @@ the other. This finds those places and adds an unsigned junction at each: a rout
 with no sign and no number (junction: true, labeled J<n> in the code), invisible on the
 map. First it tidies up:
   - drops junctions a sign beside them already covers
-  - trims a trail line that runs a few meters past an intersection to a dead end (a
-    drawing overshoot), unless its tip touches another trail
+  - with --trim, trims a trail line that runs a few meters past an intersection to a dead
+    end (a drawing overshoot), unless its tip touches another trail. Not by default: the
+    curated lines are meant to reach the trails they meet, even just past a sign.
 Safe to rerun after adding trails; it only changes what needs it.
 
   python add_junctions.py          tidy, add junctions, and write the data
   python add_junctions.py --dry    just report what it would do
+  python add_junctions.py --trim   ...also trim overshoots (check them with --dry --trim)
 
 Writes intersections_zoned.geojson and trails_selected.geojson.
 """
@@ -86,6 +88,7 @@ def network():
     bm = importlib.util.module_from_spec(spec)
     with contextlib.redirect_stdout(io.StringIO()):
         spec.loader.exec_module(bm)
+        bm.renumber = lambda feats: None     # only reading here: the build writes new numbers
         labeled, _, _ = bm.load_and_process()
     tim = bm.build_trail_int_map(labeled, trails)
     joins = {}
@@ -95,7 +98,7 @@ def network():
     return ints, trails, labeled, tim, joins
 
 
-def tidy(dry):
+def tidy(dry, trim=False):
     ints, trails, labeled, tim, joins = network()
     feats = {f["properties"]["label"]: f for f in labeled["features"]}
 
@@ -114,7 +117,7 @@ def tidy(dry):
 
     # Overshoots: a short dead end past a trail's first or last intersection. Its tip may
     # touch other trails; that's only a link worth keeping if they don't all meet at the
-    # same intersection anyway.
+    # same intersection anyway, or if the tip is far enough from it to be a meeting of its own.
     def touches_other(ti, c, label):
         p, touched = xy(c), set()
         for tj, g in enumerate(trails["features"]):
@@ -123,14 +126,19 @@ def tidy(dry):
                     pts = [xy(k) for k in line]
                     if any(dist(p, project(p, pts[k], pts[k + 1])[0]) <= TOUCH_M for k in range(len(pts) - 1)):
                         touched.add(tj)
-        return not touched <= joins.get(label, set())
+        apart = dist(p, xy(feats[label]["geometry"]["coordinates"])) > MERGE_M
+        return bool(touched) and (apart or not touched <= joins.get(label, set()))
 
     trims = []
     for ti, f in enumerate(trails["features"]):
         info = tim.get(ti)
-        if f["geometry"]["type"] != "LineString" or not info or not info["ints"]:
+        if not trim or f["geometry"]["type"] != "LineString" or not info or not info["ints"]:
             continue
         c = f["geometry"]["coordinates"]
+        # A closed loop has no dead end: the stretch before its first intersection runs on
+        # round to its last one
+        if dist(xy(c[0]), xy(c[-1])) <= TOUCH_M:
+            continue
         cum = [0.0]
         for k in range(1, len(c)):
             cum.append(cum[-1] + dist(xy(c[k - 1]), xy(c[k])))
@@ -287,8 +295,9 @@ def main(dry):
 
 if __name__ == "__main__":
     dry = "--dry" in sys.argv
+    trim = "--trim" in sys.argv
     # A trim can leave a neighboring trail's tip free, so tidy until nothing changes
     passes = 1
-    while tidy(dry) and not dry and passes < 10:
+    while tidy(dry, trim) and not dry and passes < 10:
         passes += 1
     main(dry)

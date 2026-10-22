@@ -25,7 +25,7 @@ import json
 import math
 import os
 
-from checks import build_checks_page
+from reports import build_reports_page
 from trailmap import build_map_page, dist_m, maps_menu_html
 import make_favicon
 
@@ -76,18 +76,8 @@ BLAZE_MIN_M = 30         # shorter blazed stretches are dropped
 # trail, not from the park's map. This map already uses the corrected versions.
 OSM_FIX_LOOK = ("the number on the intersection sign (the four-digit number on a post or tree "
                 "at the junction).")
+# Resolved checks come off the list (3153 and 3157: seen on the signs 2026-10-21, fixed in OSM)
 FIELD_CHECKS = [
-    {"id": "osm-3153", "label": "3153", "lat": 42.223661, "lon": -71.045687,
-     "question": "What number is on the sign at this junction?",
-     "choices": ["3153", "5153", "Another number (note it)", "No sign"],
-     "why": "OpenStreetMap numbers this sign 5153, but 5xxx is the Ponkapoag section, south of I-93. This "
-            "junction is in Chickatawbut (3xxx), next to 3151 and 3152, and the park map has 3153 here.",
-     "look_for": OSM_FIX_LOOK},
-    {"id": "osm-3157", "label": "3157", "lat": 42.223442, "lon": -71.045101,
-     "question": "What number is on the sign at this junction?",
-     "choices": ["3157", "5157", "Another number (note it)", "No sign"],
-     "why": "OpenStreetMap numbers this sign 5157; the park map has 3157 here, about 50 m from 3153.",
-     "look_for": OSM_FIX_LOOK},
     {"id": "osm-5422", "label": "5422", "lat": 42.198533, "lon": -71.074663,
      "question": "Is the 5422 sign here, where Middle Road meets the Pipe Line?",
      "choices": ["Yes, it's here", "No, it's 150 m west, at Middle Road and Wannamanhut Path", "Not at either", "Can't tell"],
@@ -121,7 +111,8 @@ SECTIONS = {   # from the Friends of the Blue Hills
 
 
 # Numbers OpenStreetMap has wrong. 5153 and 5157 sit in Chickatawbut (section 3), next to
-# 3151 and 3152, right where the park map has 3153 and 3157.
+# 3151 and 3152, right where the park map has 3153 and 3157. The signs say 3153 and 3157
+# (2026-10-21) and OSM has been fixed, pending review: drop these once the build says so.
 OSM_NUMBER_FIXES = {"5153": "3153", "5157": "3157"}
 # Numbers OpenStreetMap has on the wrong junction: number -> the right OSM point. The park
 # map has 5422 where Middle Road meets the Pipe Line; OSM has it 150 m west, where Middle
@@ -621,11 +612,6 @@ def main():
                 ints.append([label[n], round(cum[k])])
         tim[ti] = {"length": round(s), "ints": ints}
 
-    # Intersections with something to check get a link to it in the map
-    checks_at = {c["label"]: c["question"] for c in FIELD_CHECKS}
-    for f in features:
-        if f["properties"].get("label") in checks_at:
-            f["properties"]["check"] = checks_at[f["properties"]["label"]]
     ints_fc = {"type": "FeatureCollection", "features": features}
     trails_fc = {"type": "FeatureCollection", "features": trail_feats}
     lons = [c[0] for f in trail_feats for c in f["geometry"]["coordinates"]]
@@ -637,6 +623,11 @@ def main():
         "bounds": [[min(lats), min(lons)], [max(lats), max(lons)]],
         "storagePrefix": "bh",
         "report": {"email": "tendiamonds@gmail.com", "signReports": True},
+        "checks": FIELD_CHECKS,
+        # Blazes as worked out from the park map's symbols, not snapped to whole stretches:
+        # snapping them (even junction to junction) loses or adds a few hundred meters on
+        # some trails (Coon Hollow Path's triangles, Headquarters Path's), to look into first
+        "blazeStops": None,
         "otherMaps": [{"name": "Upper Charles Forest", "href": "../map.html"}],
         "zonesPage": False,
         "dem": os.path.join(PROJ, "elevation_cache", "bluehills.tif"),
@@ -644,7 +635,7 @@ def main():
         "widths": WIDTHS,
         "terrain": TERRAIN,
         "nav": ('<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a>'
-                '<a href="checks.html" style="color:#ecf0f1;font-size:14px">Checks</a>'
+                '<a href="reports.html" style="color:#ecf0f1;font-size:14px">Reports</a>'
                 + maps_menu_html("bh", "../") + '</nav>'),
     }
     os.makedirs(OUT, exist_ok=True)
@@ -653,13 +644,13 @@ def main():
         f.write('<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=map.html">'
                 '<title>Blue Hills Reservation</title><a href="map.html">Blue Hills Reservation trail map</a>\n')
     make_favicon.make_icons(OUT, label="BH", color="#1f4e79", name="Blue Hills Reservation", short_name="Blue Hills")
-    build_checks_page(FIELD_CHECKS, os.path.join(OUT, "checks.html"), title="Field Checks — Blue Hills Reservation",
-                      subtitle="OpenStreetMap mistakes to confirm on the ground, nearest first. Answers are kept on "
-                               "this phone until you send them. Once you've confirmed one, here's "
-                               '<a href="https://github.com/tendiamonds/Quinobequin/blob/master/bluehills_osm_fixes.md">'
-                               "how to fix it in OpenStreetMap</a>.",
-                      css=CHECKS_CSS, nav=region["nav"], storage_prefix=region["storagePrefix"],
-                      email=region["report"]["email"])
+    build_reports_page(os.path.join(OUT, "reports.html"), title="Reports — Blue Hills Reservation", css=CHECKS_CSS,
+                       nav=region["nav"], storage_prefix=region["storagePrefix"], email=region["report"]["email"],
+                       blazes=BLAZES, checks=FIELD_CHECKS,
+                       checks_intro="OpenStreetMap mistakes to confirm on the ground, nearest first; on the map, "
+                                    "they have a ? badge. Once you've confirmed one, here's "
+                                    '<a href="https://github.com/tendiamonds/Quinobequin/blob/master/bluehills_osm_fixes.md">'
+                                    "how to fix it in OpenStreetMap</a>.")
 
     for k in WIDTHS:
         print("  %-14s %.1f km" % (k, sum(r[2] - r[1] for rs in widths.values() for r in rs if r[0] == k) / 1000))

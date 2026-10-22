@@ -16,7 +16,7 @@ import os
 import re
 from collections import OrderedDict, defaultdict
 
-from checks import build_checks_page
+from reports import build_reports_page
 from crs import CRS, holders_text, sign_checks, sign_crs
 from trailmap import build_map_page, build_trail_int_map, dist_m, maps_menu_html
 
@@ -65,12 +65,13 @@ def region():
         "dem": os.path.join(PROJ, "elevation_cache", "upper_charles.tif"),
         # The prototype signs up now use an abandoned numbering, so no "I'm at this sign"
         "report": {"email": "tendiamonds@gmail.com", "signReports": False},
+        "checks": sign_checks(),
         "otherMaps": [{"name": "Blue Hills", "href": "bluehills/map.html"}],
         "zonesPage": True,
         "nav": nav_html("map"),
         # Blazed trails, from NEMBA's 2012 map (uc_blazes.py), corrected from the ground;
-        # which stretches each marks is in trails_selected.geojson ("blazes", as for the
-        # Blue Hills)
+        # which stretches each marks is in trails_selected.geojson ("blazes", sign to sign:
+        # see blazes_to_meters)
         "blazes": {
             "red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"},
             "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"},
@@ -269,6 +270,42 @@ def dijkstra(graph, start_nodes):
     return dist
 
 
+RENUMBER = True   # no signs are up yet: number afresh each build (turn off once they are)
+
+
+def renumber(feats):
+    """Where this build's numbers differ from the ones in the data, carry the change to
+    everything keyed by number: the data's own "sign"s (intersections_zoned.geojson), the
+    sign list (sign_logos.csv), and the T-shirt notes (tshirt_signs.md, local)."""
+    moves = {f["properties"]["sign"]: f["properties"]["label"] for f in feats
+             if f["properties"].get("sign") and f["properties"]["sign"] != f["properties"]["label"]}
+    new = {f["properties"]["number"]: f["properties"]["label"] for f in feats}
+    if not moves and all(f["properties"].get("sign") for f in feats):
+        return
+    path = os.path.join(PROJ, "intersections_zoned.geojson")
+    data = json.load(open(path, encoding="utf-8"))
+    for f in data["features"]:
+        num = f["properties"].get("number")
+        if num in new and not f["properties"].get("no_sign"):
+            f["properties"]["sign"] = new[num]
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(json.dumps(data, indent=2) + "\n")
+    # All at once, so D8->D7 and D7->D6 don't run into each other
+    swap = lambda m: moves.get(m.group(0), m.group(0))
+    pattern = re.compile(r"\b[A-F]\d+\b")
+    signs = os.path.join(PROJ, "sign_logos.csv")
+    lines = open(signs, encoding="utf-8", newline="").read().splitlines(keepends=True)
+    out = [lines[0]] + [moves.get(l.split(",", 1)[0], l.split(",", 1)[0]) + "," + l.split(",", 1)[1] for l in lines[1:]]
+    with open(signs, "w", encoding="utf-8", newline="") as fh:
+        fh.write("".join(out))
+    shirts = os.path.join(PROJ, "tshirt_signs.md")
+    if os.path.exists(shirts):
+        text = open(shirts, encoding="utf-8").read()
+        with open(shirts, "w", encoding="utf-8") as fh:
+            fh.write(pattern.sub(swap, text))
+    print("Renumbered %d intersection(s): %s" % (len(moves), ", ".join("%s->%s" % kv for kv in sorted(moves.items())) or "only new ones"))
+
+
 def load_and_process():
     with open(rf"{PROJ}\parcels_all.geojson") as f:
         parcels = json.load(f)
@@ -277,10 +314,13 @@ def load_and_process():
     with open(rf"{PROJ}\trails_selected.geojson") as f:
         trails = json.load(f)
 
-    # Labels are printed on signs, so once given they never change: each sign's label is
-    # frozen in the data ("sign"), and only a new intersection without one is numbered,
-    # after the highest label in its zone. Signless intersections (a post with no sign
-    # like Post 4, or a landmark on a trail like Teetering Rock) aren't numbered at all.
+    # Until the signs go up (RENUMBER), every build numbers each zone afresh, in its order
+    # out from the zone's exit, so adding or removing trails and intersections keeps the
+    # numbers tidy; renumber() then carries what's keyed by number along. Once they're up,
+    # labels are printed on signs, so never change: each sign's label is frozen in the data
+    # ("sign"), and only a new intersection without one is numbered, after the highest
+    # label in its zone. Signless intersections (a post with no sign like Post 4, or a
+    # landmark on a trail like Teetering Rock) aren't numbered at all.
     signed = {"features": [f for f in ints["features"] if not f["properties"].get("no_sign")]}
     graph = build_trail_graph(signed, trails)
 
@@ -314,13 +354,15 @@ def load_and_process():
             ordered = order_subgroup(pts, ex, ey)
 
         taken = [int(f["properties"]["sign"][1:]) for f in ordered if f["properties"].get("sign")]
-        n = max(taken, default=0)
+        n = 0 if RENUMBER else max(taken, default=0)
         for feat in ordered:
-            if feat["properties"].get("sign"):
+            if feat["properties"].get("sign") and not RENUMBER:
                 feat["properties"]["label"] = feat["properties"]["sign"]
             else:
                 n += 1
                 feat["properties"]["label"] = "%s%d" % (z, n)
+    if RENUMBER:
+        renumber(signed["features"])
     for feat in ints["features"]:
         if feat["properties"].get("no_sign"):
             feat["properties"]["label"] = feat["properties"].get("code") or "P%d" % feat["properties"]["post"]
@@ -407,7 +449,7 @@ def nav_html(active):
         ("map.html", "Map"),
         ("zones.html", "Zones"),
         ("owners.html", "Owners"),
-        ("checks.html", "Checks"),
+        ("reports.html", "Reports"),
     ]
     parts = ['<nav class="topnav">']
     for href, label in items:
@@ -801,6 +843,43 @@ def build_owners_page(rows):
 
 
 
+def blazes_to_meters(ints, trails):
+    """trails_selected.geojson keeps each trail's blazes as runs from sign to sign along it,
+    by the intersections' data numbers ("start" or "end" for a trail end with none):
+    [color, from, to], and a direction if it's marked one way. So extending or trimming a
+    trail, or renumbering, leaves them be. The app wants meters along the trail."""
+    tim = build_trail_int_map(ints, trails)
+    label_of = {f["properties"]["number"]: f["properties"]["label"] for f in ints["features"] if "number" in f["properties"]}
+    for ti, f in enumerate(trails["features"]):
+        runs = f["properties"].get("blazes")
+        info = tim.get(ti)
+        if not runs or not info:
+            continue
+        pos = {}
+        for label, d in info["ints"]:
+            pos.setdefault(label, []).append(d)
+
+        def at(end):
+            if end in ("start", "end"):
+                return [0 if end == "start" else info["length"]]
+            return pos.get(label_of.get(end), [])
+
+        out = []
+        for r in runs:
+            a_s, b_s = at(r[1]), at(r[2])
+            if not a_s or not b_s:
+                print("  WARNING: %s's %s blaze runs from #%s to #%s, but %s isn't on it any more; left out" % (
+                    f["properties"].get("name") or f["properties"]["id"], r[0], r[1], r[2], "#%s" % (r[1] if not a_s else r[2])))
+                continue
+            # (a loop can pass a sign twice: the nearest pair)
+            a, b = min(((x, y) for x in a_s for y in b_s), key=lambda p: abs(p[1] - p[0]))
+            way = r[3] if len(r) > 3 else None
+            if a > b:
+                a, b, way = b, a, (-way if way else way)
+            out.append([r[0], a, b] + ([way] if way else []))
+        f["properties"]["blazes"] = out
+
+
 # ---------------------------------------------------------------------------
 
 def main():
@@ -808,14 +887,14 @@ def main():
     print("Processed %d intersections" % len(rows))
 
     build_landing(rows)
+    blazes_to_meters(ints, trails)
     build_map_page(ints, trails, region(), PROJ)
     build_zones_page(rows)
     build_owners_page(rows)
-    build_checks_page(sign_checks(), rf"{PROJ}\checks.html", title="Field Checks — Upper Charles Forest",
-                      subtitle="Signs to check on the next walk, nearest first. Answers are kept on this phone "
-                               "until you send them.",
-                      css=PAGE_CSS, nav=nav_html("checks"), storage_prefix=region()["storagePrefix"],
-                      email=region()["report"]["email"])
+    build_reports_page(rf"{PROJ}\reports.html", title="Reports — Upper Charles Forest", css=PAGE_CSS,
+                       nav=nav_html("reports"), storage_prefix=region()["storagePrefix"],
+                       email=region()["report"]["email"], blazes=region()["blazes"], checks=sign_checks(),
+                       checks_intro="Signs to check on the next walk, nearest first. On the map, they have a ? badge.")
 
 
 if __name__ == "__main__":

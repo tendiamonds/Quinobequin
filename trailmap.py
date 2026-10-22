@@ -9,7 +9,9 @@ build_map_page(ints, trails, region, out_dir) writes out_dir/map.html. region is
   bounds         [[south, west], [north, east]] of the trail network
   storagePrefix  prefix for what the browser keeps (settings, breadcrumbs), so two
                  regions served from the same site don't mix them up
-  report         where reports go and which kinds this region offers (see the app)
+  report         {"email", "signReports"}: where the Reports page sends reports, and
+                 whether "I'm standing at this sign" is offered (see reports.py)
+  checks         (optional) field checks at intersections, as for reports.py
   zonesPage      whether the site has a zones.html for zone tags to link to
   otherMaps      [{"name": ..., "href": ...}] links to the other regions' maps
   placeLabels    (optional) [{"name", "lat", "lon"}] names for places the map tiles don't
@@ -17,7 +19,9 @@ build_map_page(ints, trails, region, out_dir) writes out_dir/map.html. region is
   nav            the page's top navigation bar (HTML)
   dem            (optional) where to keep the region's elevation grid (elevation.py); with
                  it, trails get elevation profiles
-  blazes, widths, terrain   (optional) blazed trails and trail widths (build_bluehills.py)
+  blazes, widths, terrain   (optional) blazed trails and trail widths (build_bluehills.py).
+                 A trail's blazes cover whole stretches (snap_blazes): sign to sign, or
+                 with blazeStops "junctions", junction to junction; None leaves them be
 
 The intersections and trails are GeoJSON; build_trail_int_map works out which
 intersections lie on which trails, which the app routes over.
@@ -30,6 +34,7 @@ import re
 import urllib.parse
 
 import elevation
+from reports import REPORTS_JS
 
 
 def dist_m(lon1, lat1, lon2, lat2):
@@ -95,6 +100,64 @@ def build_trail_int_map(ints, trails):
     return result
 
 
+def blaze_stretches(ints, trail_int_map, ti, length, signs_only=True):
+    """Where trail ti's blazes can start and stop: its ends and the intersections along it,
+    [(meters along, label or None)]. signs_only: not at unmarked junctions, so a blaze that
+    changes where there's no sign is a reason to promote that junction to a sign (for a
+    region whose signs are its own; at the Blue Hills they're the park's)."""
+    junction = {f["properties"]["label"] for f in ints["features"] if signs_only and f["properties"].get("junction")}
+    info = trail_int_map.get(ti) or trail_int_map.get(str(ti)) or {"ints": []}
+    out = [(0, None)]
+    for label, d in info["ints"]:
+        if label in junction:
+            continue
+        if d <= out[-1][0] + 1:            # at the trail's start, or doubled up
+            out[-1] = (out[-1][0], out[-1][1] or label)
+        else:
+            out.append((min(d, length), label))
+    if out[-1][0] >= length - 1:
+        out[-1] = (length, out[-1][1])
+    else:
+        out.append((length, None))
+    return out
+
+
+def snap_blazes(ints, trails, trail_int_map, signs_only=True):
+    """Blazes run from sign to sign (or junction to junction, if not signs_only): each
+    trail's blazes ([key, from m, to m, direction?]) become whole stretches between
+    blaze_stretches, a stretch carrying a blaze its runs cover at least half of, and
+    neighboring stretches with the same blaze joined up. Returns how many stretches
+    gained or lost a blaze, or were only partly covered."""
+    changed = 0
+    for ti, f in enumerate(trails["features"]):
+        runs = f["properties"].get("blazes")
+        info = trail_int_map.get(ti) or trail_int_map.get(str(ti))
+        if not runs or not info:
+            continue
+        bounds = [d for d, _ in blaze_stretches(ints, trail_int_map, ti, info["length"], signs_only)]
+        kinds = []
+        for r in runs:
+            kind = (r[0], r[3] if len(r) > 3 else None)
+            if kind not in kinds:
+                kinds.append(kind)
+        new = []
+        for key, way in kinds:
+            mine = [r for r in runs if r[0] == key and (r[3] if len(r) > 3 else None) == way]
+            for lo, hi in zip(bounds, bounds[1:]):
+                cover = sum(max(0.0, min(hi, r[2]) - max(lo, r[1])) for r in mine)
+                had = cover > 0.05 * (hi - lo)
+                has = cover >= 0.5 * (hi - lo)
+                changed += had != has or (has and cover < 0.95 * (hi - lo))
+                if not has:
+                    continue
+                if new and new[-1][0] == key and new[-1][2] == lo and (new[-1][3] if len(new[-1]) > 3 else None) == way:
+                    new[-1][2] = hi
+                else:
+                    new.append([key, lo, hi] + ([way] if way is not None else []))
+        f["properties"]["blazes"] = new
+    return changed
+
+
 # The sites' maps, for each one's menu of the others: (key, name, path from the site's root)
 SITE_MAPS = [("uc", "Upper Charles Forest", "map.html"), ("bh", "Blue Hills", "bluehills/map.html"),
              ("sar", "Saratoga Woods", "saratoga/map.html")]
@@ -121,6 +184,14 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
         f["properties"]["_idx"] = i
     ele_step = elevation.add_elevations(ints, trails, region["bounds"], region["dem"]) if region.get("dem") else None
 
+    if trail_int_map is None:
+        trail_int_map = build_trail_int_map(ints, trails)
+    stops = region.get("blazeStops", "signs")
+    signs_only = stops == "signs"
+    snapped = snap_blazes(ints, trails, trail_int_map, signs_only) if stops else 0
+    if snapped:
+        print("Blazes: %d stretch(es) snapped to run %s" % (snapped, "sign to sign" if signs_only else "junction to junction"))
+
     int_data = json.dumps(ints)
     trail_data = json.dumps(trails)
 
@@ -133,8 +204,6 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
             trail_names.add(name)
     n_names = len(trail_names)
 
-    if trail_int_map is None:
-        trail_int_map = build_trail_int_map(ints, trails)
     trail_int_json = json.dumps(trail_int_map)
 
     int_trail_map = {}
@@ -173,7 +242,8 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     client["widths"] = region.get("widths", {})
     client["terrain"] = region.get("terrain", [])
     client["eleStep"] = ele_step
-    html = MAP_TEMPLATE
+    client["checks"] = region.get("checks", [])
+    html = MAP_TEMPLATE.replace("__REPORTS_JS__", REPORTS_JS)
     # Legend rows only for kinds of marker this region has
     for kind in ("post", "landmark", "road"):
         if not any(f["properties"].get(kind) for f in ints["features"] + trails["features"]):
@@ -198,7 +268,7 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     # How to let the site use your location, linked from the map when it can't
     report = region.get("report") or {}
     contact = ('<a href="mailto:%s?subject=%s">email us</a>.' % (report["email"], urllib.parse.quote(region["name"] + ": location won't work"))
-               if report.get("email") else "use the map's Report a problem link.")
+               if report.get("email") else "use the map's Report button.")
     page = (LOCATION_HELP.replace("__REGION_NAME__", region["name"]).replace("__NAV__", region["nav"])
             .replace("__REPORT__", contact))
     with open(os.path.join(out_dir, "location-help.html"), "w", encoding="utf-8") as f:
@@ -502,11 +572,27 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .report-link { margin-top: 10px; font-size: 12px; text-align: right; }
   .report-link a { color: #777; text-decoration: underline; cursor: pointer; }
   .report-head { font-size: 13px; margin-bottom: 6px; }
-  .report-kind { display: block; font-size: 13px; padding: 3px 0; cursor: pointer; }
   .report textarea { width: 100%; margin: 6px 0; font: inherit; font-size: 13px; padding: 4px 6px;
     border: 1px solid #ccc; border-radius: 4px; }
   .report-warn { color: #c62828; font-size: 12px; }
   .report-fine { color: #888; font-size: 11px; margin-top: 6px; }
+  .report-where { font-size: 12px; color: #455a64; margin-bottom: 6px; }
+  .report-acc { color: #90a4ae; }
+  .report-sub { font-size: 12px; font-weight: 600; color: #555; margin: 8px 0 2px; }
+  .blaze-picks { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 6px; }
+  .blaze-pick { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #b0bec5; border-radius: 16px;
+    padding: 6px 10px; font-size: 13px; background: #fff; color: #263238; cursor: pointer; }
+  .blaze-pick:active { background: #e3f2fd; }
+  .report-ctl a { display: flex; align-items: center; justify-content: center; position: relative; }
+  .report-count { position: absolute; top: -6px; right: -6px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
+    background: #e65100; color: #fff; font: 700 10px/16px sans-serif; text-align: center; }
+  .check-badge { display: inline-block; width: 16px; height: 16px; border-radius: 8px; background: #e65100; color: #fff;
+    font: 700 11px/16px sans-serif; text-align: center; border: 1.5px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,0.5); }
+  .check-badge.done { background: #2e7d32; }
+  .check-here { font-size: 12px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 6px; padding: 5px 7px;
+    margin: 0 0 6px; cursor: pointer; }
+  .check-q { font-size: 14px; font-weight: 600; margin: 6px 0 4px; }
+  .check-why { font-size: 12px; color: #455a64; margin: 3px 0; }
   .estimated-tag { font-size: 11px; color: #b26a00; }
   .blaze-chip { display: inline-flex; margin-left: 4px; vertical-align: middle; }
   .blaze-chip.against { opacity: 0.35; }
@@ -523,6 +609,7 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .route-skipped { font-size: 12px; color: #777; margin: -2px 0 6px; }
   .turn-tag { font-size: 10px; font-weight: 700; color: #0d47a1; text-transform: uppercase; letter-spacing: 0.3px; }
   .rr-link { flex: none; width: 14px; border-top: 3px dashed #0d47a1; margin: 0 3px; }
+  .rr-blazes { flex: none; display: inline-flex; margin-right: 1px; }
   .rr-link.passed { border-top-color: #bbb; }
   .route-row .seg-you { margin: 0 1px; }
   .exits { margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; }
@@ -960,12 +1047,12 @@ function showIntInfo(feature, marker) {
       '</td></tr>' : '') +
     (p.owner ? '<tr class="full-only"><td>Owner</td><td><a href="' + esc(ownerHref) + '" onmouseover="hoverOwner(' + jsArg(p.owner) + ')" onmouseout="unhover()">' + esc(p.owner) + '</a> ' + pubTag + '</td></tr>' : '') +
     (p.town ? '<tr class="full-only"><td>Town</td><td>' + esc(p.town) + '</td></tr>' : '') +
-    // Something to check here on the next walk (checks.html)
-    (p.check ? '<tr class="full-only"><td>Field check</td><td><a href="' + esc('checks.html#' + p.label) + '">' + esc(p.check) + '</a></td></tr>' : '') +
     // A conservation restriction on the land (it doesn't change the owner)
     (p.cr ? '<tr class="full-only"><td>Protected</td><td><a href="' + esc('owners.html#' + ownerSlug(p.cr)) + '" onmouseover="hoverOwner(' +
       jsArg(p.cr) + ', ' + jsArg("cr") + ')" onmouseout="unhover()">' + esc(p.cr) + '</a><div class="blaze-marks">held by ' + esc(p.cr_holders) + '</div></td></tr>' : '') +
-    '</table>';
+    '</table>' +
+    // Something to check here on a walk
+    checkRowsHtml(p.label);
 
   var connections = intTrailMap[p.label] || [];
   if (connections.length > 0) {
@@ -1495,6 +1582,14 @@ function routePanelHtml() {
     });
   }
   var next = nextAt >= 0 ? plan.steps[nextAt] : null;
+  // The blazes to look for now: on the stretch you're walking, or at a step, the one you
+  // take from it
+  var hereStep = states.indexOf("here"), nowBlazes = [];
+  if (plan.live && !plan.arrived) {
+    nowBlazes = hereStep >= 0 ? plan.steps[hereStep].nextBlazes
+      : youBefore === 0 ? plan.legBlazes || []
+      : youBefore > 0 ? plan.steps[youBefore - 1].nextBlazes : [];
+  }
   // "0.4 mi to A12 · 160 ft to A2 (turn)", or "0.4 mi to A12 · at A2 (turn)". A function:
   // the line is in both views, and each copy of a turn icon needs its own id.
   var distLine = function() {
@@ -1514,9 +1609,11 @@ function routePanelHtml() {
   plan.hist.steps.forEach(function(s) {
     if (!quietStep(s)) row += (row ? link(true) : '') + intPill(s.label, "passed");
   });
+  // ...with the blazes to look for beside you
+  var nowChips = nowBlazes.length ? '<span class="rr-blazes">' + blazeChipsHtml(nowBlazes) + '</span>' : '';
   plan.steps.forEach(function(s, i) {
-    if (i === youBefore) row += (row ? link(true) : '') + '<span class="seg-you rr-you"></span>';
-    if (!quietStep(s)) row += (row ? link(states[i] !== "ahead") : '') + intPill(s.label, states[i]);
+    if (i === youBefore) row += (row ? link(true) : '') + '<span class="seg-you rr-you"></span>' + nowChips;
+    if (!quietStep(s)) row += (row ? link(states[i] !== "ahead") : '') + intPill(s.label, states[i]) + (i === hereStep ? nowChips : '');
   });
   if (endChip) row += link(plan.arrived) + homePill;
   var small = '<div class="compact-only">' +
@@ -1551,7 +1648,7 @@ function routePanelHtml() {
       var upTo = plan.steps.filter(function(t, j) { return j >= i && !quietStep(t); })[0] || s;
       html += '<div class="route-step"><span class="you-badge">You</span>' +
         '<span class="route-arrow">→</span>' +
-        '<span class="route-trail-name">' + esc(trail) + '</span>' +
+        '<span class="route-trail-name">' + esc(trail) + '</span>' + blazeChipsHtml(nowBlazes) +
         '<span class="int-dist">' + formatDist(upTo.at - plan.progress) + '</span></div>';
     }
     if (!quietStep(s)) html += stepRowHtml(s, states[i], stepFt[i], turnIconHtml(i));
@@ -1566,7 +1663,7 @@ function routePanelHtml() {
     ' <button class="route-btn" style="background:#888" onclick="cancelRoute()">Clear</button></div>' +
     (userLatLng ? planning : '');
 
-  return '<div id="routeInfo">' + small + '<div class="full-only">' + html + '</div></div>';
+  return '<div id="routeInfo">' + checkHereHtml() + small + '<div class="full-only">' + html + '</div></div>';
 }
 
 var END_CHIP = '<span class="start-chip">End</span>';
@@ -1834,6 +1931,7 @@ function renderRoute(result, userLeg, noFit, hist, info) {
   plan = {trip: trip, live: !!userLeg, segs: segs, steps: steps, total: s,
           graphDist: result.totalDist, progress: userLeg ? 0 : null, arrived: false,
           legTrail: userLeg ? (userLeg.trail || 'off trail') : null,
+          legBlazes: userLeg && userLeg.ti !== undefined ? blazesOn(userLeg.ti, userLeg.along, userLeg.cum) : [],
           hist: hist || {steps: [], segs: []}};
   saveTrip();
   if (hist) return;
@@ -2694,91 +2792,237 @@ function clearSelection(keepRoute) {
   currentIntFeature = null;
 }
 
-// --- Reporting a problem. The site has no server, so a report is an email: the form
-// fills in a message for the phone's mail app, with the details needed to act on it.
-// REGION.report: {email, signReports}; signReports adds "I'm standing at this sign".
+// --- Reports (reports.py). Nothing is sent from here: each report is saved on the phone
+// with where you are, which way you're heading, and what the map has there, and the
+// Reports page sends them all together. A blaze takes one tap: its color.
+var REPORTS_KEY = REGION.storagePrefix + "Reports", REPORT_EMAIL = REGION.report.email, REPORT_TITLE = REGION.name;
+var REPORT_BLAZES = REGION.blazes || {}, REPORT_CHECKS = REGION.checks || [];
+__REPORTS_JS__
 
-// blazes (optional, for a trail): the blazes the map shows on it, for the report to say
-function reportLinkHtml(what, ref, extra, blazes) {
-  return REGION.report
-    ? '<div class="report-link full-only"><a onclick="showReport(' + jsArg(what) + ', ' + jsArg(ref) + ', ' + jsArg(extra || "") + ', ' +
-      jsArg(blazes || "") + ')">Report a problem</a></div>'
-    : '';
+var reportAbout = null;   // what the open report sheet is about: {what: "int" or "trail", ref, extra}
+
+// "Report" in a trail's or intersection's details: the sheet, about it
+function reportLinkHtml(what, ref, extra) {
+  return '<div class="report-link"><a onclick="openReportSheet(' + jsArg(what) + ', ' + jsArg(ref) + ', ' + jsArg(extra || "") +
+    ')">Report</a></div>';
 }
 
-var REPORT_KINDS = {
-  int: ["Wrong location on the map", "Wrong number", "Missing or damaged sign", "Trail problem here (blocked, washed out...)", "Other"],
-  trail: ["Trail is drawn in the wrong place", "Trail doesn't exist or is closed", "Blocked, overgrown, or washed out", "Wrong name", "Other"],
-  here: ["A trail here is missing from the map", "Something's wrong with the map here", "Other"]
-};
-var AT_SIGN = "I'm standing at this sign";
-// Offered for trails where the region maps blazes, to collect what's really out there
-var BLAZE_KIND = "Blaze color wrong or missing";
-var REPORT_HINTS = {};
-REPORT_HINTS[BLAZE_KIND] = "What blazes do you see? The colors, and where along the trail they start and stop";
-var NOTE_HINT = "Anything else? (optional)";
+// What the map has where you are, for a report to say
+function reportContext() {
+  if (!userLatLng) return null;
+  var place = userPlace(userLatLng);
+  if (place.type === "at") return {near: place.label, nearM: 0};
+  if (place.type === "off") return {near: place.label, nearM: Math.round(place.dist)};
+  return {trail: place.trail, stretch: (place.left.label || "end") + "–" + (place.right.label || "end"),
+          expect: (place.blazes || []).map(function(o) { return o.key; })};
+}
 
-function showReport(what, ref, extra, blazes) {
-  var kinds = REPORT_KINDS[what].slice();
-  var p = what === "int" ? intFeatures[ref].properties : null;
-  if (what === "int" && REGION.report.signReports && !p.no_sign) kinds.unshift(AT_SIGN);
-  if (what === "trail" && Object.keys(REGION.blazes || {}).length) kinds.splice(kinds.length - 1, 0, BLAZE_KIND);
-  var subject = what === "int" ? intName(ref) : what === "trail" ? ref + (extra ? " (" + extra + ")" : "") : "where I am";
-  var html = '<div class="report"><div class="report-head">Report a problem with <strong>' + esc(subject) + '</strong></div>';
-  kinds.forEach(function(k, i) {
-    html += '<label class="report-kind"><input type="radio" name="reportKind" value="' + esc(k) + '"' + (i === 0 ? ' checked' : '') +
-      ' onchange="document.getElementById(\'reportNote\').placeholder = ' + jsArg(REPORT_HINTS[k] || NOTE_HINT) + '"> ' + esc(k) + '</label>';
-  });
-  html += '<textarea id="reportNote" rows="3" placeholder="' + esc(NOTE_HINT) + '"></textarea>' +
+function saveReport(r) {
+  var h = currentHeading();
+  r.at = userLatLng ? {lat: +userLatLng.lat.toFixed(6), lon: +userLatLng.lng.toFixed(6), acc: Math.round(userAccuracy)} : null;
+  r.heading = h === null || h === undefined || isNaN(h) ? null : Math.round(h);
+  r.ctx = reportContext();
+  r.about = reportAbout;
+  r = addReport(r);
+  updateReportCount();
+  return r;
+}
+
+function openReportSheet(what, ref, extra) {
+  reportAbout = what ? {what: what, ref: ref, extra: extra || ""} : null;
+  showReportSheet();
+}
+
+function aboutName(a) {
+  return a.what === "int" ? intName(a.ref) : a.ref + (a.extra ? " (" + a.extra + ")" : "");
+}
+
+function reportWhereHtml() {
+  if (!userLatLng) {
+    return '<div class="report-warn">Your location is off, so the report won\'t say where you are' +
+      (reportAbout ? ', only what it\'s about' : '') + '. The locate button turns it on.</div>';
+  }
+  var c = reportContext();
+  return '<div class="report-where">' + (c.trail ? 'On <em>' + esc(c.trail) + '</em>, ' + esc(c.stretch)
+    : c.nearM ? 'Off trail, ' + formatDist(c.nearM) + ' from ' + intPill(c.near) : 'At ' + intPill(c.near)) +
+    ' <span class="report-acc">± ' + formatDist(userAccuracy) + '</span></div>';
+}
+
+function showReportSheet() {
+  var a = reportAbout, p = a && a.what === "int" ? intFeatures[a.ref].properties : null;
+  var html = '<div class="report"><div class="report-head"><strong>Report</strong>' + (a ? ' about ' + esc(aboutName(a)) : '') + '</div>' +
+    reportWhereHtml();
+  if (p && REGION.report.signReports && !p.no_sign) {
+    html += '<button class="route-btn" onclick="saveSignReport()">I\'m standing at this sign</button>';
+  }
+  if (a && a.what === "int") html += checkRowsHtml(a.ref);
+  var keys = Object.keys(REGION.blazes || {});
+  if (keys.length) {
+    html += '<div class="report-sub">A blaze you can see</div><div class="blaze-picks">' +
+      keys.map(function(k) {
+        return '<button class="blaze-pick" onclick="saveBlaze(' + jsArg(k) + ')">' + blazeMarkSvg(k) + esc(blazeWords(k)) + '</button>';
+      }).join('') +
+      '<button class="blaze-pick" onclick="saveBlaze(\'other\')">Another color</button>' +
+      '<button class="blaze-pick" onclick="saveBlaze(\'none\')">No blaze here</button></div>';
+  }
+  html += '<div class="report-sub">Something else</div>' +
+    '<textarea id="reportNote" rows="3" placeholder="What did you see?"></textarea>' +
     '<div id="reportWarn" class="report-warn"></div>' +
-    '<button class="route-btn" onclick="sendReport(' + jsArg(what) + ', ' + jsArg(ref) + ', ' + jsArg(extra || "") + ', ' + jsArg(blazes || "") + ')">Send report</button> ' +
-    '<button class="route-btn" style="background:#888" onclick="closeReport(' + jsArg(what) + ', ' + jsArg(ref) + ')">Cancel</button>' +
-    '<div class="report-fine">Opens your mail app with the report filled in, including your location if it\'s on. Send it from there.</div></div>';
+    '<button class="route-btn" onclick="saveNote()">Save</button> ' +
+    '<button class="route-btn" style="background:#888" onclick="closeReport()">Cancel</button>' +
+    '<div class="report-fine">Saved on this phone. Send them all from <a href="reports.html">Reports</a>.</div></div>';
   document.getElementById("infoContent").innerHTML = html;
 }
 
-// Hands a mailto: link to the phone's mail app (a separate step so tests can catch it)
-function openMail(url) { location.href = url; }
+function saveBlaze(key) {
+  var r = saveReport({kind: "blaze", blaze: key, text: ""});
+  reportSaved(r, key === "other" ? "Which color?" : null);
+}
 
-function closeReport(what, ref) {
-  if (what === "int") showIntInfo(intFeatures[ref], intMarkers[ref]);
+function saveNote() {
+  var text = document.getElementById("reportNote").value.trim();
+  if (!text) { document.getElementById("reportWarn").textContent = "Type what you saw first."; return; }
+  reportSaved(saveReport({kind: "note", text: text}));
+}
+
+function saveSignReport() {
+  if (!userLatLng) { showReportSheet(); return; }
+  reportSaved(saveReport({kind: "sign", text: ""}));
+}
+
+// After saving: a note can be added, or the report taken back
+function reportSaved(r, ask) {
+  var n = unsentReports().length;
+  document.getElementById("infoContent").innerHTML = '<div class="report">' +
+    '<div class="report-head"><strong>✓ Saved:</strong> ' + esc(ask ? "Blaze: another color" : reportHeadline(r)) + '</div>' +
+    (r.at ? '' : '<div class="report-warn">Without your location, it doesn\'t say where.</div>') +
+    '<textarea id="savedNote" rows="2" placeholder="' + esc(ask || "Add a note? (optional)") + '"></textarea>' +
+    '<button class="route-btn" onclick="noteSaved(' + jsArg(r.id) + ')">Done</button> ' +
+    '<button class="route-btn" style="background:#0d47a1" onclick="noteSaved(' + jsArg(r.id) + ', true)">Report another</button> ' +
+    '<button class="route-btn" style="background:#888" onclick="undoReport(' + jsArg(r.id) + ')">Undo</button>' +
+    '<div class="report-fine">' + n + ' report' + (n === 1 ? '' : 's') + ' waiting to send, on <a href="reports.html">Reports</a>.</div></div>';
+}
+
+function noteSaved(id, another) {
+  var t = document.getElementById("savedNote").value.trim();
+  if (t) changeReport(id, function(r) { r.text = t; });
+  if (another) showReportSheet(); else closeReport();
+}
+
+function undoReport(id) {
+  dropReport(id);
+  updateReportCount();
+  refreshCheckBadges();
+  showReportSheet();
+}
+
+function closeReport() {
+  var a = reportAbout;
+  reportAbout = null;
+  if (a && a.what === "int") showIntInfo(intFeatures[a.ref], intMarkers[a.ref]);
   else if (plan) backToRoute();
+  else if (userLatLng) showLocateInfo();
   else showHome();
 }
 
-function sendReport(what, ref, extra, blazes) {
-  var picked = document.querySelector('input[name="reportKind"]:checked');
-  var kind = picked ? picked.value : "Other";
-  var note = document.getElementById("reportNote").value.trim();
-  var warn = document.getElementById("reportWarn");
-  if (kind === AT_SIGN && !userLatLng) {
-    warn.textContent = "Turn on your location (the locate button) so the report can say where the sign is.";
-  } else {
-    var c = map.getCenter();
-    var lines = [REGION.name + " map report", "", "What: " + kind];
-    if (note) lines.push("Note: " + note);
-    if (what === "int") {
-      var p = intFeatures[ref].properties, at = intMarkers[ref].getLatLng();
-      lines.push("Intersection: " + intName(ref) + (intName(ref) !== ref ? " [" + ref + "]" : "") +
-                 (p.number !== undefined ? " (data #" + p.number + ")" : "") + (p.estimated ? ", position estimated" : ""));
-      lines.push("Map has it at: " + at.lat.toFixed(6) + ", " + at.lng.toFixed(6));
-      if (kind === AT_SIGN) lines.push("Sign is " + Math.round(userLatLng.distanceTo(at)) + " m from where the map has it");
-    } else if (what === "trail") {
-      lines.push("Trail: " + ref + (extra ? ", between " + extra : ""));
-      if (Object.keys(REGION.blazes || {}).length) lines.push("Blazes on the map: " + (blazes || "none"));
-    }
-    lines.push(userLatLng
-      ? "My location: " + userLatLng.lat.toFixed(6) + ", " + userLatLng.lng.toFixed(6) + " (+/- " + Math.round(userAccuracy) + " m)"
-      : "My location: not available");
-    lines.push("Map view: " + c.lat.toFixed(5) + ", " + c.lng.toFixed(5) + ", zoom " + map.getZoom());
-    lines.push("When: " + new Date().toISOString());
-    lines.push("Page: " + location.href.split("?")[0]);
-    lines.push("Device: " + navigator.userAgent);
-    var subj = REGION.name + ": " + kind + (what === "int" ? " - " + intName(ref) : what === "trail" ? " - " + ref : "");
-    openMail("mailto:" + REGION.report.email + "?subject=" + encodeURIComponent(subj) + "&body=" + encodeURIComponent(lines.join("\n")));
-    document.getElementById("infoContent").innerHTML = '<div class="route-msg" style="margin-top:0">Thanks! Your mail app should open with the report filled in; send it from there.' +
-      '<br><br><button class="route-btn" onclick="closeReport(' + jsArg(what) + ', ' + jsArg(ref) + ')">Done</button></div>';
+// The Report button, under the locate button, with how many are waiting to send
+var reportCountEl = null;
+var ReportControl = L.Control.extend({
+  options: {position: "topright"},
+  onAdd: function() {
+    var div = L.DomUtil.create("div", "leaflet-bar report-ctl");
+    var a = L.DomUtil.create("a", "", div);
+    a.href = "#";
+    a.title = "Report";
+    a.setAttribute("role", "button");
+    a.setAttribute("aria-label", "Report");
+    a.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round">' +
+      '<path d="M5 21V4h11l-2 4 2 4H5"/></svg><span class="report-count"></span>';
+    reportCountEl = a.querySelector(".report-count");
+    L.DomEvent.disableClickPropagation(div);
+    L.DomEvent.on(a, "click", function(e) { L.DomEvent.preventDefault(e); openReportSheet(); });
+    return div;
   }
+});
+
+function updateReportCount() {
+  if (reportCountEl) {
+    var n = unsentReports().length;
+    reportCountEl.textContent = n || "";
+    reportCountEl.style.display = n ? "" : "none";
+  }
+}
+
+// --- Field checks: things to look at on a walk, at particular intersections (REGION.checks).
+// Each gets a badge on its intersection; near one, the panels say so. An answer is a report.
+var CHECK_NEAR_M = 40;
+var checkBadges = {};
+
+function checksAt(label) { return REPORT_CHECKS.filter(function(c) { return c.label === label; }); }
+
+function refreshCheckBadges() {
+  REPORT_CHECKS.forEach(function(c) {
+    var m = intMarkers[c.label];
+    if (checkBadges[c.id]) map.removeLayer(checkBadges[c.id]);
+    if (!m) return;
+    var done = !!checkAnswer(c.id);
+    checkBadges[c.id] = L.marker(m.getLatLng(), {
+      icon: L.divIcon({className: "", html: '<span class="check-badge' + (done ? ' done' : '') + '" title="Field check">' + (done ? '✓' : '?') + '</span>',
+                       iconSize: [16, 16], iconAnchor: [19, 19]}),
+      keyboard: false
+    }).on("click", function(e) { L.DomEvent.stopPropagation(e); showCheck(c.id); }).addTo(map);
+  });
+}
+
+// The nearest unanswered check you're standing by, or null
+function checkNear() {
+  if (!userLatLng) return null;
+  var best = null, bestD = CHECK_NEAR_M;
+  REPORT_CHECKS.forEach(function(c) {
+    var d = userLatLng.distanceTo(L.latLng(c.lat, c.lon));
+    if (d <= bestD && !checkAnswer(c.id)) { best = c; bestD = d; }
+  });
+  return best;
+}
+
+function checkHereHtml() {
+  var c = checkNear();
+  return c ? '<div class="check-here" onclick="showCheck(' + jsArg(c.id) + ')"><span class="check-badge">?</span> ' +
+    '<strong>Check here</strong> at ' + esc(c.label) + ': ' + esc(c.question) + '</div>' : '';
+}
+
+// An intersection's checks, for its details and its report sheet
+function checkRowsHtml(label) {
+  return checksAt(label).map(function(c) {
+    var s = checkAnswer(c.id);
+    return '<div class="check-here" onclick="showCheck(' + jsArg(c.id) + ')"><span class="check-badge' + (s ? ' done' : '') + '">' +
+      (s ? '✓' : '?') + '</span> <strong>Field check:</strong> ' + esc(c.question) +
+      (s ? '<div class="blaze-marks">You answered ' + esc(s.answer) + '</div>' : '') + '</div>';
+  }).join('');
+}
+
+function showCheck(id) {
+  var c = checkById(id), s = checkAnswer(id);
+  reportAbout = {what: "int", ref: c.label, extra: ""};
+  var html = '<div class="report"><div class="report-head"><strong>Field check</strong> at ' + intPill(c.label) + '</div>' +
+    reportWhereHtml() +
+    '<div class="check-q">' + esc(c.question) + '</div>' +
+    (c.why ? '<div class="check-why"><b>Why:</b> ' + esc(c.why) + '</div>' : '') +
+    (c.look_for ? '<div class="check-why"><b>Look for:</b> ' + esc(c.look_for) + '</div>' : '') +
+    (s ? '<div class="blaze-marks">You answered ' + esc(s.answer) + ', ' + esc(new Date(s.when).toLocaleString()) + '</div>' : '') +
+    '<textarea id="checkNote" rows="2" placeholder="Notes (optional): what you saw"></textarea>' +
+    '<div class="blaze-picks">' + c.choices.map(function(ch) {
+      return '<button class="blaze-pick" onclick="saveCheck(' + jsArg(id) + ', ' + jsArg(ch) + ')">' + esc(ch) + '</button>';
+    }).join('') + '</div>' +
+    '<button class="route-btn" style="background:#888" onclick="closeReport()">Cancel</button></div>';
+  document.getElementById("infoContent").innerHTML = html;
+}
+
+function saveCheck(id, answer) {
+  var note = document.getElementById("checkNote").value.trim();
+  var r = saveReport({kind: "check", check: id, answer: answer, text: note});
+  refreshCheckBadges();
+  reportSaved(r);
 }
 
 // Details opened while a route is up keep the route going and offer a way back to it
@@ -3376,10 +3620,12 @@ function userPlace(ll) {
             ll: L.latLng(pt[1], pt[0])};
   }
   var a = end(ends.before, true), b = end(ends.after, false);
+  // The blazes expected between the two ends; no direction here, so none count as against
+  var blazes = blazesOn(snap.ti, snap.along - a.dist, snap.along + b.dist).map(function(o) { return {key: o.key}; });
   // Lay the strip out west to east so it matches the map
   var west = a.ll.lng <= b.ll.lng ? a : b;
   return {type: "seg", trail: snap.name, off: snap.d, left: west, right: west === a ? b : a,
-          tan: snap.tan, afterIsRight: west === a};
+          tan: snap.tan, afterIsRight: west === a, blazes: blazes};
 }
 
 // Which way the strip's "you" marker should point: 1 right, -1 left, 0 no heading
@@ -3429,7 +3675,7 @@ function locateHtml(place) {
         '<div class="seg-part" style="flex-grow:' + Math.max(place.right.dist, 1) + '"><span class="seg-dist">' + formatDist(place.right.dist) + '</span></div>' +
         endHtml(place.right) +
       '</div>' +
-      '<div class="seg-trail">on <em>' + esc(place.trail) + '</em>' +
+      '<div class="seg-trail">on <em>' + esc(place.trail) + '</em>' + blazeChipsHtml(place.blazes || []) +
         (place.off > 25 ? ' · about ' + formatDist(place.off) + ' off the trail' : '') + '</div>' +
     '</div>';
   }
@@ -3447,8 +3693,7 @@ function locateHtml(place) {
     html += '<div class="estimated-tag" style="margin-top:6px">Your phone is only sharing a rough location (within ' +
       formatDist(userAccuracy) + '). Turning on Precise Location fixes that. ' + HELP_LINK + '</div>';
   }
-  html += reportLinkHtml("here", "");
-  return '<div id="locateInfo">' + html + '</div>';
+  return '<div id="locateInfo">' + checkHereHtml() + html + '</div>';
 }
 
 var ENTRY_NEAR_M = 60;   // crumbs this close to an entry point count as passing it
@@ -4001,6 +4246,9 @@ var LocateControl = L.Control.extend({
   }
 });
 new LocateControl().addTo(map);
+new ReportControl().addTo(map);
+updateReportCount();
+refreshCheckBadges();
 
 // ?sim: fake geolocation driven by mobile_preview.html via window.simLocate
 var simMode = new URLSearchParams(location.search).has("sim");

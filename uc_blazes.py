@@ -19,6 +19,10 @@ This is a one-time import: run it again and it replaces every trail's blazes and
 with the 2012 map's. Corrections found on the ground go straight into
 trails_selected.geojson.
 
+Done (2026-10): its blazes, in meters along each trail, have since been snapped sign to
+sign and rewritten as runs between intersection numbers (build_map.blazes_to_meters), so
+don't rerun --write; it would put back the old format and undo the corrections.
+
     python uc_blazes.py          shows what it found
     python uc_blazes.py --write  also writes it into trails_selected.geojson
 """

@@ -19,6 +19,7 @@ Each spot has a link to it on OpenStreetMap and Google Maps.
   (42.223661, -71.045687)
 - **Check:** what number is on the sign?
 - **Why it looks wrong:** 5xxx numbers are the Ponkapoag section, south of I-93. This spot is in Chickatawbut, which is 3xxx, and the park map has 3153 here.
+- **Resolved 2026-10-21:** the sign says 3153. Fixed in OSM (marked for review).
 
 ## 2. The sign that OSM calls 5157 should be 3157
 
@@ -28,6 +29,7 @@ Each spot has a link to it on OpenStreetMap and Google Maps.
   (42.223442, -71.045101)
 - **Check:** what number is on the sign?
 - **Why it looks wrong:** the same reason as #1. The park map has 3157 here.
+- **Resolved 2026-10-21:** the sign says 3157. Fixed in OSM (marked for review).
 
 ## 3. Sign 5422 is on the wrong junction in OSM
 

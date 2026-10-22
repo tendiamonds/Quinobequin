@@ -42,7 +42,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D18"
+        "sign": "D24"
       },
       "geometry": {
         "type": "Point",
@@ -59,7 +59,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D9"
+        "sign": "D8"
       },
       "geometry": {
         "type": "Point",
@@ -76,7 +76,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D16"
+        "sign": "D13"
       },
       "geometry": {
         "type": "Point",
@@ -115,8 +115,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.49145,
-          42.163547
+          -71.49129,
+          42.16363
         ]
       }
     },
@@ -212,7 +212,7 @@
         "degree": 4,
         "cluster_size": 2,
         "zone": "C",
-        "sign": "C21"
+        "sign": "C23"
       },
       "geometry": {
         "type": "Point",
@@ -246,13 +246,13 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "A",
-        "sign": "A15"
+        "sign": "A14"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.4907851,
-          42.1807867
+          -71.49068,
+          42.18081
         ]
       }
     },
@@ -263,7 +263,7 @@
         "degree": 4,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D19"
+        "sign": "D20"
       },
       "geometry": {
         "type": "Point",
@@ -280,7 +280,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D14"
+        "sign": "D16"
       },
       "geometry": {
         "type": "Point",
@@ -331,7 +331,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D21"
+        "sign": "D17"
       },
       "geometry": {
         "type": "Point",
@@ -544,7 +544,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "C",
-        "sign": "C16"
+        "sign": "C18"
       },
       "geometry": {
         "type": "Point",
@@ -561,7 +561,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "C",
-        "sign": "C22"
+        "sign": "C24"
       },
       "geometry": {
         "type": "Point",
@@ -663,7 +663,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "C",
-        "sign": "C14"
+        "sign": "C15"
       },
       "geometry": {
         "type": "Point",
@@ -680,7 +680,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "C",
-        "sign": "C18"
+        "sign": "C19"
       },
       "geometry": {
         "type": "Point",
@@ -782,7 +782,7 @@
         "degree": 5,
         "cluster_size": 1,
         "zone": "C",
-        "sign": "C24"
+        "sign": "C14"
       },
       "geometry": {
         "type": "Point",
@@ -799,13 +799,13 @@
         "degree": 5,
         "cluster_size": 2,
         "zone": "C",
-        "sign": "C17"
+        "sign": "C16"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.49911415,
-          42.188027149999996
+          -71.49898,
+          42.18807
         ]
       }
     },
@@ -816,7 +816,7 @@
         "degree": 5,
         "cluster_size": 1,
         "zone": "C",
-        "sign": "C23"
+        "sign": "C20"
       },
       "geometry": {
         "type": "Point",
@@ -850,7 +850,7 @@
         "degree": 4,
         "cluster_size": 1,
         "zone": "C",
-        "sign": "C15"
+        "sign": "C17"
       },
       "geometry": {
         "type": "Point",
@@ -901,7 +901,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D11"
+        "sign": "D9"
       },
       "geometry": {
         "type": "Point",
@@ -918,7 +918,7 @@
         "degree": 4,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D13"
+        "sign": "D10"
       },
       "geometry": {
         "type": "Point",
@@ -1332,7 +1332,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D27"
+        "sign": "D26"
       },
       "geometry": {
         "type": "Point",
@@ -1349,7 +1349,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D24"
+        "sign": "D27"
       },
       "geometry": {
         "type": "Point",
@@ -1366,7 +1366,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D26"
+        "sign": "D21"
       },
       "geometry": {
         "type": "Point",
@@ -1383,7 +1383,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D28"
+        "sign": "D25"
       },
       "geometry": {
         "type": "Point",
@@ -1485,7 +1485,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D22"
+        "sign": "D18"
       },
       "geometry": {
         "type": "Point",
@@ -1502,7 +1502,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D25"
+        "sign": "D19"
       },
       "geometry": {
         "type": "Point",
@@ -1609,8 +1609,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.4849149,
-          42.1684977
+          -71.4848,
+          42.16862
         ]
       }
     },
@@ -1725,7 +1725,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D8"
+        "sign": "D7"
       },
       "geometry": {
         "type": "Point",
@@ -1759,7 +1759,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D15"
+        "sign": "D22"
       },
       "geometry": {
         "type": "Point",
@@ -1776,7 +1776,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D10"
+        "sign": "D12"
       },
       "geometry": {
         "type": "Point",
@@ -1793,7 +1793,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D7"
+        "sign": "D6"
       },
       "geometry": {
         "type": "Point",
@@ -1834,8 +1834,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.4856367,
-          42.1758349
+          -71.48569,
+          42.17593
         ]
       }
     },
@@ -1863,13 +1863,13 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "A",
-        "sign": "A14"
+        "sign": "A15"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.4877263,
-          42.1747624
+          -71.48789,
+          42.17478
         ]
       }
     },
@@ -1897,7 +1897,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "C",
-        "sign": "C20"
+        "sign": "C22"
       },
       "geometry": {
         "type": "Point",
@@ -2040,9 +2040,10 @@
       "properties": {
         "number": 241,
         "degree": 3,
-        "cluster_size": 1,
         "zone": "D",
-        "sign": "D6"
+        "no_sign": true,
+        "junction": true,
+        "code": "J64"
       },
       "geometry": {
         "type": "Point",
@@ -2059,7 +2060,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "C",
-        "sign": "C19"
+        "sign": "C21"
       },
       "geometry": {
         "type": "Point",
@@ -2130,7 +2131,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D20"
+        "sign": "D15"
       },
       "geometry": {
         "type": "Point",
@@ -2147,7 +2148,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "D",
-        "sign": "D12"
+        "sign": "D11"
       },
       "geometry": {
         "type": "Point",
@@ -2163,7 +2164,7 @@
         "number": 257,
         "degree": 3,
         "zone": "D",
-        "sign": "D17"
+        "sign": "D14"
       },
       "geometry": {
         "type": "Point",
@@ -2227,7 +2228,7 @@
         "number": 264,
         "degree": 3,
         "zone": "B",
-        "sign": "B10"
+        "sign": "B9"
       },
       "geometry": {
         "type": "Point",
@@ -2243,7 +2244,7 @@
         "number": 265,
         "degree": 3,
         "zone": "B",
-        "sign": "B9"
+        "sign": "B10"
       },
       "geometry": {
         "type": "Point",
@@ -2291,45 +2292,13 @@
         "number": 269,
         "degree": 2,
         "zone": "E",
-        "sign": "E31"
+        "sign": "E16"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
           -71.5016238,
           42.1682547
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 271,
-        "degree": 8,
-        "zone": "E",
-        "sign": "E13"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.5010568,
-          42.1680089
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 273,
-        "degree": 5,
-        "zone": "E",
-        "sign": "E20"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.5005725,
-          42.1680319
         ]
       }
     },
@@ -2360,72 +2329,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.5000976,
-          42.1684833
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 279,
-        "degree": 4,
-        "zone": "E",
-        "sign": "E10"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.4993798,
-          42.1681959
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 282,
-        "degree": 2,
-        "zone": "E",
-        "sign": "E15"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.5000366,
-          42.167856
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 287,
-        "degree": 2,
-        "zone": "E",
-        "sign": "E18"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.4986437,
-          42.1678598
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 289,
-        "degree": 2,
-        "zone": "E",
-        "sign": "E23"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.4977878,
-          42.1678456
+          -71.50024,
+          42.16847
         ]
       }
     },
@@ -2451,7 +2356,7 @@
         "number": 300,
         "degree": 3,
         "zone": "E",
-        "sign": "E27"
+        "sign": "E22"
       },
       "geometry": {
         "type": "Point",
@@ -2467,7 +2372,7 @@
         "number": 301,
         "degree": 2,
         "zone": "E",
-        "sign": "E22"
+        "sign": "E24"
       },
       "geometry": {
         "type": "Point",
@@ -2483,7 +2388,7 @@
         "number": 304,
         "degree": 2,
         "zone": "E",
-        "sign": "E40"
+        "sign": "E29"
       },
       "geometry": {
         "type": "Point",
@@ -2499,7 +2404,7 @@
         "number": 305,
         "degree": 2,
         "zone": "E",
-        "sign": "E37"
+        "sign": "E26"
       },
       "geometry": {
         "type": "Point",
@@ -2515,7 +2420,7 @@
         "number": 306,
         "degree": 2,
         "zone": "E",
-        "sign": "E38"
+        "sign": "E27"
       },
       "geometry": {
         "type": "Point",
@@ -2531,61 +2436,13 @@
         "number": 307,
         "degree": 2,
         "zone": "E",
-        "sign": "E36"
+        "sign": "E25"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
           -71.5058052,
           42.1684858
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 310,
-        "degree": 4,
-        "zone": "E",
-        "sign": "E5"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.4997133,
-          42.1689557
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 312,
-        "degree": 2,
-        "zone": "E",
-        "sign": "E14"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.4995529,
-          42.1677471
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 313,
-        "degree": 2,
-        "zone": "E",
-        "sign": "E26"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.4982163,
-          42.167457
         ]
       }
     },
@@ -2608,26 +2465,10 @@
     {
       "type": "Feature",
       "properties": {
-        "number": 315,
-        "degree": 3,
-        "zone": "E",
-        "sign": "E30"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.5021037,
-          42.167786
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "number": 316,
         "degree": 2,
         "zone": "E",
-        "sign": "E34"
+        "sign": "E21"
       },
       "geometry": {
         "type": "Point",
@@ -2643,7 +2484,7 @@
         "number": 317,
         "degree": 3,
         "zone": "E",
-        "sign": "E32"
+        "sign": "E17"
       },
       "geometry": {
         "type": "Point",
@@ -2675,7 +2516,7 @@
         "number": 323,
         "degree": 2,
         "zone": "E",
-        "sign": "E29"
+        "sign": "E14"
       },
       "geometry": {
         "type": "Point",
@@ -2707,29 +2548,13 @@
         "number": 328,
         "degree": 2,
         "zone": "E",
-        "sign": "E11"
+        "sign": "E10"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
           -71.497621,
           42.168954
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 336,
-        "degree": 2,
-        "zone": "E",
-        "sign": "E28"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.4977383,
-          42.1674637
         ]
       }
     },
@@ -2755,109 +2580,13 @@
         "number": 338,
         "degree": 3,
         "zone": "E",
-        "sign": "E19"
+        "sign": "E11"
       },
       "geometry": {
         "type": "Point",
         "coordinates": [
           -71.49778962135316,
           42.16816780631486
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 340,
-        "degree": 3,
-        "zone": "E",
-        "sign": "E9"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.49903416633607,
-          42.168251269965126
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 341,
-        "degree": 3,
-        "zone": "E",
-        "sign": "E21"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.49863719940187,
-          42.16738880693555
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 344,
-        "degree": 3,
-        "zone": "E",
-        "sign": "E12"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.499200463295,
-          42.167901516789826
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 345,
-        "degree": 3,
-        "zone": "E",
-        "sign": "E16"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.49895906448366,
-          42.167559710682006
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 347,
-        "degree": 3,
-        "zone": "E",
-        "sign": "E25"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.50036454200746,
-          42.167563685182266
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 348,
-        "degree": 3,
-        "zone": "E",
-        "sign": "E17"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.50019824504854,
-          42.16810421488838
         ]
       }
     },
@@ -2874,22 +2603,6 @@
         "coordinates": [
           -71.50187194347383,
           42.18403747756375
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 352,
-        "degree": 3,
-        "zone": "E",
-        "sign": "E6"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.50053620338441,
-          42.16892920779402
         ]
       }
     },
@@ -2944,42 +2657,10 @@
     {
       "type": "Feature",
       "properties": {
-        "number": 356,
-        "degree": 3,
-        "zone": "E",
-        "sign": "E24"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.50146424770357,
-          42.16745097309802
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 357,
-        "degree": 3,
-        "zone": "E",
-        "sign": "E39"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.50544464588167,
-          42.168114336306736
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "number": 358,
         "degree": 2,
         "zone": "E",
-        "sign": "E35"
+        "sign": "E23"
       },
       "geometry": {
         "type": "Point",
@@ -2995,7 +2676,7 @@
         "number": 359,
         "degree": 2,
         "zone": "E",
-        "sign": "E33"
+        "sign": "E19"
       },
       "geometry": {
         "type": "Point",
@@ -3046,8 +2727,8 @@
       "geometry": {
         "type": "Point",
         "coordinates": [
-          -71.48459315299989,
-          42.178272494739666
+          -71.48448,
+          42.17823
         ]
       }
     },
@@ -3128,24 +2809,6 @@
         "coordinates": [
           -71.4953,
           42.18672
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "number": 366,
-        "degree": 4,
-        "zone": "E",
-        "no_sign": true,
-        "junction": true,
-        "code": "J2"
-      },
-      "geometry": {
-        "type": "Point",
-        "coordinates": [
-          -71.50149,
-          42.16808
         ]
       }
     },
@@ -4178,6 +3841,7 @@
     {
       "type": "Feature",
       "properties": {
+        "number": 433,
         "code": "L1",
         "lot": "Rail Trail Parking (Route 85)",
         "no_sign": true,
@@ -4195,6 +3859,330 @@
         "coordinates": [
           -71.5047409,
           42.1878299
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 428,
+        "degree": 3,
+        "zone": "E",
+        "sign": "E6"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50047030535787,
+          42.16897793204157
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 429,
+        "degree": 3,
+        "zone": "E",
+        "sign": "E5"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49981561495122,
+          42.1689938357834
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 430,
+        "degree": 3,
+        "zone": "E",
+        "sign": "E15"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50211820879876,
+          42.16775333191266
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 431,
+        "degree": 3,
+        "zone": "E",
+        "sign": "E13"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50160035941973,
+          42.16743922611143
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 432,
+        "degree": 3,
+        "zone": "E",
+        "sign": "E12"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50133472683669,
+          42.16753862685011
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 434,
+        "degree": 4,
+        "zone": "E",
+        "sign": "E18"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5029824,
+          42.1673478
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 435,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J66"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5020705,
+          42.1671389
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 436,
+        "degree": 3,
+        "zone": "E",
+        "sign": "E20"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5034512,
+          42.1677312
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 437,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J68"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5044229,
+          42.1669787
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 438,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J69"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.504627,
+          42.167031
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 439,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J70"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5040852,
+          42.1668921
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 440,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J71"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5045572,
+          42.1663862
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 441,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J72"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5016024,
+          42.1667733
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 442,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J73"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.501864,
+          42.1664914
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 443,
+        "degree": 3,
+        "zone": "E",
+        "sign": "E28"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.50543,
+          42.16794
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 444,
+        "degree": 3,
+        "zone": "E",
+        "sign": "E9"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49909724574928,
+          42.16833382713688
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 445,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J74"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5050348,
+          42.1675662
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 446,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J75"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5025418,
+          42.1672734
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 447,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J76"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.49947,
+          42.16833
         ]
       }
     }

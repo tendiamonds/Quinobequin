@@ -4,7 +4,7 @@ Build the trail/intersection editor (trail_editor.html).
 Embeds trails_selected.geojson and intersections_zoned.geojson into
 a standalone Leaflet-based editing tool with these capabilities:
 
-Trails:  rename, delete
+Trails:  rename, delete, add from the available ones, draw one that's missing
 Intersections:  add (click map), remove, change zone
 
 Exports updated GeoJSON files that can be dropped back into the project.
@@ -20,12 +20,14 @@ def main():
     trail_file = sys.argv[1] if len(sys.argv) > 1 else rf"{PROJ}\trails_selected.geojson"
     with open(trail_file) as f:
         trails = json.load(f)
-    int_file = sys.argv[2] if len(sys.argv) > 2 else r"C:\Users\jbreslau\Downloads\intersections_zoned.geojson"
+    int_file = sys.argv[2] if len(sys.argv) > 2 else rf"{PROJ}\intersections_zoned.geojson"   # the project's own, current
     print("Trail source: %s" % trail_file)
     print("Intersection source: %s" % int_file)
     with open(int_file) as f:
         ints = json.load(f)
-    with open(rf"{PROJ}\trails_selected.geojson") as f:
+    # Trails that can be added: OSM's paths and the Trailforks snapshot's trails not already
+    # on the map (trails_available.geojson), shown dashed red to click and add
+    with open(rf"{PROJ}\trails_available.geojson", encoding="utf-8") as f:
         old_trails = json.load(f)
 
     html = TEMPLATE.replace("__TRAIL_DATA__", json.dumps(trails))
@@ -144,8 +146,7 @@ TEMPLATE = r"""<!DOCTYPE html>
   .prox-slider-row label { font-size: 11px; color: #555; white-space: nowrap; }
   .prox-slider-row input[type=range] { flex: 1; }
   .prox-slider-row .prox-val { font-weight: 700; min-width: 36px; text-align: right; font-size: 12px; }
-  @keyframes pulse-ring { 0% { opacity: 0.8; } 50% { opacity: 0.3; } 100% { opacity: 0.8; } }
-  .prox-warn-ring { animation: pulse-ring 1.2s ease-in-out infinite; }
+  .prox-warn-ring { }   /* steady, no pulsing */
 </style>
 </head>
 <body>
@@ -154,6 +155,7 @@ TEMPLATE = r"""<!DOCTYPE html>
   <span class="sep">|</span>
   <button class="mode-btn active" id="modeTrails" onclick="setMode('trails')">Trails</button>
   <button class="mode-btn" id="modeInts" onclick="setMode('intersections')">Intersections</button>
+  <button class="mode-btn" id="modeDraw" onclick="setMode('draw')">Draw Trail</button>
   <span class="sep">|</span>
   <button class="export" onclick="exportTrails()">Export Trails</button>
   <button class="export" onclick="exportIntersections()">Export Intersections</button>
@@ -384,20 +386,30 @@ function intZone(f, idx) {
   return f.properties.zone;
 }
 
+// An unmarked junction (no sign: a routing point where trails meet) is a small grey dot, so
+// it can't be mistaken for an intersection that gets a numbered sign
+function isUnmarked(f) { return !!(f.properties.junction || f.properties.no_sign); }
+
+function intMarkerStyle(f, zone) {
+  return isUnmarked(f)
+    ? {radius: 3.5, fillColor: "#90a4ae", color: "#fff", weight: 1, fillOpacity: 0.9}
+    : {radius: 7, fillColor: ZONE_COLORS[zone] || "#888", color: "#fff", weight: 2, fillOpacity: 0.85};
+}
+
 function addIntMarker(f, idx) {
   var zone = intZone(f, idx);
   var ll = [f.geometry.coordinates[1], f.geometry.coordinates[0]];
   var color = ZONE_COLORS[zone] || "#888";
-  var marker = L.circleMarker(ll, {
-    radius: 7, fillColor: color, color: "#fff", weight: 2, fillOpacity: 0.85
-  }).addTo(map);
+  var marker = L.circleMarker(ll, intMarkerStyle(f, zone)).addTo(map);
   marker._idx = idx;
   marker._zone = zone;
+  marker._feature = f;
   marker.on("click", function(e) {
     L.DomEvent.stopPropagation(e);
     if (mode === "intersections" && !addingIntersection) selectIntersection(f, idx, marker);
   });
   intMarkers[idx] = marker;
+  if (isUnmarked(f)) return;   // no zone letter beside an unmarked junction
 
   var label = L.marker(ll, {
     icon: L.divIcon({
@@ -424,10 +436,11 @@ function distMeters(lon1, lat1, lon2, lat2) {
   return Math.sqrt(dx*dx + dy*dy);
 }
 
+// The signed intersections (spacing matters between signs, not unmarked junctions)
 function getActiveIntersections() {
   var active = [];
   intData.features.forEach(function(f, idx) {
-    if (!deletedIntIndices[idx]) {
+    if (!deletedIntIndices[idx] && !isUnmarked(f)) {
       var c = f.geometry.coordinates;
       active.push({lon: c[0], lat: c[1], idx: idx, zone: intZone(f, idx)});
     }
@@ -483,13 +496,18 @@ function proxSliderHtml() {
 
 // --- Mode switching ---
 function setMode(m) {
+  if (mode === "draw" && m !== "draw") stopDrawing();
   mode = m;
   document.getElementById("modeTrails").classList.toggle("active", m === "trails");
   document.getElementById("modeInts").classList.toggle("active", m === "intersections");
+  document.getElementById("modeDraw").classList.toggle("active", m === "draw");
   clearSelection();
   cancelAdd();
   updateLegend();
-  if (m === "trails") {
+  if (m === "draw") {
+    document.getElementById("panelTitle").textContent = "Draw a Trail";
+    startDrawing();
+  } else if (m === "trails") {
     document.getElementById("panelTitle").textContent = "Trail Editor";
     proxRings.forEach(function(r) { map.removeLayer(r); });
     proxRings = [];
@@ -624,6 +642,8 @@ function selectIntersection(feature, idx, marker) {
     feature.geometry.coordinates[0].toFixed(6) + '</td></tr>' +
     '</table>' +
     '<label style="font-size:12px;font-weight:600;color:#555;margin-top:8px;display:block">' +
+    '<input type="checkbox"' + (isUnmarked(feature) ? '' : ' checked') + ' onchange="setSigned(' + ia + ', this.checked)"> Numbered sign</label>' +
+    '<label style="font-size:12px;font-weight:600;color:#555;margin-top:4px;display:block">' +
     '<input type="checkbox"' + (p.entry ? ' checked' : '') + ' onchange="toggleFlag(' + ia + ', \'entry\', \'entry point\', this.checked)"> Entry point</label>' +
     '<label style="font-size:12px;font-weight:600;color:#555;margin-top:4px;display:block">' +
     '<input type="checkbox"' + (p.parking ? ' checked' : '') + ' onchange="toggleFlag(' + ia + ', \'parking\', \'parking\', this.checked)"> Parking</label>' +
@@ -673,6 +693,28 @@ function toggleFlag(idx, key, desc, on) {
   });
 }
 
+// Turn an unmarked junction into an intersection that gets a numbered sign, or back. The
+// build gives a new sign its label (RENUMBER), so only the junction properties change here.
+var JUNCTION_KEYS = ["junction", "no_sign", "code"];
+function setSigned(idx, on) {
+  var f = intFeatureByIdx[idx] || intData.features[idx];
+  var prev = {};
+  JUNCTION_KEYS.forEach(function(k) { if (k in f.properties) prev[k] = f.properties[k]; });
+  if (on) JUNCTION_KEYS.forEach(function(k) { delete f.properties[k]; });
+  else { f.properties.junction = true; f.properties.no_sign = true; }
+  var restyle = function() {
+    refreshIntMarker(f, idx);
+    if (intMarkers[idx]) selectIntersection(f, idx, intMarkers[idx]);
+  };
+  addChange("rezoned", "Intersection #" + (f.properties.number || "?") + ": " +
+            (on ? "unmarked junction → numbered sign" : "numbered sign → unmarked junction"), idx, function() {
+    JUNCTION_KEYS.forEach(function(k) { delete f.properties[k]; });
+    Object.keys(prev).forEach(function(k) { f.properties[k] = prev[k]; });
+    refreshIntMarker(f, idx);
+  });
+  restyle();
+}
+
 function deleteIntersection(idx) {
   var f = intFeatureByIdx[idx] || intData.features[idx];
   deletedIntIndices[idx] = true;
@@ -690,7 +732,7 @@ function deleteIntersection(idx) {
 // "added" entry was undone is gone from intFeatureByIdx)
 function refreshIntMarker(f, idx) {
   if (intMarkers[idx]) map.removeLayer(intMarkers[idx]);
-  if (intLabels[idx]) map.removeLayer(intLabels[idx]);
+  if (intLabels[idx]) { map.removeLayer(intLabels[idx]); delete intLabels[idx]; }
   if (!deletedIntIndices[idx] && intFeatureByIdx[idx]) addIntMarker(f, idx);
 }
 
@@ -796,7 +838,8 @@ function clearSelection() {
   if (selectedIntMarker) {
     var idx = selectedIntMarker._idx;
     var zone = selectedIntMarker._zone;
-    selectedIntMarker.setStyle({fillColor: ZONE_COLORS[zone] || "#888", radius: 7, weight: 2, color: "#fff", fillOpacity: 0.85});
+    selectedIntMarker.setStyle(selectedIntMarker._feature ? intMarkerStyle(selectedIntMarker._feature, zone)
+      : {fillColor: ZONE_COLORS[zone] || "#888", radius: 7, weight: 2, color: "#fff", fillOpacity: 0.85});
     selectedIntMarker = null;
     selectedIntFeature = null;
   }
@@ -863,8 +906,107 @@ function updateLegend() {
       '<div class="legend-row"><div class="legend-swatch" style="background:#2ecc71"></div> Zone C</div>' +
       '<div class="legend-row"><div class="legend-swatch" style="background:#f39c12"></div> Zone D</div>' +
       '<div class="legend-row"><div class="legend-swatch" style="background:#9b59b6"></div> Zone E</div>' +
-      '<div class="legend-row"><div class="legend-swatch" style="background:#1abc9c"></div> Zone F</div>';
+      '<div class="legend-row"><div class="legend-swatch" style="background:#1abc9c"></div> Zone F</div>' +
+      '<div class="legend-row"><div class="legend-swatch" style="background:#90a4ae;width:8px;height:8px"></div> Unmarked junction (no sign)</div>';
   }
+}
+
+// --- Drawing a missing trail. Each click adds a point; a click within SNAP_PX of a trail
+// lands on it, so the new trail joins it there (add_junctions.py then adds the junction).
+// A clear layer over the map takes the clicks, even on top of trails.
+var SNAP_PX = 12;
+var drawPts = [], drawLine = null, drawDots = null, drawCatcher = null, drawnCount = 0;
+
+function startDrawing() {
+  drawPts = [];
+  if (!map.getPane("drawPane")) map.createPane("drawPane").style.zIndex = 650;
+  drawDots = L.layerGroup().addTo(map);
+  drawLine = L.polyline([], {color: "#27ae60", weight: 4, dashArray: "6,4", interactive: false}).addTo(map);
+  drawCatcher = L.rectangle([[-85, -180], [85, 180]], {pane: "drawPane", stroke: false, fillOpacity: 0.001, cursor: "crosshair"}).addTo(map);
+  drawCatcher.on("click", function(e) { addDrawPoint(e.latlng); });
+  showDrawPanel();
+}
+
+function stopDrawing() {
+  [drawLine, drawDots, drawCatcher].forEach(function(l) { if (l) map.removeLayer(l); });
+  drawLine = drawDots = drawCatcher = null;
+  drawPts = [];
+}
+
+// The nearest point on a trail to a click, if within SNAP_PX: {ll, name} or null
+function snapToTrail(ll) {
+  var p = map.latLngToLayerPoint(ll), best = null, bestD = SNAP_PX;
+  trailData.features.forEach(function(f) {
+    if (deletedTrailIds[f.properties.id]) return;
+    var c = f.geometry.type === "LineString" ? f.geometry.coordinates : [].concat.apply([], f.geometry.coordinates);
+    for (var i = 0; i < c.length - 1; i++) {
+      var a = map.latLngToLayerPoint([c[i][1], c[i][0]]), b = map.latLngToLayerPoint([c[i + 1][1], c[i + 1][0]]);
+      var vx = b.x - a.x, vy = b.y - a.y, L2 = vx * vx + vy * vy || 1e-9;
+      var t = Math.max(0, Math.min(1, ((p.x - a.x) * vx + (p.y - a.y) * vy) / L2));
+      var q = L.point(a.x + t * vx, a.y + t * vy), d = q.distanceTo(p);
+      if (d < bestD) { bestD = d; best = {ll: map.layerPointToLatLng(q), name: trailName(f) || "(unnamed)"}; }
+    }
+  });
+  return best;
+}
+
+function addDrawPoint(ll) {
+  var snap = snapToTrail(ll), at = snap ? snap.ll : ll;
+  drawPts.push({ll: at, onto: snap ? snap.name : null});
+  L.circleMarker(at, {radius: snap ? 6 : 4, color: snap ? "#e67e22" : "#27ae60", weight: 2, fillOpacity: 1,
+                      fillColor: "#fff", interactive: false}).addTo(drawDots);
+  drawLine.setLatLngs(drawPts.map(function(q) { return q.ll; }));
+  showDrawPanel();
+}
+
+function undoDrawPoint() {
+  drawPts.pop();
+  var dots = drawDots.getLayers();
+  if (dots.length) drawDots.removeLayer(dots[dots.length - 1]);
+  drawLine.setLatLngs(drawPts.map(function(q) { return q.ll; }));
+  showDrawPanel();
+}
+
+function drawnLength() {
+  var m = 0;
+  for (var i = 1; i < drawPts.length; i++) m += drawPts[i - 1].ll.distanceTo(drawPts[i].ll);
+  return m;
+}
+
+function showDrawPanel() {
+  var ends = drawPts.length ? [drawPts[0], drawPts[drawPts.length - 1]] : [];
+  var joins = drawPts.filter(function(q) { return q.onto; }).map(function(q) { return q.onto; });
+  document.getElementById("panelContent").innerHTML =
+    '<p style="font-size:12px;color:#555">Click along the trail. A click near an existing trail lands on it ' +
+    '(orange), so the new one joins it there.</p>' +
+    '<p><strong>' + drawPts.length + '</strong> points, <strong>' + Math.round(drawnLength()) + ' m</strong>' +
+    (joins.length ? '<br><span style="font-size:12px">joins: ' + joins.join(", ") + '</span>' : '') + '</p>' +
+    '<input type="text" id="drawNameInput" placeholder="Trail name...">' +
+    '<div class="btn-row">' +
+    '<button class="btn btn-green" onclick="finishDrawing()"' + (drawPts.length < 2 ? ' disabled' : '') + '>Add Trail</button>' +
+    '<button class="btn btn-gray" onclick="undoDrawPoint()"' + (drawPts.length ? '' : ' disabled') + '>Undo point</button>' +
+    '<button class="btn btn-gray" onclick="stopDrawing(); startDrawing()">Clear</button>' +
+    '</div>';
+}
+
+function finishDrawing() {
+  if (drawPts.length < 2) return;
+  var name = (document.getElementById("drawNameInput").value || "").trim();
+  var newId = "drawn_" + Date.now() + "_" + (++drawnCount);
+  var feature = {type: "Feature", properties: {id: newId, name: name, pdf_name: name, source: "drawn in the editor"},
+                 geometry: {type: "LineString", coordinates: drawPts.map(function(q) {
+                   return [Math.round(q.ll.lng * 1e7) / 1e7, Math.round(q.ll.lat * 1e7) / 1e7]; })}};
+  trailData.features.push(feature);
+  var layer = L.geoJSON(feature, {style: function() { return {color: "#27ae60", weight: 4, opacity: 0.9}; }}).addTo(map);
+  trailLayerById[newId] = layer;
+  addChange("added", "Trail: " + (name || "(unnamed)") + " (drawn, " + Math.round(drawnLength()) + " m)", newId, function() {
+    trailData.features = trailData.features.filter(function(f) { return f.properties.id !== newId; });
+    map.removeLayer(layer);
+    delete trailLayerById[newId];
+  });
+  stopDrawing();
+  startDrawing();
+  updateStats();
 }
 
 // --- Export ---
@@ -878,7 +1020,7 @@ function exportTrails() {
       f.properties.name = trailRenames[fid];
     }
   });
-  var added = Object.keys(addedFromOld).length;
+  var added = Object.keys(addedFromOld).length + drawnCount;
   var deleted = Object.keys(deletedTrailIds).length;
   var renamed = Object.keys(trailRenames).length;
   console.log("Exporting " + out.features.length + " trails (" + added + " added, " + deleted + " deleted, " + renamed + " renamed)");
