@@ -7414,8 +7414,8 @@
       "type": "Feature",
       "properties": {
         "id": "tf_56",
-        "name": "Giggidy",
-        "pdf_name": "Giggidy",
+        "name": "The Gigg",
+        "pdf_name": "The Gigg",
         "source": "trailforks",
         "osm_ways": [
           496384149
@@ -17598,8 +17598,8 @@
       "type": "Feature",
       "properties": {
         "id": "tf_125",
-        "name": "The Gigg",
-        "pdf_name": "The Gigg",
+        "name": "Giggity",
+        "pdf_name": "Giggity",
         "source": "trailforks",
         "widths": [
           [

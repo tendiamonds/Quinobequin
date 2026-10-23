@@ -32,6 +32,9 @@ EXIT_POINTS = {
     "F": (-71.485, 42.170),
 }
 F_G_GROUP = {36, 178, 213, 214, 176, 4, 129, 1, 245, 135, 9, 175, 10, 248, 130}
+# Each zone's 1, by data number: the entrance (or hub) everything else in the zone counts
+# out from, so renumbering never moves it (Jason, 2026-10-23)
+ZONE_ONES = {"A": 361, "B": 127, "C": 41, "D": 108, "E": 337, "F": 360}
 
 PUBLIC_ORDER = [
     "Town of Holliston",
@@ -332,8 +335,10 @@ def load_and_process():
         by_zone.setdefault(z, []).append(feat)
         feat_by_id[id(feat)] = feat
 
-    def order_subgroup(pts, ex, ey):
-        exit_feat = min(pts, key=lambda f: dist_m(
+    def order_subgroup(pts, ex, ey, one=None):
+        # counted out from the zone's 1 (ZONE_ONES), or else the sign nearest its exit
+        anchored = [f for f in pts if f["properties"]["number"] == one]
+        exit_feat = anchored[0] if anchored else min(pts, key=lambda f: dist_m(
             f["geometry"]["coordinates"][0], f["geometry"]["coordinates"][1], ex, ey))
         dists = dijkstra(graph, [id(exit_feat)])
         reachable = [(f, dists[id(f)]) for f in pts if id(f) in dists]
@@ -350,9 +355,11 @@ def load_and_process():
         if z == "F":
             main_pts = [f for f in pts if f["properties"]["number"] not in F_G_GROUP]
             tail_pts = [f for f in pts if f["properties"]["number"] in F_G_GROUP]
-            ordered = order_subgroup(main_pts, ex, ey) + order_subgroup(tail_pts, ex, ey)
+            ordered = order_subgroup(main_pts, ex, ey, ZONE_ONES[z]) + order_subgroup(tail_pts, ex, ey)
         else:
-            ordered = order_subgroup(pts, ex, ey)
+            ordered = order_subgroup(pts, ex, ey, ZONE_ONES[z])
+        if ordered and ordered[0]["properties"]["number"] != ZONE_ONES[z]:
+            print("  WARNING: zone %s's 1 (data #%d) isn't in the data any more" % (z, ZONE_ONES[z]))
 
         taken = [int(f["properties"]["sign"][1:]) for f in ordered if f["properties"].get("sign")]
         n = 0 if RENUMBER else max(taken, default=0)
@@ -648,9 +655,12 @@ NAV_PLACEHOLDER
   once our signs are in place.</p>
   <p style="margin-top:16px">Sample signs:</p>
   <div style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0">
-    <img src="sign_sample_1.png" alt="Sample sign A1 — Holliston, Adams Town Forest" style="width:200px;border-radius:6px;border:1px solid #ddd">
-    <img src="sign_sample_2.png" alt="Sample sign E1 — Milford, NEMBA Land" style="width:200px;border-radius:6px;border:1px solid #ddd">
-    <img src="sign_sample_3.png" alt="Sample sign C1 — Hopkinton, College Rock Park" style="width:200px;border-radius:6px;border:1px solid #ddd">
+    <img src="sign_samples/A7.png" alt="Sample sign A7: Holliston, Adams Town Forest" style="width:200px">
+    <img src="sign_samples/B3.png" alt="Sample sign B3: Milford, Beaver Brook Woods" style="width:200px">
+    <img src="sign_samples/C2.png" alt="Sample sign C2: Hopkinton, College Rock Park" style="width:200px">
+    <img src="sign_samples/D5.png" alt="Sample sign D5: Holliston, Rocky Woods, with The Trustees and DCR logos" style="width:200px">
+    <img src="sign_samples/E1.png" alt="Sample sign E1: Milford, NEMBA Land, with the NEMBA logo" style="width:200px">
+    <img src="sign_samples/F4.png" alt="Sample sign F4: Holliston, Fairbanks, with The Trustees and DCR logos" style="width:200px">
   </div>
 
   <h2>Entry Kiosks</h2>
