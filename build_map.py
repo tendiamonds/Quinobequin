@@ -18,7 +18,7 @@ from collections import OrderedDict, defaultdict
 
 from reports import build_reports_page
 from crs import CRS, holders_text, sign_checks, sign_crs
-from trailmap import build_map_page, build_trail_int_map, dist_m, maps_menu_html
+from trailmap import build_map_page, build_trail_int_map, curve_trails, dist_m, maps_menu_html
 
 PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
 TOWNS = {136: "Holliston", 139: "Hopkinton", 185: "Milford"}
@@ -292,7 +292,8 @@ def renumber(feats):
         fh.write(json.dumps(data, indent=2) + "\n")
     # All at once, so D8->D7 and D7->D6 don't run into each other
     swap = lambda m: moves.get(m.group(0), m.group(0))
-    pattern = re.compile(r"\b[A-F]\d+\b")
+    # (a number in backticks is just a number, like `A4` paper, and stays as it is)
+    pattern = re.compile(r"(?<!`)\b[A-F]\d+\b(?!`)")
     signs = os.path.join(PROJ, "sign_logos.csv")
     lines = open(signs, encoding="utf-8", newline="").read().splitlines(keepends=True)
     out = [lines[0]] + [moves.get(l.split(",", 1)[0], l.split(",", 1)[0]) + "," + l.split(",", 1)[1] for l in lines[1:]]
@@ -887,6 +888,9 @@ def main():
     print("Processed %d intersections" % len(rows))
 
     build_landing(rows)
+    # Most lines are Trailforks GPS tracks, a point every dozen meters or so: drawn as
+    # curves through those points, not zigzags (before anything measures along them)
+    print("Trails drawn as curves (lines move at most %.1f m)" % curve_trails(trails))
     blazes_to_meters(ints, trails)
     build_map_page(ints, trails, region(), PROJ)
     build_zones_page(rows)

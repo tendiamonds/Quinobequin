@@ -42,12 +42,18 @@ def dist_m(lon1, lat1, lon2, lat2):
     return math.sqrt(((lon1 - lon2) * 82000)**2 + ((lat1 - lat2) * 111000)**2)
 
 
-def build_trail_int_map(ints, trails):
+SIGN_SNAP_M = 10   # a trail passes a sign if it has a point this close to it
+
+
+def build_trail_int_map(ints, trails, sign_snap=None):
     """Map each trail feature index to its intersections with distances.
-    A trail passes an intersection if it has a point within SNAP_DIST of it. Unsigned
-    junctions are placed exactly where trails meet, so they use a tight JUNCTION_SNAP and
-    never catch a neighboring trail that only runs close by."""
-    SNAP_DIST = 20
+    A trail passes an intersection if it has a point within SIGN_SNAP_M of it (sign_snap,
+    if given). Unsigned junctions are placed exactly where trails meet, so they use a tight
+    JUNCTION_SNAP and never catch a neighboring trail that only runs close by. (Upper
+    Charles's signs used to sit off their lines, so this was 20 m; since its lines come
+    from OSM with a point at every intersection, 10 m is plenty, and doesn't catch trails
+    just passing a crowded spot.)"""
+    SNAP_DIST = sign_snap or SIGN_SNAP_M
     JUNCTION_SNAP = 6
     int_list = [(feat["properties"]["label"],
                  feat["geometry"]["coordinates"][0],
@@ -98,6 +104,60 @@ def build_trail_int_map(ints, trails):
         }
 
     return result
+
+
+def curve_trails(trails, step_m=3.0):
+    """Draw each trail as a curve through its points, not straight lines between them: a
+    centripetal Catmull-Rom curve, which passes through every point (so it only bows
+    between them, a meter or so) and doesn't overshoot, with a point every step_m. For
+    lines with sparse, angular points (GPS tracks a dozen meters apart); the data keeps
+    the points as they are. Returns how far the farthest line moved, in meters."""
+    def xy(p):
+        return (p[0] * 82000.0, p[1] * 111000.0)
+
+    def curve(c):
+        P = [xy(p) for p in c]
+        # ends extended straight, so the curve runs all the way to them
+        P = [(2 * P[0][0] - P[1][0], 2 * P[0][1] - P[1][1])] + P + [(2 * P[-1][0] - P[-2][0], 2 * P[-1][1] - P[-2][1])]
+        out = [c[0]]
+        for i in range(1, len(P) - 2):
+            p0, p1, p2, p3 = P[i - 1], P[i], P[i + 1], P[i + 2]
+            ts = [0.0]
+            for a, b in ((p0, p1), (p1, p2), (p2, p3)):
+                ts.append(ts[-1] + max(math.hypot(b[0] - a[0], b[1] - a[1]), 1e-6) ** 0.5)
+            t0, t1, t2, t3 = ts
+            n = max(1, int(math.hypot(p2[0] - p1[0], p2[1] - p1[1]) / step_m))
+            for k in range(1, n + 1):
+                t = t1 + (t2 - t1) * k / n
+
+                def lerp(a, b, ta, tb):
+                    u = (t - ta) / (tb - ta)
+                    return (a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u)
+                a1, a2, a3 = lerp(p0, p1, t0, t1), lerp(p1, p2, t1, t2), lerp(p2, p3, t2, t3)
+                q = lerp(lerp(a1, a2, t0, t2), lerp(a2, a3, t1, t3), t1, t2)
+                out.append([round(q[0] / 82000.0, 6), round(q[1] / 111000.0, 6)])
+        out[-1] = c[-1]
+        return out
+
+    def off(p, c):
+        px, py = xy(p)
+        best = math.inf
+        for a, b in zip(c, c[1:]):
+            (ax, ay), (bx, by) = xy(a), xy(b)
+            vx, vy = bx - ax, by - ay
+            t = max(0.0, min(1.0, ((px - ax) * vx + (py - ay) * vy) / ((vx * vx + vy * vy) or 1e-9)))
+            best = min(best, math.hypot(ax + t * vx - px, ay + t * vy - py))
+        return best
+
+    farthest = 0.0
+    for f in trails["features"]:
+        g = f["geometry"]
+        # (a line taken from OSM stays as it is, right on the map tiles' line)
+        if g["type"] == "LineString" and len(g["coordinates"]) >= 3 and not f["properties"].get("osm_ways"):
+            c = g["coordinates"]
+            g["coordinates"] = curve(c)
+            farthest = max(farthest, max(off(p, c) for p in g["coordinates"][::5]))
+    return farthest
 
 
 def blaze_stretches(ints, trail_int_map, ti, length, signs_only=True):
