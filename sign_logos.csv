@@ -85,7 +85,7 @@ D3,Trustees + DCR,Fairbanks CR,,,,42.170924,-71.496792,
 D4,Trustees + DCR,Fairbanks CR,,,,42.170614,-71.496570,
 D5,Trustees + DCR,Fairbanks CR,,Fairbanks CR,11 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map,42.171993,-71.498145,2026-10-21: on CR land
 D6,,,,Fairbanks CR,"2 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map; the town parcel map puts it on Town of Milford land, which would mean no CR",42.172633,-71.498707,2026-10-21: not on CR land
-D7,,,yes,Fairbanks CR,"seen on the ground (2026-10-21) as on the Fairbanks land, and the town's parcel map puts it 10 m inside the Fairbanks parcel, but The Trustees' 2013 CR map has it outside; sources disagree here; this follows The Trustees' own CR map",42.170416,-71.498049,
+D7,Trustees + DCR,Fairbanks CR,,Fairbanks CR,"seen on the ground (2026-10-21) as on the Fairbanks land, and the town's parcel map puts it 10 m inside the Fairbanks parcel, but The Trustees' 2013 CR map has it outside; sources disagree here; this follows The Trustees' own CR map",42.170416,-71.498049,2026-10-25: on CR land
 D11,,,,,,42.171565,-71.500691,
 D8,,,,,,42.170718,-71.500378,
 D10,,,,,,42.171205,-71.500693,
@@ -112,7 +112,7 @@ E4,,,,,,42.169286,-71.500029,
 E7,,,,,,42.168528,-71.500649,
 E8,,,,,,42.168477,-71.500102,
 E10,,,,Fairbanks CR,15 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map,42.168970,-71.497588,2026-10-21: not on CR land; this little box may be neither NEMBA's nor Fairbanks'
-E11,,,yes,Fairbanks CR,3 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands,42.168134,-71.497738,"2026-10-21: can't tell; should E19 be here, and should the red line (a path on the background map) be on the map?"
+E11,,,,Fairbanks CR,3 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands,42.168134,-71.497738,"2026-10-21: can't tell; should E19 be here, and should the red line (a path on the background map) be on the map?; 2026-10-25: not on CR land"
 E24,,,,,,42.167341,-71.499261,
 E22,,,,,,42.167025,-71.498846,
 E14,,,,,,42.167109,-71.501805,

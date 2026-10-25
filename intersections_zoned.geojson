@@ -4403,6 +4403,42 @@
           42.180531
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 472,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J100"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4970824,
+          42.1684566
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 473,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J101"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4969179,
+          42.1686022
+        ]
+      }
     }
   ]
 }

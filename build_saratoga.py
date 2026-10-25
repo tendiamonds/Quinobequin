@@ -385,7 +385,6 @@ def main():
         "storagePrefix": "sar",
         "report": {"email": "tendiamonds@gmail.com", "signReports": False},
         "otherMaps": [{"name": "Upper Charles Forest", "href": "../map.html"}, {"name": "Blue Hills", "href": "../bluehills/map.html"}],
-        "shareUrl": "https://tendiamonds.github.io/Quinobequin/saratoga/map.html",
         "zonesPage": False,
         "dem": os.path.join(PROJ, "elevation_cache", "saratoga.tif"),
         "blazes": BLAZES,

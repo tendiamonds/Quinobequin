@@ -14249,6 +14249,11 @@
         "source": "trailforks",
         "blazes": [
           [
+            "red",
+            239,
+            134
+          ],
+          [
             "green",
             239,
             134
@@ -18054,7 +18059,7 @@
         "blazes": [
           [
             "red",
-            64,
+            182,
             360
           ]
         ],
@@ -22981,18 +22986,6 @@
         "pdf_name": "",
         "source": "gpx 2026-10-11",
         "geometry_note": "first 17 m shares Fairbanks Trail's line out of F12",
-        "blazes": [
-          [
-            "red",
-            181,
-            239
-          ],
-          [
-            "yellow",
-            181,
-            239
-          ]
-        ],
         "widths": [
           [
             "narrow",
@@ -24070,6 +24063,31 @@
           [
             -71.4972532,
             42.1805418
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "osm_1380319221",
+        "name": "",
+        "source": "osm, added 2026-10-25 (field report: on the ground)",
+        "new_m": 23,
+        "osm_ways": [
+          1380319221
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.4970824,
+            42.1684566
+          ],
+          [
+            -71.4969257,
+            42.1686303
           ]
         ]
       }

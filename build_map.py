@@ -21,6 +21,7 @@ from crs import CRS, holders_text, sign_checks, sign_crs
 from trailmap import build_map_page, build_trail_int_map, curve_trails, dist_m, maps_menu_html
 
 PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
+SITE = "https://tendiamonds.github.io/Quinobequin/"   # where the site is published
 TOWNS = {136: "Holliston", 139: "Hopkinton", 185: "Milford"}
 
 EXIT_POINTS = {
@@ -70,7 +71,6 @@ def region():
         "report": {"email": "tendiamonds@gmail.com", "signReports": False},
         "checks": sign_checks(),
         "otherMaps": [{"name": "Blue Hills", "href": "bluehills/map.html"}],
-        "shareUrl": "https://tendiamonds.github.io/Quinobequin/map.html",
         "zonesPage": True,
         "nav": nav_html("map"),
         # Blazed trails, from NEMBA's 2012 map (uc_blazes.py), corrected from the ground;
@@ -605,7 +605,7 @@ NAV_PLACEHOLDER
     <img src="qr.svg" alt="A QR code for the map, tendiamonds.github.io/Quinobequin/map.html" style="width:160px;height:160px">
     <p style="flex:1;min-width:220px">Point a phone&rsquo;s camera at this code to open
     <a href="map.html">the map</a>. It works in the phone&rsquo;s browser, with nothing to
-    install. On the trail, the map&rsquo;s Share button shows the same code, to pass it on.</p>
+    install.</p>
   </div>
 
   <h2>Zoning Philosophy</h2>
@@ -863,6 +863,17 @@ def build_owners_page(rows):
 
 
 
+def write_qr(url, path):
+    """A QR code for url, as an SVG (the About page's, for the map). Without segno
+    (pip install segno), the one there stays."""
+    try:
+        import segno
+    except ImportError:
+        print("  WARNING: no segno, so %s wasn't remade" % path)
+        return
+    segno.make(url, error="m").save(path, kind="svg", border=4, light="#fff", omitsize=True, xmldecl=False)
+
+
 def blazes_to_meters(ints, trails):
     """trails_selected.geojson keeps each trail's blazes as runs from sign to sign along it,
     by the intersections' data numbers ("start" or "end" for a trail end with none):
@@ -907,6 +918,7 @@ def main():
     print("Processed %d intersections" % len(rows))
 
     build_landing(rows)
+    write_qr(SITE + "map.html", os.path.join(PROJ, "qr.svg"))
     # Most lines are Trailforks GPS tracks, a point every dozen meters or so: drawn as
     # curves through those points, not zigzags (before anything measures along them)
     print("Trails drawn as curves (lines move at most %.1f m)" % curve_trails(trails))
