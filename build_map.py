@@ -70,6 +70,7 @@ def region():
         "report": {"email": "tendiamonds@gmail.com", "signReports": False},
         "checks": sign_checks(),
         "otherMaps": [{"name": "Blue Hills", "href": "bluehills/map.html"}],
+        "shareUrl": "https://tendiamonds.github.io/Quinobequin/map.html",
         "zonesPage": True,
         "nav": nav_html("map"),
         # Blazed trails, from NEMBA's 2012 map (uc_blazes.py), corrected from the ground;
@@ -598,6 +599,14 @@ NAV_PLACEHOLDER
     line corridor, whose owners let the trails pass. Please stay on the trails, and respect
     posted land.</li>
   </ul>
+
+  <h2>Share the Map</h2>
+  <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+    <img src="qr.svg" alt="A QR code for the map, tendiamonds.github.io/Quinobequin/map.html" style="width:160px;height:160px">
+    <p style="flex:1;min-width:220px">Point a phone&rsquo;s camera at this code to open
+    <a href="map.html">the map</a>. It works in the phone&rsquo;s browser, with nothing to
+    install. On the trail, the map&rsquo;s Share button shows the same code, to pass it on.</p>
+  </div>
 
   <h2>Zoning Philosophy</h2>
   <p>The full area is divided into 6 regions spanning across three towns. The regions are

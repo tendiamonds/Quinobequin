@@ -24,8 +24,6 @@ import html
 import json
 import os
 
-from checks import DESK, desk_rows, write_desk_files
-
 REPORTS_JS = r"""
 // --- Saved reports (reports.py), shared by the map and the Reports page through the
 // phone's storage. A report: {id, when, kind ("blaze", "note", "check" or "sign"),
@@ -182,13 +180,6 @@ PAGE = r"""<!DOCTYPE html>
   .warn { font-size: 13px; color: #c62828; margin-top: 6px; }
   .empty { font-size: 13px; color: #78909c; margin: 4px 0 12px; }
   details summary { cursor: pointer; font-size: 15px; font-weight: 600; margin: 22px 0 8px; }
-  .desk { margin-top: 28px; }
-  .desk h2 { font-size: 18px; margin-bottom: 8px; }
-  .desk p { font-size: 13px; color: #455a64; margin: 6px 0; }
-  .desk table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 10px 0; }
-  .desk th, .desk td { border: 1px solid #dde3e7; padding: 5px 8px; text-align: left; vertical-align: top; }
-  .desk th { background: #eceff1; }
-  .desk td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -224,7 +215,6 @@ Report button is the quickest way: a tap on a blaze's color records it right whe
 
 <details id="sentWrap"><summary id="sentHead">Sent</summary><div id="sent"></div>
   <button class="btn2 quiet" onclick="clearSent()">Clear sent reports</button></details>
-__DESK__
 </div>
 <script>
 var REPORTS_KEY = __KEY__, REPORT_EMAIL = __EMAIL__, REPORT_TITLE = __TITLE_JS__;
@@ -379,16 +369,6 @@ function render() {
   showDistances();
 }
 
-// The desk table, tab-separated, for a spreadsheet or GIS
-function copyTable() {
-  var text = [...document.querySelectorAll("#deskTable tr")].map(function(tr) {
-    return [...tr.children].slice(0, 4).map(function(td) { return td.innerText.trim(); }).join("\t");
-  }).join("\n");
-  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function() {
-    document.getElementById("deskCopied").textContent = "Copied.";
-  }, function() { window.prompt("Copy the table:", text); });
-}
-
 if (navigator.geolocation) {
   var first = true;
   navigator.geolocation.watchPosition(function(pos) {
@@ -415,8 +395,7 @@ REDIRECT = """<!DOCTYPE html><meta charset="utf-8"><title>Field checks</title>
 
 
 def build_reports_page(path, title, css, nav, storage_prefix, email, blazes, checks, checks_intro=""):
-    """Write the Reports page (reports.html), checks.html pointing to it, and the checks'
-    desk files (checks.csv, checks.geojson)"""
+    """Write the Reports page (reports.html), and checks.html pointing to it"""
     # The emails name the place, as the map's do ("Reports — Blue Hills" -> "Blue Hills")
     place = title.split(" — ", 1)[-1]
     page = (PAGE.replace("__TITLE__", html.escape(title))
@@ -428,13 +407,10 @@ def build_reports_page(path, title, css, nav, storage_prefix, email, blazes, che
             .replace("__EMAIL__", json.dumps(email))
             .replace("__BLAZES__", json.dumps(blazes or {}))
             .replace("__CHECKS__", json.dumps(checks))
-            .replace("__DESK__", DESK % desk_rows(checks) if checks else "")
             .replace("__REPORTS_JS__", REPORTS_JS))
     folder = os.path.dirname(path)
     with open(path, "w", encoding="utf-8") as f:
         f.write(page)
     with open(os.path.join(folder, "checks.html"), "w", encoding="utf-8") as f:
         f.write(REDIRECT)
-    if checks:
-        write_desk_files(checks, folder)
     print("Wrote %s (%d checks)" % (path, len(checks)))

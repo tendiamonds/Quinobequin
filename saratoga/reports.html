@@ -54,13 +54,6 @@
   .warn { font-size: 13px; color: #c62828; margin-top: 6px; }
   .empty { font-size: 13px; color: #78909c; margin: 4px 0 12px; }
   details summary { cursor: pointer; font-size: 15px; font-weight: 600; margin: 22px 0 8px; }
-  .desk { margin-top: 28px; }
-  .desk h2 { font-size: 18px; margin-bottom: 8px; }
-  .desk p { font-size: 13px; color: #455a64; margin: 6px 0; }
-  .desk table { border-collapse: collapse; width: 100%; font-size: 13px; margin: 10px 0; }
-  .desk th, .desk td { border: 1px solid #dde3e7; padding: 5px 8px; text-align: left; vertical-align: top; }
-  .desk th { background: #eceff1; }
-  .desk td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -96,7 +89,6 @@ Report button is the quickest way: a tap on a blaze's color records it right whe
 
 <details id="sentWrap"><summary id="sentHead">Sent</summary><div id="sent"></div>
   <button class="btn2 quiet" onclick="clearSent()">Clear sent reports</button></details>
-
 </div>
 <script>
 var REPORTS_KEY = "sarReports", REPORT_EMAIL = "tendiamonds@gmail.com", REPORT_TITLE = "Saratoga Woods";
@@ -357,16 +349,6 @@ function render() {
   if (here) checks.sort(function(a, b) { return distM(here, a) - distM(here, b); });
   document.getElementById("cards").innerHTML = checks.map(checkCardHtml).join('');
   showDistances();
-}
-
-// The desk table, tab-separated, for a spreadsheet or GIS
-function copyTable() {
-  var text = [...document.querySelectorAll("#deskTable tr")].map(function(tr) {
-    return [...tr.children].slice(0, 4).map(function(td) { return td.innerText.trim(); }).join("\t");
-  }).join("\n");
-  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(function() {
-    document.getElementById("deskCopied").textContent = "Copied.";
-  }, function() { window.prompt("Copy the table:", text); });
 }
 
 if (navigator.geolocation) {

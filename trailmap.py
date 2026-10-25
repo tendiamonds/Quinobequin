@@ -12,6 +12,8 @@ build_map_page(ints, trails, region, out_dir) writes out_dir/map.html. region is
   report         {"email", "signReports"}: where the Reports page sends reports, and
                  whether "I'm standing at this sign" is offered (see reports.py)
   checks         (optional) field checks at intersections, as for reports.py
+  shareUrl       (optional) the map's public address: a Share button shows it, and as a
+                 QR code (out_dir/qr.svg, made with segno)
   zonesPage      whether the site has a zones.html for zone tags to link to
   otherMaps      [{"name": ..., "href": ...}] links to the other regions' maps
   placeLabels    (optional) [{"name", "lat", "lon"}] names for places the map tiles don't
@@ -235,6 +237,16 @@ def maps_menu_html(here, root):
             '<option value="">Maps</option>' + opts + '</select>')
 
 
+def write_qr(url, path):
+    """A QR code for url, as an SVG. Without segno (pip install segno), the one there stays."""
+    try:
+        import segno
+    except ImportError:
+        print("  WARNING: no segno, so %s wasn't remade" % path)
+        return
+    segno.make(url, error="m").save(path, kind="svg", border=4, light="#fff", omitsize=True, xmldecl=False)
+
+
 def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     """Write out_dir/map.html for a region (see the module docstring for its config).
     trail_int_map (optional): which intersections lie along each trail, as from
@@ -303,6 +315,9 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     client["terrain"] = region.get("terrain", [])
     client["eleStep"] = ele_step
     client["checks"] = region.get("checks", [])
+    client["shareUrl"] = region.get("shareUrl")
+    if region.get("shareUrl"):
+        write_qr(region["shareUrl"], os.path.join(out_dir, "qr.svg"))
     html = MAP_TEMPLATE.replace("__REPORTS_JS__", REPORTS_JS)
     # Legend rows only for kinds of marker this region has
     for kind in ("post", "landmark", "road"):
@@ -595,6 +610,8 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .live-tag { font-size: 10px; font-weight: 700; color: #fff; background: #c62828; border-radius: 3px;
     padding: 1px 5px; vertical-align: middle; }
   .crumb-clear { font-size: 11px; color: #1e88e5; cursor: pointer; }
+  .crumb-row { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-top: 4px;
+    font-size: 12px; color: #607d8b; }
   .seg-view { padding: 4px 2px 0; }
   .seg-row { display: flex; align-items: center; padding-top: 18px; }
   .seg-part { position: relative; flex-basis: 0; min-width: 52px; height: 4px; background: #555;
@@ -643,7 +660,10 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .blaze-pick { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #b0bec5; border-radius: 16px;
     padding: 6px 10px; font-size: 13px; background: #fff; color: #263238; cursor: pointer; }
   .blaze-pick:active { background: #e3f2fd; }
-  .report-ctl a { display: flex; align-items: center; justify-content: center; position: relative; }
+  .share-qr { text-align: center; margin: 8px 0 4px; }
+  .share-qr img { width: 220px; max-width: 100%; height: auto; image-rendering: pixelated; }
+  .share-url { font-size: 12px; color: #546e7a; text-align: center; word-break: break-all; margin-bottom: 8px; }
+  .report-ctl a, .share-ctl a { display: flex; align-items: center; justify-content: center; position: relative; }
   .report-count { position: absolute; top: -6px; right: -6px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
     background: #e65100; color: #fff; font: 700 10px/16px sans-serif; text-align: center; }
   .check-badge { display: inline-block; width: 16px; height: 16px; border-radius: 8px; background: #e65100; color: #fff;
@@ -2985,6 +3005,48 @@ function closeReport() {
   else showHome();
 }
 
+// Sharing the map, for a group on the trail: a QR code (qr.svg, from the build) to scan
+// off your screen, the phone's own share sheet, or the link to copy
+var ShareControl = L.Control.extend({
+  options: {position: "topright"},
+  onAdd: function() {
+    var div = L.DomUtil.create("div", "leaflet-bar share-ctl");
+    var a = L.DomUtil.create("a", "", div);
+    a.href = "#";
+    a.title = "Share this map";
+    a.setAttribute("role", "button");
+    a.setAttribute("aria-label", "Share this map");
+    a.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">' +
+      '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/></svg>';
+    L.DomEvent.disableClickPropagation(div);
+    L.DomEvent.on(a, "click", function(e) { L.DomEvent.preventDefault(e); showShareSheet(); });
+    return div;
+  }
+});
+
+function showShareSheet() {
+  var url = REGION.shareUrl;
+  document.getElementById("infoContent").innerHTML =
+    '<div class="report"><div class="report-head"><strong>Share this map</strong></div>' +
+    '<div class="share-qr"><img src="qr.svg" alt="A QR code for ' + esc(url) + '"></div>' +
+    '<div class="report-fine" style="text-align:center">Others can point their phone&rsquo;s camera at this to open the map.</div>' +
+    '<div class="share-url">' + esc(url) + '</div>' +
+    (navigator.share ? '<button class="route-btn" onclick="shareLink()">Send the link</button> ' : '') +
+    '<button class="route-btn" onclick="copyShareLink()">Copy link</button> ' +
+    '<button class="route-btn" style="background:#888" onclick="reportAbout = null; closeReport()">Done</button>' +
+    '<div id="shareMsg" class="report-fine"></div></div>';
+}
+
+function shareLink() {
+  navigator.share({title: REGION.name + " trail map", url: REGION.shareUrl}).catch(function() {});
+}
+
+function copyShareLink() {
+  var msg = document.getElementById("shareMsg");
+  (navigator.clipboard ? navigator.clipboard.writeText(REGION.shareUrl) : Promise.reject()).then(function() { msg.textContent = "Copied."; },
+    function() { msg.textContent = "Couldn't copy it here; the link is above."; });
+}
+
 // The Report button, under the locate button, with how many are waiting to send
 var reportCountEl = null;
 var ReportControl = L.Control.extend({
@@ -3743,7 +3805,8 @@ function locateHtml(place) {
     html += '<div class="full-only" style="color:#777;font-size:11px;margin-top:4px">GPS accuracy ±' + formatDist(userAccuracy) + '</div>';
   }
   if (crumbs.length > 1) {
-    html += '<div class="full-only" style="text-align:right;margin-top:4px"><a class="crumb-clear" onclick="clearCrumbs()">Clear breadcrumbs</a></div>';
+    html += '<div class="crumb-row"><span>Walked ' + formatDist(walkedM()) + '</span>' +
+      '<a class="crumb-clear full-only" onclick="clearCrumbs()">Clear breadcrumbs</a></div>';
   }
   if (plan) html += '<div style="margin-top:2px">' + backToRouteBtn() + '</div>';
   else if (!awayFromTrails()) html += exitsHtml();
@@ -4078,6 +4141,13 @@ function addCrumb(ll, acc) {
   }
 }
 
+// How far you've walked: along the breadcrumbs, gaps filled along the trails as drawn
+function walkedM() {
+  var pts = crumbLine.getLatLngs(), m = 0;
+  for (var i = 1; i < pts.length; i++) m += pts[i - 1].distanceTo(pts[i]);
+  return m;
+}
+
 function clearCrumbs() {
   crumbs = [];
   crumbFills = [];
@@ -4230,10 +4300,28 @@ function onLocation(pos) {
     if (!targetInt && snapToTrail(userLatLng).d <= ON_TRAILS_M) map.setView(userLatLng, 16);
   } else if (liveRouting()) {
     updateLiveRoute();
+  } else if (walkedOnFromArrival()) {
+    endArrivedRoute();
   } else {
     refreshLocateInfo();
   }
   if (following) map.panTo(userLatLng);
+}
+
+// Once you've arrived, walking on from the destination ends the route: back to where you are
+var WALKED_ON_M = 60;
+
+function walkedOnFromArrival() {
+  if (!plan || !plan.live || !plan.arrived || userAccuracy > REROUTE_MAX_ACC_M) return false;
+  var trip = plan.trip, dest = trip.to === null ? trip.home : intMarkers[trip.to].getLatLng();
+  return userLatLng.distanceTo(dest) > WALKED_ON_M;
+}
+
+function endArrivedRoute() {
+  var showing = document.getElementById("routeInfo");
+  clearRouteDisplay();
+  if (showing) showLocateInfo();
+  else refreshLocateInfo();
 }
 
 // iPhones and iPads (an iPad can say it's a Mac): their location settings are the
@@ -4307,6 +4395,7 @@ var LocateControl = L.Control.extend({
 });
 new LocateControl().addTo(map);
 new ReportControl().addTo(map);
+if (REGION.shareUrl) new ShareControl().addTo(map);
 updateReportCount();
 refreshCheckBadges();
 

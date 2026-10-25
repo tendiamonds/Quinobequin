@@ -629,6 +629,7 @@ def main():
         # some trails (Coon Hollow Path's triangles, Headquarters Path's), to look into first
         "blazeStops": None,
         "otherMaps": [{"name": "Upper Charles Forest", "href": "../map.html"}],
+        "shareUrl": "https://tendiamonds.github.io/Quinobequin/bluehills/map.html",
         "zonesPage": False,
         "dem": os.path.join(PROJ, "elevation_cache", "bluehills.tif"),
         "blazes": BLAZES,
