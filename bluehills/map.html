@@ -311,7 +311,8 @@ var intTrailMap = {"5175": [["Redman Farm Path", "J1", 676], ["Maple Avenue", "J
 
 // Build adjacency graph for routing. Each edge has its true length (dist) and what it
 // costs to route along (cost): a trail can carry route_cost, a multiplier that makes
-// routing favor the main way over a side trail of about the same length.
+// routing favor the main way over a side trail of about the same length, or keep off a
+// trail (one too steep, say) unless you add it to the route; route_note says why.
 var trailRouteCost = {};
 trailData.features.forEach(function(f) {
   var c = f.properties.route_cost;
@@ -2384,6 +2385,7 @@ function showTrailInfo(feature, layer, ll, k) {
         profileSvg(prof) + '</td></tr>';
     }
   }
+  if (p.route_note) html += '<tr><td>Routing</td><td>' + esc(p.route_note) + '</td></tr>';
   if (p.surface) html += '<tr class="full-only"><td>Surface</td><td>' + esc(p.surface) + '</td></tr>';
   if (p.highway) html += '<tr class="full-only"><td>Type</td><td>' + esc(p.highway) + '</td></tr>';
   html += '</table>';

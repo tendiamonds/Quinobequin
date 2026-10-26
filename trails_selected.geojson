@@ -16015,7 +16015,9 @@
         "id": "tf_111",
         "name": "Root Canal",
         "pdf_name": "Root Canal",
-        "source": "trailforks"
+        "source": "trailforks",
+        "route_cost": 10,
+        "route_note": "Very steep: routes avoid it unless you add it to yours."
       },
       "geometry": {
         "type": "LineString",
