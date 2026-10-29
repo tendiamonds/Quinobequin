@@ -37,6 +37,13 @@ F_G_GROUP = {36, 178, 213, 214, 176, 4, 129, 1, 245, 135, 9, 175, 10, 248, 130}
 # out from, so renumbering never moves it (Jason, 2026-10-23)
 ZONE_ONES = {"A": 361, "B": 127, "C": 41, "D": 108, "E": 337, "F": 360}
 
+# The temporary signs up in zone A, numbered from an earlier plan: what each reads, by
+# the data number of where it stands (two are at junctions the plan no longer signs), so
+# the map can show it beside today's number. Drop this when the real signs go up.
+POSTED_SIGNS = {173: "A1", 449: "A2", 172: "A2a", 121: "A3", 459: "A4", 206: "A5", 207: "A6", 208: "A7",
+                453: "A8", 122: "A9", 123: "A10", 55: "A11", 54: "A12", 53: "A13", 204: "A14", 46: "A15",
+                45: "A16", 19: "A17", 18: "A18", 149: "A19", 124: "A20", 125: "A21", 209: "A22", 146: "A23"}
+
 PUBLIC_ORDER = [
     "Town of Holliston",
     "Town of Hopkinton",
@@ -916,6 +923,12 @@ def blazes_to_meters(ints, trails):
 def main():
     ints, trails, rows = load_and_process()
     print("Processed %d intersections" % len(rows))
+    here = {f["properties"].get("number"): f for f in ints["features"]}
+    for n, text in POSTED_SIGNS.items():
+        if n in here:
+            here[n]["properties"]["posted_sign"] = text
+        else:
+            print("  WARNING: the temporary sign %s stands at data #%d, which isn't in the data any more" % (text, n))
 
     build_landing(rows)
     write_qr(SITE + "map.html", os.path.join(PROJ, "qr.svg"))

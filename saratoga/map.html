@@ -98,6 +98,10 @@
     text-shadow: 0 0 1px #3e2a12, 0 0 1px #3e2a12;
     border-radius: 3px; border: 1.5px solid #fff; box-shadow: 0 0 0 1px #5d4425, 0 1px 3px rgba(0,0,0,0.4);
     vertical-align: middle; cursor: pointer; }
+  /* A temporary sign, as it reads (intersection property posted_sign): a small white
+     tag beside the dot, like a sign board (placed by placePostedTags) */
+  .posted-badge { display: inline-block; padding: 0 3px; background: #fff; color: #333; font: 700 10px/13px sans-serif;
+    border: 1px solid #555; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.3); white-space: nowrap; cursor: pointer; }
   .junction-dot { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%;
     background: #9e9e9e; border: 2px solid #fff; box-shadow: 0 0 0 1px #9e9e9e; vertical-align: middle; margin: 0 2px; }
   .junction-dot.passed { opacity: 0.4; }
@@ -448,6 +452,7 @@ var trailLayer = L.geoJSON(trailData, {
 
 var intMarkers = {};
 var labelMarkers = {};
+var postedSigns = L.layerGroup();   // temporary signs (posted_sign), shown from POSTED_ZOOM
 var selectedMarker = null;
 var selectedRing = null;
 var intFeatures = {};
@@ -599,6 +604,15 @@ intData.features.forEach(function(f) {
       title: "Post " + f.properties.post, keyboard: false
     }).on("click", onTap).addTo(map);
   }
+  // A temporary sign up now, with an older number: a tag beside the dot (or, at a
+  // junction the plan doesn't sign, beside where it is), from close in
+  if (f.properties.posted_sign) {
+    postedSigns.addLayer(L.marker(ll, {
+      icon: L.divIcon({className: "posted-icon", iconSize: [0, 0], iconAnchor: [0, 0],
+        html: '<span class="posted-badge">' + esc(f.properties.posted_sign) + '</span>'}),
+      title: "Temporary sign " + f.properties.posted_sign, keyboard: false
+    }).on("click", f.properties.junction ? function(e) { L.DomEvent.stopPropagation(e); showPostedJunction(label); } : onTap));
+  }
   if (f.properties.no_sign || f.properties.shape) return;
 
   var lbl = L.marker(ll, {
@@ -612,6 +626,75 @@ intData.features.forEach(function(f) {
   labelMarkers[label] = lbl;
   lbl._zone = zone;
 });
+
+var POSTED_ZOOM = 15;
+function showPostedSigns() {
+  if (map.getZoom() >= POSTED_ZOOM) {
+    postedSigns.addTo(map);
+    placePostedTags();
+  } else {
+    postedSigns.remove();
+  }
+}
+map.on("zoomend", showPostedSigns);
+showPostedSigns();
+
+// Each tag sits beside its dot where it covers least: other dots, number labels, post and
+// parking badges, entry points, and the tags placed before it. Below first, then the other
+// sides, then a little farther out; worked out again at each zoom, as what's near changes.
+var POSTED_SPOTS = [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [-1, 1], [1, -1], [-1, -1]];
+var POSTED_GAP = [9, 17];   // px from the dot's center to the tag's near edge
+function placePostedTags() {
+  var origin = map.getContainer().getBoundingClientRect();
+  var rect = function(el) {
+    var r = el.getBoundingClientRect();
+    return [r.left - origin.left, r.top - origin.top, r.right - origin.left, r.bottom - origin.top];
+  };
+  var taken = [];
+  Object.keys(intMarkers).forEach(function(label) {
+    var m = intMarkers[label];
+    if (m._hidden) return;
+    var c = map.latLngToContainerPoint(m.getLatLng());
+    taken.push([c.x - 8, c.y - 8, c.x + 8, c.y + 8]);
+  });
+  [map.getPane("markerPane"), map.getPane("entryPane")].forEach(function(pane) {
+    pane.querySelectorAll(".marker-label span, .post-badge, .lot-badge, .rock-svg, .entry-diamond").forEach(function(el) {
+      taken.push(rect(el));
+    });
+  });
+  var overlap = function(a, b) {
+    return Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+  };
+  postedSigns.eachLayer(function(m) {
+    var tag = m.getElement() && m.getElement().querySelector(".posted-badge");
+    if (!tag) return;
+    var c = map.latLngToContainerPoint(m.getLatLng()), w = tag.offsetWidth, h = tag.offsetHeight, best = null;
+    POSTED_GAP.forEach(function(gap, far) {
+      POSTED_SPOTS.forEach(function(d, i) {
+        // the tag's top left, its near edge or corner gap px out from the dot
+        var x = d[0] > 0 ? c.x + gap * (d[1] ? 0.75 : 1) : d[0] < 0 ? c.x - gap * (d[1] ? 0.75 : 1) - w : c.x - w / 2;
+        var y = d[1] > 0 ? c.y + gap * (d[0] ? 0.75 : 1) : d[1] < 0 ? c.y - gap * (d[0] ? 0.75 : 1) - h : c.y - h / 2;
+        var box = [x, y, x + w, y + h], cost = i + 20 * far;
+        taken.forEach(function(t) { cost += 10 * overlap(box, t); });
+        if (!best || cost < best.cost) best = {cost: cost, box: box};
+      });
+    });
+    tag.style.transform = "translate(" + Math.round(best.box[0] - c.x) + "px," + Math.round(best.box[1] - c.y) + "px)";
+    taken.push(best.box);
+  });
+}
+
+// A temporary sign at a junction the plan doesn't sign: what it is, in the panel
+function postedTrails(label) {
+  var names = [];
+  (intTrailMap[label] || []).forEach(function(c) { if (names.indexOf(c[0]) < 0) names.push(c[0]); });
+  return names;
+}
+function showPostedJunction(label) {
+  var p = intFeatures[label].properties;
+  showPanelMsg('<span class="posted-badge">' + esc(p.posted_sign) + '</span> A temporary sign, numbered from an earlier plan. ' +
+    'It stands where ' + esc(postedTrails(label).join(" and ")) + ' meet, a junction the current plan leaves unsigned.');
+}
 
 // Names the map tiles don't show (REGION.placeLabels), once you're close enough to see buildings
 var PLACE_LABEL_ZOOM = 17, placeLabels = L.layerGroup();
@@ -669,6 +752,8 @@ function showIntInfo(feature, marker) {
       ? '<tr><td>Junction</td><td><div class="shape-head">' + junctionIconHtml(p.label, 64) + '<div><strong style="font-size:15px">' +
         esc(intName(p.label)) + '</strong><div style="margin-top:4px">' + zoneTag + '</div></div></div></td></tr>'
       : '<tr><td>Label</td><td><strong style="font-size:16px">' + p.label + '</strong> ' + zoneTag + '</td></tr>' +
+        (p.posted_sign ? '<tr><td>Sign now</td><td><span class="posted-badge">' + esc(p.posted_sign) + '</span>' +
+          '<div class="connects-tag">The temporary sign here, numbered from an earlier plan</div></td></tr>' : '') +
         (p.post ? '<tr><td>Post</td><td>' + postBadgeHtml(p.post) + '</td></tr>' : '')) +
     (p.ele !== undefined && REGION.eleStep ? '<tr class="full-only"><td>Elevation</td><td>' + feet(p.ele) + '</td></tr>' : '') +
     (p.entry ? '<tr><td>Access</td><td><span class="entry-tag">◆ Entry point</span>' +
@@ -3417,7 +3502,9 @@ function locateHtml(place) {
   var html;
   shownPlace = place;
   if (place.type === "at") {
-    html = '<div class="route-msg" style="margin-top:0;font-size:13px">You are at ' + intPill(place.label) + '</div>';
+    var here = intFeatures[place.label].properties;
+    html = '<div class="route-msg" style="margin-top:0;font-size:13px">You are at ' + intPill(place.label) +
+      (here.posted_sign ? ' <span style="color:#666">(its temporary sign reads <span class="posted-badge">' + esc(here.posted_sign) + '</span>)</span>' : '') + '</div>';
   } else if (place.type === "off") {
     html = '<div class="route-msg" style="margin-top:0;font-size:13px">You are off trail, about <strong>' +
       formatDist(place.dist) + '</strong> from ' + intPill(place.label) + '</div>';
