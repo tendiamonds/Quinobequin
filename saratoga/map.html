@@ -218,6 +218,15 @@
   .blaze-pick { display: inline-flex; align-items: center; gap: 4px; border: 1px solid #b0bec5; border-radius: 16px;
     padding: 6px 10px; font-size: 13px; background: #fff; color: #263238; cursor: pointer; }
   .blaze-pick:active { background: #e3f2fd; }
+  .blaze-pick.on { background: #e3f2fd; border-color: #1e88e5; }
+  .loop-via { display: inline-flex; align-items: center; gap: 3px; margin-right: 4px; }
+  .loop-seg { font-size: 12px; }
+  .loop-links { margin: -2px 0 6px; }
+  .loop-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 22px; margin-left: 2px;
+    color: #1e88e5; border: 1px solid #b0bec5; border-radius: 4px; cursor: pointer; background: #fff; }
+  .loop-icon:active { background: #e3f2fd; }
+  .stop-x { margin-left: 4px; color: #90a4ae; font-size: 12px; cursor: pointer; text-decoration: none; }
+  .stop-x:hover { color: #c62828; }
   .report-ctl a { display: flex; align-items: center; justify-content: center; position: relative; }
   .report-count { position: absolute; top: -6px; right: -6px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px;
     background: #e65100; color: #fff; font: 700 10px/16px sans-serif; text-align: center; }
@@ -282,7 +291,7 @@
   <h2>Saratoga Woods</h2>
   <div class="content" id="infoContent"><div id="welcomeInfo">
     <p style="color:#888">Click a trail or intersection marker for details.</p>
-    <p style="margin-top:6px;font-size:12px"><a onclick="showDriveList()" style="cursor:pointer">Directions to an entrance</a> &nbsp;&middot;&nbsp; <a href="location-help.html">Location not working?</a></p>
+    <p style="margin-top:6px;font-size:12px"><a onclick="showDriveList()" style="cursor:pointer">Directions to an entrance</a> &nbsp;&middot;&nbsp; <a onclick="newLoop()" style="cursor:pointer">Make a loop</a> &nbsp;&middot;&nbsp; <a href="location-help.html">Location not working?</a></p>
     <p style="margin-top:8px;color:#888;font-size:11px">130 numbered intersections across 3 zones.<br>
     88 trail segments, 54 named trails.</p></div>
   </div>
@@ -436,8 +445,9 @@ var trailLayer = L.geoJSON(trailData, {
   onEachFeature: function(feature, layer) {
     layer.on("click", function(e) {
       L.DomEvent.stopPropagation(e);
-      // On a trail right by an intersection, a finger means the intersection
-      if (!tapNearInt(e)) showTrailInfo(feature, layer, e.latlng);
+      // On a trail right by an intersection, a finger means the intersection. Choosing a
+      // place for a loop to go through, a tap on a trail means the stretch there.
+      if (!tapNearInt(e)) tapTrail(feature, layer, e.latlng);
     });
     layer.on("mouseover", function() {
       if (highlightedSegments.indexOf(layer) === -1)
@@ -569,7 +579,9 @@ intData.features.forEach(function(f) {
   marker.setStyle(restStyle(marker));
   function onTap(e) {
     L.DomEvent.stopPropagation(e);
-    if (routeMode) {
+    if (loopPicking) {
+      addLoopThrough({label: f.properties.label});
+    } else if (routeMode) {
       completeRoute(f.properties.label);
     } else {
       showIntInfo(f, marker);
@@ -809,6 +821,7 @@ function showIntInfo(feature, marker) {
     html += '<button class="route-btn" style="background:#1e88e5" onclick="routeFromMe(\'' + p.label + '\')">Route here</button>' +
       ' <button class="route-btn" style="background:#1e88e5" onclick="roundTripFromMe(\'' + p.label + '\')">Round trip</button>';
   }
+  if (!plan && loopOffered()) html += ' <button class="route-btn" style="background:#1e88e5" onclick="newLoop(' + jsArg(p.label) + ')">Loop through here</button>';
   html += planFromHtml(p.label, 'Route from here');
   html += reportLinkHtml("int", p.label);
 
@@ -1239,7 +1252,11 @@ function stepRowHtml(step, state, ft, icon) {
         terrainSvg(step.nextTerrain) + '</span>' : '') + gradeTagHtml(step.nextClimb);
   }
   var stop = step.segStart || (step.stop && !step.stop.edge ? step.stop : null);
-  if (stop) html += '<span class="turn-tag">' + (isTurnaround(stop) ? 'turn around' : 'waypoint') + '</span>';
+  if (stop) {
+    var at = plan.trip.stops.indexOf(stop);
+    html += '<span class="turn-tag">' + (isTurnaround(stop) ? 'turn around' : 'waypoint') + '</span>' +
+      (!stop.done && at >= 0 ? '<a class="stop-x" title="Take this stop out of the route" onclick="removeStop(' + at + ')">&#x2715;</a>' : '');
+  }
   return html + '</div>';
 }
 
@@ -1261,7 +1278,7 @@ function shownFt(steps) {
 // A round trip to one intersection turns around there
 function isTurnaround(stop) {
   var trip = plan.trip;
-  return trip.to === null && trip.stops.length === 1 && !stop.edge;
+  return trip.to === null && trip.stops.length === 1 && !stop.edge && !trip.loop;
 }
 
 // How a stop reads in titles: "A12", or "Challenger (C13–C34)" for a trail segment
@@ -1335,7 +1352,7 @@ function routePanelHtml() {
   var small = '<div class="compact-only">' +
     '<div class="route-compact-head">' + (plan.arrived
       ? arrivedHtml
-      : distLine() + live) +
+      : distLine() + (trip.loop ? loopLinksHtml(true) : '') + live) +
     '</div><div class="route-row">' + row + '</div></div>';
 
   // Large view: the step list
@@ -1344,10 +1361,14 @@ function routePanelHtml() {
   plan.hist.steps.concat(plan.steps).forEach(function(st) { if (st.stop && inOrder.indexOf(st.stop) < 0) inOrder.push(st.stop); });
   trip.stops.forEach(function(s) { if (!s.skipped && inOrder.indexOf(s) < 0) inOrder.push(s); });
   var names = inOrder.filter(function(s) { return !s.skipped; }).map(stopName);
-  var title = dest === null
+  var title = trip.loop
+    ? (dest !== null ? 'Route of ' + formatDist(trip.loop.len) + ' to ' + intName(dest)
+       : 'Loop of ' + formatDist(trip.loop.len) + (trip.homeLabel ? ', back to ' + intName(trip.homeLabel) : ', back here'))
+    : dest === null
     ? (names.length === 1 ? 'Round trip: out to ' + names[0] + ' and back' : 'Round trip via ' + names.join(', '))
     : 'Route: ' + (plan.live ? 'Your location' : intName(trip.from)) + ' → ' + intName(dest) + (names.length ? ' via ' + names.join(', ') : '');
-  var html = '<div class="route-title"><strong style="font-size:14px">' + (plan.arrived ? arrivedHtml : title) + '</strong>' + live + '</div>';
+  var html = '<div class="route-title"><strong style="font-size:14px">' + (plan.arrived ? arrivedHtml : title) + '</strong>' + live + '</div>' +
+    (trip.loop ? loopLinksHtml(false) : '');
   var skipped = trip.stops.filter(function(s) { return s.skipped; });
   if (skipped.length) {
     html += '<div class="route-skipped">Skipped ' + skipped.map(function(s) { return s.edge ? stopName(s) : intPill(s.label, "passed"); }).join(', ') + '</div>';
@@ -1375,7 +1396,8 @@ function routePanelHtml() {
   var planning = (plan.live ? '' : planFromHtml(trip.from, 'New route from ' + intName(trip.from))) +
     (dest !== null ? planFromHtml(dest, 'New route from ' + intName(dest)) : '');
   html += '<div style="margin-top:10px">' + (userLatLng ? '' : planning) +
-    (canReverseLoop() ? ' <button class="route-btn" onclick="reverseLoopNow()">Reverse loop</button>' : '') +
+    (canReverseLoop() && !trip.loop ? ' <button class="route-btn" onclick="reverseLoopNow()">Reverse loop</button>' : '') +
+    (!plan.arrived ? ' <button class="route-btn" onclick="makeLonger()">Make longer</button>' : '') +
     ' <button class="route-btn" style="background:#888" onclick="cancelRoute()">Clear</button></div>' +
     (userLatLng ? planning : '');
 
@@ -1764,6 +1786,349 @@ function routeFromEntrance(entry, destLabel, roundTrip) {
   startTrip(trip, 'No ' + (roundTrip ? 'round trip' : 'route') + ' found from <strong>' + intName(entry) + '</strong> to <strong>' + intName(destLabel) + '</strong>.');
 }
 
+// --- Loops: a route of about the length you ask for, out one way and back another
+//
+// From where you are (or an entrance you'll start from) to where you'd like to end: back
+// here, the entrance you came in by (from the breadcrumbs), or another; or, with Make
+// longer, a route you have, to the same place the long way. A loop is a trip (trip.loop)
+// through the places you choose (loopThrough: intersections or stretches of trail), in
+// their best order, and via points it adds itself (auto) to come to about the length
+// asked for, with as little trail walked twice as can be. The best few are worked out in
+// full; "Another loop" shows the next.
+var LOOP_MILES = [1, 2, 3, 4, 5];
+var LOOP_TRY = 10, LOOP_KEEP = 5;  // loops worked out in full, and kept for "Another loop"
+var LOOP_REPEAT_WEIGHT = 1.5;      // walking a share of the loop twice costs this much more than missing the length by as much
+var loopFrom = null, loopEnd = "here", loopEndChosen = false, loopAlts = [], loopAlt = 0;
+var loopThrough = [], loopPicking = false;   // places every loop takes in ({label} or {edge}), and choosing one on the map
+var loopLonger = 0, loopHome = null;         // Make longer: the route's length to go, and a round trip's home
+
+// A fresh loop sheet, through a place if via is given
+function newLoop(via) {
+  loopLonger = 0;
+  loopHome = null;
+  loopFrom = null;
+  loopEnd = "here";
+  loopEndChosen = false;
+  loopThrough = via ? [{label: via, edge: null}] : [];
+  loopPicking = false;
+  showLoopSheet();
+}
+
+// Make longer: the route you have, to the same place (or home), the long way round. It
+// keeps the stops you chose, not the via points a loop added.
+function makeLonger() {
+  var trip = plan.trip;
+  loopFrom = plan.live ? null : trip.from;
+  loopEnd = trip.to === null ? "here" : trip.to;
+  loopEndChosen = true;
+  loopHome = trip.to === null ? {home: trip.home, homeAnchors: trip.homeAnchors, homeLabel: trip.homeLabel} : null;
+  loopThrough = pendingStops(trip).filter(function(st) { return !st.auto; }).map(function(st) { return {label: st.label, edge: st.edge}; });
+  loopLonger = plan.live ? Math.max(plan.total - plan.progress, 0) : plan.graphDist;
+  loopPicking = false;
+  showLoopSheet();
+}
+
+function showLoopSheet(from) {
+  reportAbout = null;
+  if (from === undefined && loopFrom === null && !loopLonger && (!userLatLng || awayFromTrails())) {
+    pickLoopEntrance();
+  } else {
+    if (from !== undefined) {
+      loopFrom = from;
+      loopEnd = "here";
+    }
+    var html = '<div class="report"><div class="report-head"><strong>' + (loopLonger ? 'Make it longer' : 'Make a loop') + '</strong>' +
+      (loopLonger ? (loopEnd !== "here" ? ' to ' + intPill(loopEnd) : ', back where you started') + ' (now ' + formatDist(loopLonger) + ')'
+       : loopFrom !== null ? ' from ' + entryChipHtml(loopFrom) : '') + '</div>';
+    if (!loopLonger && loopFrom === null && !nearEntry(userLatLng, ENTRY_NEAR_M)) {
+      // Not at an entrance: end back here, at the entrance you came in by, or another
+      var mine = inferEntrance();
+      if (!loopEndChosen) loopEnd = mine || "here";
+      var ends = ["here"].concat(mine ? [mine] : [], entryLabels().filter(function(l) { return l !== mine; }).sort(function(a, b) {
+        return userLatLng.distanceTo(intMarkers[a].getLatLng()) - userLatLng.distanceTo(intMarkers[b].getLatLng());
+      }).slice(0, 3));
+      html += '<div class="report-sub">Ending at</div><div class="blaze-picks">' + ends.map(function(e) {
+        return '<button class="blaze-pick' + (e === loopEnd ? ' on' : '') + '" onclick="chooseLoopEnd(' + jsArg(e) + ')">' +
+          (e === "here" ? 'Here' : entryChipHtml(e) + (e === mine ? ' Your entrance' : entryNoteHtml(e, "to"))) + '</button>';
+      }).join('') + '</div>';
+    }
+    // The places to go through, each with its x; the loop has to be at least this long
+    html += '<div class="report-sub">Through (if you like)</div><div class="blaze-picks">' + loopThrough.map(function(st, i) {
+      return '<span class="loop-via">' + (st.edge ? '<span class="loop-seg">' + stopName(st) + '</span>' : intPill(st.label)) +
+        '<a class="stop-x" title="Take it out" onclick="loopThrough.splice(' + i + ', 1); showLoopSheet()">&#x2715;</a></span>';
+    }).join('') + '<button class="blaze-pick" onclick="pickLoopVia()">' + (loopThrough.length ? 'Add another' : 'Choose on the map') + '</button></div>';
+    var shortest = loopShortest(), miles = LOOP_MILES;
+    if (shortest > 0 && shortest < Infinity) html += '<div class="report-fine">Shortest through ' + (loopThrough.length > 1 ? 'these' : 'it') + ': ' + formatDist(shortest) + '</div>';
+    // Whole miles from the shortest through those places, or from a little more than the
+    // route is now
+    var least = Math.max(loopLonger, shortest < Infinity ? shortest : 0);
+    if (least > 0) {
+      var base = Math.max(1, Math.ceil(least / 1609.344 + (loopLonger >= shortest ? 0.4 : 0)));
+      miles = LOOP_MILES.map(function(m, i) { return base + i; });
+    }
+    html += shortest === Infinity
+      ? '<div class="report-warn">No loop goes through all of these from here.</div>'
+      : '<div class="report-sub">' + (loopLonger ? 'About how far in all?' : 'About how far?') + '</div><div class="blaze-picks">' + miles.map(function(m) {
+          return '<button class="blaze-pick" onclick="makeLoop(' + m + ')">' + m + ' mi</button>';
+        }).join('') + '</div>';
+    html += '<div id="loopMsg" class="report-warn"></div>' +
+      '<button class="route-btn" style="background:#888" onclick="endLoopSheet()">Cancel</button></div>';
+    clearSelection(true);
+    document.getElementById("infoContent").innerHTML = html;
+  }
+}
+
+// Choosing a place to go through: the next intersection or stretch of trail tapped (see
+// the markers' onTap and the trails' click)
+function pickLoopVia() {
+  loopPicking = true;
+  document.getElementById("infoContent").innerHTML = '<div class="route-msg" style="margin-top:0">Tap an intersection, or a stretch of trail, to go through.<br><br>' +
+    '<button class="route-btn" style="background:#888" onclick="loopPicking = false; showLoopSheet()">Cancel</button></div>';
+}
+
+function addLoopThrough(stop) {
+  loopPicking = false;
+  var dup = loopThrough.some(function(st) {
+    return stop.edge ? sameEdge(st.edge, stop.edge.a, stop.edge.b, stop.edge.trail) : !st.edge && st.label === stop.label;
+  });
+  if (!dup) loopThrough.push({label: stop.label || null, edge: stop.edge || null});
+  showLoopSheet();
+}
+
+function chooseLoopEnd(e) {
+  loopEnd = e;
+  loopEndChosen = true;
+  showLoopSheet();
+}
+
+function endLoopSheet() {
+  loopFrom = null;
+  loopEnd = "here";
+  loopEndChosen = false;
+  loopThrough = [];
+  loopPicking = false;
+  loopLonger = 0;
+  loopHome = null;
+  closeReport();
+}
+
+// Away from the trails, a loop starts from an entrance: which?
+function pickLoopEntrance() {
+  var opts = entryLabels();
+  if (userLatLng) {
+    opts.sort(function(a, b) { return userLatLng.distanceTo(intMarkers[a].getLatLng()) - userLatLng.distanceTo(intMarkers[b].getLatLng()); });
+  }
+  clearSelection(true);
+  document.getElementById("infoContent").innerHTML = '<div class="route-msg" style="margin-top:0">' +
+    (userLatLng ? 'You&rsquo;re away from the trails. ' : '') + 'Start the loop from which entrance?</div><div class="exits">' +
+    opts.slice(0, userLatLng ? ENTRANCE_CHOICES : opts.length).map(function(l) {
+      return '<button class="exit-btn" onclick="showLoopSheet(' + jsArg(l) + ')">' + entryChipHtml(l) + parkSlotHtml(l) + entryNoteHtml(l, "from") + '</button>';
+    }).join('') + '</div><button class="route-btn" style="background:#888" onclick="endLoopSheet()">Cancel</button>';
+}
+
+// The edges from a path tree's start to a place: [{key, len}], key the same either way
+function treePath(tree, to) {
+  var out = [], n = to;
+  while (tree.prev[n] !== undefined) {
+    var p = tree.prev[n];
+    out.push({key: (p < n ? p + "|" + n : n + "|" + p) + "|" + tree.via[n], len: tree.len[n] - tree.len[p]});
+    n = p;
+  }
+  return out;
+}
+
+// How far off a loop is: missing the length asked for, and trail walked twice
+function loopScore(edges, target) {
+  var total = 0, again = 0, seen = {};
+  edges.forEach(function(e) {
+    total += e.len;
+    if (seen[e.key]) again += e.len;
+    seen[e.key] = true;
+  });
+  return {total: total, again: again, score: Math.abs(total - target) / target + LOOP_REPEAT_WEIGHT * again / Math.max(total, 1)};
+}
+
+// n of list, picked at random (it shuffles list)
+function shuffled(list, n) {
+  for (var i = list.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1)), t = list[i];
+    list[i] = list[j];
+    list[j] = t;
+  }
+  return list.slice(0, n);
+}
+
+// With no places to go through: one or two via points, best first by a quick reckoning
+// (each leg its shortest way): [[label, ...]]
+function loopCandidates(start, end, target) {
+  var tS = pathTree(start), tE = pathTree(end), out = [];
+  var vias = Object.keys(intFeatures).filter(function(l) {
+    return !isSignless(intFeatures[l].properties) && l !== start && l !== end && tS.len[l] !== undefined && tE.len[l] !== undefined;
+  });
+  vias.forEach(function(v) {
+    var est = tS.len[v] + tE.len[v];
+    if (est > 0.6 * target && est < 1.4 * target) out.push({vias: [v], q: loopScore(treePath(tS, v).concat(treePath(tE, v)), target)});
+  });
+  shuffled(vias.filter(function(v) { return tS.len[v] > 0.15 * target && tS.len[v] < 0.5 * target; }), 25).forEach(function(v1) {
+    var t1 = pathTree(v1);
+    shuffled(vias.filter(function(v2) {
+      var est = tS.len[v1] + t1.len[v2] + tE.len[v2];
+      return v2 !== v1 && tE.len[v2] > 0.15 * target && tE.len[v2] < 0.5 * target && est > 0.75 * target && est < 1.25 * target;
+    }), 25).forEach(function(v2) {
+      out.push({vias: [v1, v2], q: loopScore(treePath(tS, v1).concat(treePath(t1, v2), treePath(tE, v2)), target)});
+    });
+  });
+  return out.sort(function(a, b) { return a.q.score - b.q.score; }).slice(0, LOOP_TRY).map(function(c) { return c.vias; });
+}
+
+// The stops of loops to try, best first: with places to go through, those in their best
+// order, alone or with one via point added somewhere along it
+function loopOrders(start, end, target, lead) {
+  var orders;
+  if (!loopThrough.length) {
+    orders = loopCandidates(start, end, Math.max(target - 2 * lead, target / 2)).map(function(vias) {
+      return vias.map(function(v) { return {label: v, edge: null, auto: true}; });
+    });
+  } else {
+    var base = loopTrip(loopThrough, 0);
+    optimizeStops(base);
+    var req = base.stops, memo = {}, tS = pathTree(start), taken = {}, out = [];
+    req.forEach(function(st) { if (st.label) taken[st.label] = true; });
+    out.push({order: req, cost: planStops(base, req, memo).cost});
+    shuffled(Object.keys(intFeatures).filter(function(l) {
+      return !isSignless(intFeatures[l].properties) && !taken[l] && l !== start && l !== end && tS.len[l] !== undefined;
+    }), 80).forEach(function(v) {
+      for (var k = 0; k <= req.length; k++) {
+        var order = req.slice(0, k).concat([{label: v, edge: null, auto: true}], req.slice(k));
+        out.push({order: order, cost: planStops(base, order, memo).cost});
+      }
+    });
+    orders = out.sort(function(a, b) { return Math.abs(a.cost - target) - Math.abs(b.cost - target); }).slice(0, LOOP_TRY).map(function(c) { return c.order; });
+  }
+  return orders;
+}
+
+// A loop's trip, through these stops in this order; len, how long it came out
+function loopTrip(stops, len) {
+  var end = loopEnd === "here" ? null : loopEnd, trip = newTrip(loopFrom, [], end);
+  trip.stops = stops.map(function(st) { return {label: st.label || null, edge: st.edge || null, done: false, skipped: false, auto: !!st.auto}; });
+  if (end === null && loopHome) {
+    trip.home = loopHome.home;
+    trip.homeAnchors = loopHome.homeAnchors;
+    trip.homeLabel = loopHome.homeLabel;
+  } else if (loopFrom !== null && end === null) {
+    trip.home = intMarkers[loopFrom].getLatLng();
+    trip.homeAnchors = [{label: loopFrom, dist: 0}];
+    trip.homeLabel = loopFrom;
+  }
+  trip.loop = {len: len || 0};
+  return trip;
+}
+
+// A compiled trip's length, from where you are (or its start) to its end
+function tripLen(args) {
+  return args.result.totalDist + (args.userLeg ? args.userLeg.dist : 0) + (args.info.tail ? args.info.tail.dist : 0);
+}
+
+// The shortest loop through the places chosen, in meters: 0 with none, Infinity if none goes
+function loopShortest() {
+  var len = 0;
+  if (loopThrough.length) {
+    var trip = loopTrip(loopThrough, 0);
+    optimizeStops(trip);
+    var args = compileTrip(trip);
+    len = args ? tripLen(args) : Infinity;
+  }
+  return len;
+}
+
+// The edges a compiled route walks, for loopScore
+function routeEdges(path) {
+  var edges = [];
+  for (var k = 1; k < path.length; k++) {
+    var a = path[k - 1].label, b = path[k].label;
+    var e = (routeGraph[a] || []).filter(function(x) { return x.to === b && x.trail === path[k].trail; })[0];
+    edges.push({key: (a < b ? a + "|" + b : b + "|" + a) + "|" + path[k].trail, len: e ? e.dist : 0});
+  }
+  return edges;
+}
+
+function makeLoop(miles) {
+  var target = miles * 1609.344, start = loopFrom, lead = 0;
+  if (start === null) {
+    var a = userAnchors(userLatLng).sort(function(x, y) { return x.dist - y.dist; })[0];
+    start = a.label;
+    lead = a.dist;
+  }
+  var end = loopEnd !== "here" ? loopEnd : loopHome ? loopHome.homeAnchors.slice().sort(function(x, y) { return x.dist - y.dist; })[0].label : start;
+  // The best few worked out in full, each different enough from those kept before it
+  var full = [];
+  loopOrders(start, end, target, lead).forEach(function(order) {
+    var args = compileTrip(loopTrip(order, 0));
+    if (args) {
+      var edges = routeEdges(args.result.path);
+      full.push({order: order, len: tripLen(args), s: loopScore(edges, target), keys: edges.map(function(e) { return e.key; })});
+    }
+  });
+  full.sort(function(x, y) { return x.s.score - y.s.score; });
+  loopAlts = [];
+  full.forEach(function(c) {
+    var same = loopAlts.some(function(o) {
+      var shared = c.keys.filter(function(k) { return o.keys.indexOf(k) >= 0; }).length;
+      return shared > 0.7 * Math.min(c.keys.length, o.keys.length);
+    });
+    if (!same && loopAlts.length < LOOP_KEEP) loopAlts.push(c);
+  });
+  loopAlt = 0;
+  if (loopAlts.length) {
+    startTrip(loopTrip(loopAlts[0].order, loopAlts[0].len), "Couldn&rsquo;t work out that loop.");
+  } else {
+    document.getElementById("loopMsg").textContent = "No loop of about " + miles + " mi from here. Try another length.";
+  }
+}
+
+// A loop's links: Another loop (or way), while there are others, and Reverse. Under its
+// title as words, or in the small view's top line as icons (with the words as titles).
+var ICON_ANOTHER = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+  '<path d="M20 12a8 8 0 1 1-2.3-5.6"/><path d="M20 4v5h-5"/></svg>';
+var ICON_REVERSE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' +
+  '<path d="M4 8h14l-4-4M20 16H6l4 4"/></svg>';
+function loopLinksHtml(icons) {
+  var another = plan.trip.to !== null ? 'Another way' : 'Another loop';
+  var link = function(js, text, icon) {
+    return icons ? '<a class="loop-icon" title="' + text + '" aria-label="' + text + '" onclick="' + js + '">' + icon + '</a>'
+      : '<a class="crumb-clear" style="margin-right:12px" onclick="' + js + '">' + text + '</a>';
+  };
+  var html = (loopAlts.length > 1 && !plan.arrived ? link("nextLoop()", another, ICON_ANOTHER) : '') +
+    (canReverseTrip() ? link("reverseTrip()", "Reverse", ICON_REVERSE) : '');
+  return html && !icons ? '<div class="loop-links">' + html + '</div>' : html;
+}
+
+// A loop's Reverse: a live round trip turned around (reverseLoop), or else the stops
+// still ahead taken the other way round, to the same end
+function canReverseTrip() {
+  return !plan.arrived && (canReverseLoop() || pendingStops(plan.trip).length > 1);
+}
+
+function reverseTrip() {
+  var trip = plan.trip;
+  if (canReverseLoop()) {
+    reverseLoopNow();
+  } else {
+    trip.stops = trip.stops.filter(function(st) { return st.done; }).concat(pendingStops(trip).reverse());
+    replanTrip(plan.progress === null ? 0 : plan.progress);
+  }
+  if (plan.trip.loop) {
+    plan.trip.loop.len = plan.live ? Math.max(plan.total - plan.progress, 0) : plan.graphDist;
+    showRoutePanel();
+  }
+}
+
+function nextLoop() {
+  loopAlt = (loopAlt + 1) % loopAlts.length;
+  startTrip(loopTrip(loopAlts[loopAlt].order, loopAlts[loopAlt].len), "Couldn&rsquo;t work out that loop.");
+}
+
 // --- Waypoints
 
 // Distance by trail, in meters, between two places: a label, null for "where you are" (as
@@ -1786,12 +2151,21 @@ function tripLegDist(trip, a, b) {
 function changeStops(change) {
   var trip = plan.trip;
   change(trip);
+  if (trip.loop) {
+    delete trip.loop;
+    loopAlts = [];
+  }
   optimizeStops(trip);
   replanTrip(plan.progress === null ? 0 : plan.progress);
 }
 
 function addWaypoint(label) {
   changeStops(function(trip) { trip.stops.push({label: label, edge: null, done: false, skipped: false}); });
+}
+
+// Take a stop out of the route, by where it is in the trip's stops
+function removeStop(at) {
+  changeStops(function(trip) { trip.stops = trip.stops.filter(function(s, i) { return s.done || i !== at; }); });
 }
 
 function removeWaypoint(label) {
@@ -2495,6 +2869,7 @@ function showTrailInfo(feature, layer, ll, k) {
 }
 
 function clearSelection(keepRoute) {
+  loopPicking = false;   // (any other panel ends choosing a place for a loop)
   if (selectedSegLine) {
     map.removeLayer(selectedSegLine);
     selectedSegLine = null;
@@ -2936,12 +3311,24 @@ function tapNearTrail(e) {
   var at = pointAlong(snap.ti, snap.along);
   if (map.latLngToContainerPoint(at).distanceTo(e.containerPoint) > TAP_TRAIL_PX) return false;
   var layer = trailLayer.getLayers().filter(function(l) { return l.feature.properties._idx === snap.ti; })[0];
-  showTrailInfo(layer.feature, layer, at);
+  tapTrail(layer.feature, layer, at);
   return true;
 }
 
+// A tap on a trail: its details, or while choosing a place for a loop to go through, the
+// stretch there
+function tapTrail(feature, layer, ll) {
+  if (loopPicking) {
+    var seg = segmentAt(feature, ll);
+    if (seg) addLoopThrough({edge: {a: seg.a, b: seg.b, trail: seg.trail, chain: seg.chain}});
+  } else {
+    showTrailInfo(feature, layer, ll);
+  }
+}
+
 map.on("click", function(e) {
-  if (tapNearInt(e) || tapNearTrail(e)) return;
+  // (choosing a place for a loop, a tap on nothing in particular leaves the prompt up)
+  if (tapNearInt(e) || tapNearTrail(e) || loopPicking) return;
   if (plan) {
     if (!document.getElementById("routeInfo")) backToRoute();
   } else {
@@ -3532,7 +3919,7 @@ function locateHtml(place) {
   }
   if (plan) html += '<div style="margin-top:2px">' + backToRouteBtn() + '</div>';
   else if (!awayFromTrails()) html += exitsHtml();
-  else html += driveLinkHtml();
+  else html += loopBtnHtml() + driveLinkHtml();
   // (Only on phones: a computer without GPS is always this vague, and has no such setting)
   if (userAccuracy > ROUGH_FIX_M && (IS_IOS || /Android/.test(navigator.userAgent))) {
     html += '<div class="estimated-tag" style="margin-top:6px">Your phone is only sharing a rough location (within ' +
@@ -3644,6 +4031,14 @@ function showDriveList(all) {
 var SHARE_ICON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
   '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
 
+// Make a loop: from an entrance you're at, or one you'll start from (away from the trails).
+// Out on the trails, a route's Make longer does it instead.
+function loopBtnHtml() {
+  return '<div class="full-only" style="margin:6px 0"><button class="route-btn" onclick="newLoop()">Make a loop</button></div>';
+}
+
+function loopOffered() { return !userLatLng || awayFromTrails() || nearEntry(userLatLng, ENTRY_NEAR_M); }
+
 function driveLinkHtml() {
   return '<div class="plan-link"><a onclick="showDriveList()">Directions to an entrance</a></div>';
 }
@@ -3693,8 +4088,10 @@ function exitsHtml() {
   var entrance = inferEntrance();
   var mine = exits.filter(function(e) { return e.label === entrance; })[0];
   var html = '<div class="full-only exits">';
+  // At an entrance, a loop from it: after the way back to yours, before the other exits
+  var loop = nearEntry(userLatLng, ENTRY_NEAR_M) ? loopBtnHtml() : '';
   if (mine) {
-    html += '<div class="exits-head">Back to your entrance</div>' + exitBtnHtml(mine);
+    html += '<div class="exits-head">Back to your entrance</div>' + exitBtnHtml(mine) + loop;
     var others = exits.filter(function(e) { return e !== mine; });
     if (others.length) {
       html += '<div><a class="crumb-clear" onclick="showAllExits=!showAllExits;refreshLocateInfo()">' +
@@ -3702,7 +4099,7 @@ function exitsHtml() {
       if (showAllExits) html += others.map(exitBtnHtml).join('');
     }
   } else {
-    html += '<div class="exits-head">Exits</div>' + exits.map(exitBtnHtml).join('');
+    html += loop + '<div class="exits-head">Exits</div>' + exits.map(exitBtnHtml).join('');
   }
   return html + '</div>';
 }
