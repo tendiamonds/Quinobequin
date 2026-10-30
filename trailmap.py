@@ -12,6 +12,7 @@ build_map_page(ints, trails, region, out_dir) writes out_dir/map.html. region is
   report         {"email", "signReports"}: where the Reports page sends reports, and
                  whether "I'm standing at this sign" is offered (see reports.py)
   checks         (optional) field checks at intersections, as for reports.py
+  credit         (optional) HTML credit for the trail data, beside the map tiles' (bottom right)
   zonesPage      whether the site has a zones.html for zone tags to link to
   otherMaps      [{"name": ..., "href": ...}] links to the other regions' maps
   placeLabels    (optional) [{"name", "lat", "lon"}] names for places the map tiles don't
@@ -219,7 +220,25 @@ def snap_blazes(ints, trails, trail_int_map, signs_only=True):
 
 
 # The sites' maps, for each one's menu of the others: (key, name, path from the site's root)
-SITE_MAPS = [("uc", "Upper Charles Forest", "map.html"), ("bh", "Blue Hills", "bluehills/map.html"),
+# The service worker each map registers, for its notifications (see "The next turn on the
+# lock screen" in MAP_TEMPLATE)
+SERVICE_WORKER = """// The map's service worker, only for notifications (the next turn on the lock screen; see
+// trailmap.py). It caches nothing, so the map is always the one on the site. A tap on a
+// notification brings the map back.
+self.addEventListener("install", function() { self.skipWaiting(); });
+self.addEventListener("activate", function(e) { e.waitUntil(self.clients.claim()); });
+self.addEventListener("notificationclick", function(e) {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({type: "window", includeUncontrolled: true}).then(function(list) {
+    for (var i = 0; i < list.length; i++) {
+      if ("focus" in list[i]) return list[i].focus();
+    }
+    return self.clients.openWindow("map.html");
+  }));
+});
+"""
+
+SITE_MAPS = [("uc", "Upper Charles", "map.html"), ("bh", "Blue Hills", "bluehills/map.html"),
              ("sar", "Saratoga Woods", "saratoga/map.html")]
 
 
@@ -236,7 +255,8 @@ def maps_menu_html(here, root):
 
 
 def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
-    """Write out_dir/map.html for a region (see the module docstring for its config).
+    """Write out_dir/map.html (and sw.js, its service worker) for a region (see the module
+    docstring for its config).
     trail_int_map (optional): which intersections lie along each trail, as from
     build_trail_int_map, for data that already knows (OpenStreetMap trails meet at shared
     points); otherwise it's worked out by snapping."""
@@ -303,6 +323,7 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     client["terrain"] = region.get("terrain", [])
     client["eleStep"] = ele_step
     client["checks"] = region.get("checks", [])
+    client["credit"] = region.get("credit")
     html = MAP_TEMPLATE.replace("__REPORTS_JS__", REPORTS_JS)
     # Legend rows only for kinds of marker this region has
     for kind in ("post", "landmark", "road", "posted_sign"):
@@ -323,6 +344,8 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
 
     with open(os.path.join(out_dir, "map.html"), "w", encoding="utf-8") as f:
         f.write(html)
+    with open(os.path.join(out_dir, "sw.js"), "w", encoding="utf-8") as f:
+        f.write(SERVICE_WORKER)
     print("Wrote " + os.path.join(out_dir, "map.html"))
 
     # How to let the site use your location, linked from the map when it can't
@@ -654,6 +677,9 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .loop-via { display: inline-flex; align-items: center; gap: 3px; margin-right: 4px; }
   .loop-seg { font-size: 12px; }
   .loop-links { margin: -2px 0 6px; }
+  .loop-slider { display: flex; align-items: center; gap: 10px; margin: 4px 0 8px; }
+  .loop-slider input { flex: 1; min-width: 0; accent-color: #1e88e5; }
+  .loop-slider span { min-width: 48px; text-align: right; font-weight: 600; font-size: 14px; }
   .loop-icon { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 22px; margin-left: 2px;
     color: #1e88e5; border: 1px solid #b0bec5; border-radius: 4px; cursor: pointer; background: #fff; }
   .loop-icon:active { background: #e3f2fd; }
@@ -861,6 +887,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   attribution: '&copy; <a href="https://osm.org/copyright">OSM</a>',
   maxZoom: 19
 }).addTo(map);
+if (REGION.credit) map.attributionControl.addAttribution(REGION.credit);
 
 var selectedTrailLayer = null;
 var highlightedSegments = [];
@@ -1834,6 +1861,7 @@ function routePanelHtml() {
     (canReverseLoop() && !trip.loop ? ' <button class="route-btn" onclick="reverseLoopNow()">Reverse loop</button>' : '') +
     (!plan.arrived ? ' <button class="route-btn" onclick="makeLonger()">Make longer</button>' : '') +
     ' <button class="route-btn" style="background:#888" onclick="cancelRoute()">Clear</button></div>' +
+    (plan.live && canAskTurnNotes() ? '<div class="plan-link"><a onclick="askTurnNotes()">Show the next turn on the lock screen</a></div>' : '') +
     (userLatLng ? planning : '');
 
   return '<div id="routeInfo">' + checkHereHtml() + small + '<div class="full-only">' + html + '</div></div>';
@@ -2230,7 +2258,12 @@ function routeFromEntrance(entry, destLabel, roundTrip) {
 // their best order, and via points it adds itself (auto) to come to about the length
 // asked for, with as little trail walked twice as can be. The best few are worked out in
 // full; "Another loop" shows the next.
-var LOOP_MILES = [1, 2, 3, 4, 5];
+// The lengths the slider offers, in miles: finer at the short end, where a quarter mile is a
+// real difference, coarser at the long, where it isn't (and on, a mile at a time, as far
+// as a loop through far places needs)
+var LOOP_STEPS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 7, 8, 9, 10, 11, 12];
+var LOOP_DEFAULT = 2;   // where the slider starts, the first time
+var loopMiles = LOOP_DEFAULT, loopSteps = [];
 var LOOP_TRY = 10, LOOP_KEEP = 5;  // loops worked out in full, and kept for "Another loop"
 var LOOP_REPEAT_WEIGHT = 1.5;      // walking a share of the loop twice costs this much more than missing the length by as much
 var loopFrom = null, loopEnd = "here", loopEndChosen = false, loopAlts = [], loopAlt = 0;
@@ -2292,20 +2325,23 @@ function showLoopSheet(from) {
       return '<span class="loop-via">' + (st.edge ? '<span class="loop-seg">' + stopName(st) + '</span>' : intPill(st.label)) +
         '<a class="stop-x" title="Take it out" onclick="loopThrough.splice(' + i + ', 1); showLoopSheet()">&#x2715;</a></span>';
     }).join('') + '<button class="blaze-pick" onclick="pickLoopVia()">' + (loopThrough.length ? 'Add another' : 'Choose on the map') + '</button></div>';
-    var shortest = loopShortest(), miles = LOOP_MILES;
+    var shortest = loopShortest();
     if (shortest > 0 && shortest < Infinity) html += '<div class="report-fine">Shortest through ' + (loopThrough.length > 1 ? 'these' : 'it') + ': ' + formatDist(shortest) + '</div>';
-    // Whole miles from the shortest through those places, or from a little more than the
-    // route is now
-    var least = Math.max(loopLonger, shortest < Infinity ? shortest : 0);
-    if (least > 0) {
-      var base = Math.max(1, Math.ceil(least / 1609.344 + (loopLonger >= shortest ? 0.4 : 0)));
-      miles = LOOP_MILES.map(function(m, i) { return base + i; });
+    // From the shortest through those places, or a little more than the route is now
+    var least = Math.max(loopLonger ? loopLonger / 1609.344 + 0.25 : 0, shortest < Infinity ? shortest / 1609.344 : 0);
+    loopSteps = LOOP_STEPS.filter(function(m) { return m >= least - 0.05; });
+    while (loopSteps.length < 6) loopSteps.push(Math.floor((loopSteps.length ? loopSteps[loopSteps.length - 1] : least)) + 1);
+    var at = 0;
+    loopSteps.forEach(function(m, i) { if (m <= loopMiles + 1e-9) at = i; });
+    if (shortest === Infinity) {
+      html += '<div class="report-warn">No loop goes through all of these from here.</div>';
+    } else {
+      html += '<div class="report-sub">' + (loopLonger ? 'About how far in all?' : 'About how far?') + '</div>' +
+        '<div class="loop-slider"><input type="range" min="0" max="' + (loopSteps.length - 1) + '" step="1" value="' + at + '"' +
+        ' aria-label="About how far" oninput="slideLoop(this.value)"><span id="loopLen">' + loopStepText(loopSteps[at]) + '</span></div>' +
+        '<button class="route-btn" onclick="makeLoop(loopSteps[document.querySelector(\'.loop-slider input\').value])">Make the ' +
+        (loopLonger ? 'route' : 'loop') + '</button> ';
     }
-    html += shortest === Infinity
-      ? '<div class="report-warn">No loop goes through all of these from here.</div>'
-      : '<div class="report-sub">' + (loopLonger ? 'About how far in all?' : 'About how far?') + '</div><div class="blaze-picks">' + miles.map(function(m) {
-          return '<button class="blaze-pick" onclick="makeLoop(' + m + ')">' + m + ' mi</button>';
-        }).join('') + '</div>';
     html += '<div id="loopMsg" class="report-warn"></div>' +
       '<button class="route-btn" style="background:#888" onclick="endLoopSheet()">Cancel</button></div>';
     clearSelection(true);
@@ -2328,6 +2364,15 @@ function addLoopThrough(stop) {
   });
   if (!dup) loopThrough.push({label: stop.label || null, edge: stop.edge || null});
   showLoopSheet();
+}
+
+function loopStepText(m) {
+  var whole = Math.floor(m), part = m - whole;
+  return (whole || part === 0 ? whole : '') + (part === 0.25 ? '&frac14;' : part === 0.5 ? '&frac12;' : part === 0.75 ? '&frac34;' : '') + ' mi';
+}
+
+function slideLoop(i) {
+  document.getElementById("loopLen").innerHTML = loopStepText(loopSteps[i]);
 }
 
 function chooseLoopEnd(e) {
@@ -2489,6 +2534,7 @@ function routeEdges(path) {
 }
 
 function makeLoop(miles) {
+  loopMiles = miles;
   var target = miles * 1609.344, start = loopFrom, lead = 0;
   if (start === null) {
     var a = userAnchors(userLatLng).sort(function(x, y) { return x.dist - y.dist; })[0];
@@ -2518,7 +2564,7 @@ function makeLoop(miles) {
   if (loopAlts.length) {
     startTrip(loopTrip(loopAlts[0].order, loopAlts[0].len), "Couldn&rsquo;t work out that loop.");
   } else {
-    document.getElementById("loopMsg").textContent = "No loop of about " + miles + " mi from here. Try another length.";
+    document.getElementById("loopMsg").innerHTML = "No loop of about " + loopStepText(miles) + " from here. Try another length.";
   }
 }
 
@@ -2563,6 +2609,69 @@ function nextLoop() {
   loopAlt = (loopAlt + 1) % loopAlts.length;
   startTrip(loopTrip(loopAlts[loopAlt].order, loopAlts[loopAlt].len), "Couldn&rsquo;t work out that loop.");
 }
+
+// --- The next turn on the lock screen: posted as a notification when you leave the map
+// (lock the phone, switch apps) with a live route up, and taken down when you come back.
+// A web page gets no location in the background, so it's the turn as of then; opening the
+// map catches up. Phones show a page's notifications only through a service worker (sw.js,
+// which does nothing else), and on an iPhone only for the map added to the Home Screen.
+var turnSW = null;
+if ("serviceWorker" in navigator && window.Notification) {
+  navigator.serviceWorker.register("sw.js").then(function(reg) { turnSW = reg; }).catch(function() {});
+}
+
+// Whether to offer turning it on: notifications possible here, and not yet allowed or blocked
+function canAskTurnNotes() { return !!turnSW && Notification.permission === "default"; }
+
+function askTurnNotes() {
+  Notification.requestPermission().then(function() { if (document.getElementById("routeInfo")) showRoutePanel(); });
+}
+
+// A turn in words, from the route's heading just before step i and just after
+function turnWords(i) {
+  var st = plan.steps[i], onto = ' onto ' + st.nextTrail;
+  if (isUTurn(i)) return 'turn around' + (st.nextTrail === st.trail ? ' on ' + st.nextTrail : onto);
+  var at = routePointAt(st.at), before = routePointAt(Math.max(st.at - 20, 0)), after = routePointAt(Math.min(st.at + 20, plan.total));
+  var turn = before && after && at.distanceTo(before) > 2 && at.distanceTo(after) > 2
+    ? (bearing(at, after) - bearing(before, at) + 540) % 360 - 180 : 0;
+  var side = turn > 0 ? 'right' : 'left', size = Math.abs(turn);
+  if (size < 25) return (st.nextTrail === st.trail ? 'stay on ' + st.nextTrail : 'continue' + onto);
+  return (size < 60 ? 'bear ' : size < 135 ? 'turn ' : 'sharp ') + side + onto;
+}
+
+// The notification's words: the next turn, and how far to the end; null with no live route
+function nextTurnNote() {
+  var note = null;
+  if (plan && plan.live && !plan.arrived) {
+    var trip = plan.trip, at = -1;
+    var end = trip.to !== null ? intName(trip.to) : trip.homeLabel ? intName(trip.homeLabel) : 'where you started';
+    var toGo = formatDist(Math.max(plan.total - plan.progress, 0)) + ' to ' + end;
+    plan.steps.forEach(function(st, i) {
+      var state = stepState(i);
+      if (at < 0 && !quietStep(st) && st.nextTrail && (state === "here" || state === "ahead")) at = i;
+    });
+    if (at < 0) {
+      note = {title: toGo, body: REGION.name};
+    } else {
+      var st = plan.steps[at], place = intName(st.label);
+      var where = stepState(at) === "here" ? 'At ' + place : formatDist(Math.max(st.at - plan.progress, 0)) + ' to ' + place;
+      var words = turnWords(at);
+      note = {title: where + ': ' + words.charAt(0).toUpperCase() + words.slice(1), body: toGo};
+    }
+  }
+  return note;
+}
+
+document.addEventListener("visibilitychange", function() {
+  if (turnSW && Notification.permission === "granted") {
+    var note = document.visibilityState === "hidden" ? nextTurnNote() : null;
+    if (note) {
+      turnSW.showNotification(note.title, {body: note.body, tag: "next-turn", silent: true, icon: "icon-192.png"});
+    } else {
+      turnSW.getNotifications({tag: "next-turn"}).then(function(ns) { ns.forEach(function(n) { n.close(); }); });
+    }
+  }
+});
 
 // --- Waypoints
 

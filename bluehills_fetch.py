@@ -1,15 +1,20 @@
 """
-Download what the Blue Hills map is built from, out of OpenStreetMap, into bluehills_data/:
-  osm_trails.json     trail ways (path, footway, track, bridleway, cycleway) and their points
-  osm_numbered.json   trail junctions carrying a four-digit Blue Hills intersection number
+Download what the Blue Hills map is built from into bluehills_data/. From the Massachusetts
+Department of Conservation and Recreation (DCR), the reservation's own trail data (what the
+park's trail map is drawn from):
+  dcr_trails.geojson         trail lines: names, blazes, loops, widths, surfaces
+  dcr_intersections.geojson  the numbered intersections (the four-digit numbers on the signs)
+From OpenStreetMap:
   osm_parking.json    parking lots, to mark the entry points
-  osm_routes.json     hiking routes (many trails are named only on these, not on their paths)
   osm_roads.json      roads you can walk (not highways), for the short road links between trails
+  osm_trails.json, osm_numbered.json, osm_routes.json   trails as OSM has them (the map used
+                      these before DCR's; kept to compare)
 
   python bluehills_fetch.py           fetch whatever isn't downloaded yet
   python bluehills_fetch.py --fresh   fetch everything again
 
-The query servers are often busy, so each download retries and falls back to a mirror.
+The OpenStreetMap query servers are often busy, so each download retries and falls back to a
+mirror.
 """
 
 import json
@@ -22,6 +27,13 @@ import urllib.request
 PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
 DATA = os.path.join(PROJ, "bluehills_data")
 BBOX = "(42.180,-71.180,42.250,-71.020)"   # south, west, north, east around the reservation
+# DCR's ArcGIS layers (found by a friend making another Blue Hills map). A query returns at
+# most 2000 features; both layers are smaller (1630 and 262 in 2026-10).
+DCR = "https://services1.arcgis.com/7iJyYTjCtKsZS1LR/arcgis/rest/services/"
+DCR_LAYERS = {
+    "dcr_trails.geojson": DCR + "BlueHillsTrailLinesPublic/FeatureServer/2",
+    "dcr_intersections.geojson": DCR + "BlueHillsNumberedIntersectionsOn2020TrailMap2024_07_24/FeatureServer/1",
+}
 SERVERS = ("https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter")
 QUERIES = {
     "osm_trails.json": '[out:json][timeout:180];way%s["highway"~"^(path|footway|track|bridleway|cycleway)$"];(._;>;);out qt;' % BBOX,
@@ -46,8 +58,26 @@ def fetch(query):
     raise RuntimeError("OpenStreetMap servers didn't answer; try again later")
 
 
+def fetch_dcr(layer):
+    """Every feature of a DCR layer, all fields, in latitude and longitude, as GeoJSON"""
+    url = layer + "/query?" + urllib.parse.urlencode({"where": "1=1", "outFields": "*", "outSR": "4326", "f": "geojson"})
+    req = urllib.request.Request(url, headers={"User-Agent": "trail-map/1.0 (tendiamonds@gmail.com)"})
+    data = json.loads(urllib.request.urlopen(req, timeout=240).read().decode("utf-8"))
+    if data.get("properties", {}).get("exceededTransferLimit") or "features" not in data:
+        raise RuntimeError("%s: more features than one query returns (or an error); fetch it in pages" % layer)
+    return data
+
+
 def main(fresh):
     os.makedirs(DATA, exist_ok=True)
+    for name, layer in DCR_LAYERS.items():
+        path = os.path.join(DATA, name)
+        if fresh or not os.path.exists(path):
+            data = fetch_dcr(layer)
+            json.dump(data, open(path, "w"))
+            print("Wrote %s (%d features)" % (name, len(data["features"])))
+        else:
+            print("Have %s" % name)
     for name, query in QUERIES.items():
         path = os.path.join(DATA, name)
         if fresh or not os.path.exists(path):

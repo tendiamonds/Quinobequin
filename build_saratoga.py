@@ -384,7 +384,7 @@ def main():
         "bounds": [[min(lats), min(lons)], [max(lats), max(lons)]],
         "storagePrefix": "sar",
         "report": {"email": "tendiamonds@gmail.com", "signReports": False},
-        "otherMaps": [{"name": "Upper Charles Forest", "href": "../map.html"}, {"name": "Blue Hills", "href": "../bluehills/map.html"}],
+        "otherMaps": [{"name": "Upper Charles", "href": "../map.html"}, {"name": "Blue Hills", "href": "../bluehills/map.html"}],
         "zonesPage": False,
         "dem": os.path.join(PROJ, "elevation_cache", "saratoga.tif"),
         "blazes": BLAZES,
