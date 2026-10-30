@@ -222,6 +222,9 @@
   .loop-via { display: inline-flex; align-items: center; gap: 3px; margin-right: 4px; }
   .loop-seg { font-size: 12px; }
   .loop-links { margin: -2px 0 6px; }
+  .turn-bell { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 22px; margin-left: 4px;
+    color: #607d8b; border: 1px solid #b0bec5; border-radius: 4px; cursor: pointer; background: #fff; vertical-align: middle; }
+  .turn-bell.on { color: #1e88e5; border-color: #1e88e5; background: #e3f2fd; }
   .loop-slider { display: flex; align-items: center; gap: 10px; margin: 4px 0 8px; }
   .loop-slider input { flex: 1; min-width: 0; accent-color: #1e88e5; }
   .loop-slider span { min-width: 48px; text-align: right; font-weight: 600; font-size: 14px; }
@@ -1307,7 +1310,7 @@ function routePanelHtml() {
     : "You've arrived at " + intPill(dest);
   // ...and the route's last pill is already that intersection, so no End chip after it
   var endChip = dest === null && !(trip.homeLabel && plan.steps[plan.steps.length - 1].label === trip.homeLabel);
-  var live = plan.live && !plan.arrived ? ' <span class="live-tag">LIVE</span>' : '';
+  var live = plan.live && !plan.arrived ? turnBellHtml() + ' <span class="live-tag">LIVE</span>' : '';
   // On a live route, also how far to the next pill and its turn; at a pill, its turn
   var nextAt = -1, hereAt = -1;
   if (plan.live && !plan.arrived) {
@@ -1403,7 +1406,6 @@ function routePanelHtml() {
     (canReverseLoop() && !trip.loop ? ' <button class="route-btn" onclick="reverseLoopNow()">Reverse loop</button>' : '') +
     (!plan.arrived ? ' <button class="route-btn" onclick="makeLonger()">Make longer</button>' : '') +
     ' <button class="route-btn" style="background:#888" onclick="cancelRoute()">Clear</button></div>' +
-    (plan.live && canAskTurnNotes() ? '<div class="plan-link"><a onclick="askTurnNotes()">Show the next turn on the lock screen</a></div>' : '') +
     (userLatLng ? planning : '');
 
   return '<div id="routeInfo">' + checkHereHtml() + small + '<div class="full-only">' + html + '</div></div>';
@@ -2162,11 +2164,38 @@ if ("serviceWorker" in navigator && window.Notification) {
   navigator.serviceWorker.register("sw.js").then(function(reg) { turnSW = reg; }).catch(function() {});
 }
 
-// Whether to offer turning it on: notifications possible here, and not yet allowed or blocked
-function canAskTurnNotes() { return !!turnSW && Notification.permission === "default"; }
+// On or off is the bell on a live route's top line, and is kept for the routes after
+// (TURN_NOTES_KEY): on once you allow notifications, until you turn it off
+var TURN_NOTES_KEY = REGION.storagePrefix + "TurnNotes";
+function turnNotesOn() {
+  var off = false;
+  try { off = localStorage.getItem(TURN_NOTES_KEY) === "off"; } catch (e) {}
+  return !!turnSW && Notification.permission === "granted" && !off;
+}
 
-function askTurnNotes() {
-  Notification.requestPermission().then(function() { if (document.getElementById("routeInfo")) showRoutePanel(); });
+function setTurnNotes(on) {
+  try { localStorage.setItem(TURN_NOTES_KEY, on ? "on" : "off"); } catch (e) {}
+  if (document.getElementById("routeInfo")) showRoutePanel();
+}
+
+var BELL_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="FILL" stroke="currentColor" stroke-width="2" stroke-linejoin="round">' +
+  '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0" fill="none"/></svg>';
+function turnBellHtml() {
+  var on = turnNotesOn();
+  return turnSW ? ' <a class="turn-bell' + (on ? ' on' : '') + '" onclick="tapTurnBell()" title="' +
+    (on ? 'Next turn on the lock screen: on' : 'Show the next turn on the lock screen') + '" aria-label="Next turn on the lock screen">' +
+    BELL_SVG.replace("FILL", on ? "currentColor" : "none") + '</a>' : '';
+}
+
+function tapTurnBell() {
+  if (Notification.permission === "granted") {
+    setTurnNotes(!turnNotesOn());
+  } else if (Notification.permission === "default") {
+    Notification.requestPermission().then(function(p) { setTurnNotes(p === "granted"); });
+  } else {
+    showPanelMsg('Notifications are blocked for this map, so it can&rsquo;t show the next turn on the lock screen. ' +
+      'To allow them, open this site&rsquo;s settings (the icon by the address, or on an iPhone, Settings &rsaquo; Notifications) and turn notifications on.');
+  }
 }
 
 // A turn in words, from the route's heading just before step i and just after
@@ -2206,7 +2235,7 @@ function nextTurnNote() {
 
 document.addEventListener("visibilitychange", function() {
   if (turnSW && Notification.permission === "granted") {
-    var note = document.visibilityState === "hidden" ? nextTurnNote() : null;
+    var note = document.visibilityState === "hidden" && turnNotesOn() ? nextTurnNote() : null;
     if (note) {
       turnSW.showNotification(note.title, {body: note.body, tag: "next-turn", silent: true, icon: "icon-192.png"});
     } else {
