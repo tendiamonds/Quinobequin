@@ -38,7 +38,7 @@ F_G_GROUP = {36, 178, 213, 214, 176, 4, 129, 1, 245, 135, 9, 175, 10, 248, 130}
 ZONE_ONES = {"A": 361, "B": 127, "C": 41, "D": 108, "E": 337, "F": 360}
 
 # The temporary signs up in zone A, numbered from an earlier plan: what each reads, by
-# the data number of where it stands (two are at junctions the plan no longer signs), so
+# the data number of where it stands (three are at junctions the plan no longer signs), so
 # the map can show it beside today's number. Drop this when the real signs go up.
 POSTED_SIGNS = {173: "A1", 449: "A2", 172: "A2a", 121: "A3", 459: "A4", 206: "A5", 207: "A6", 208: "A7",
                 453: "A8", 122: "A9", 123: "A10", 55: "A11", 54: "A12", 53: "A13", 204: "A14", 46: "A15",
@@ -500,7 +500,9 @@ def zone_link(zone):
 # Page builders
 # ---------------------------------------------------------------------------
 
-def build_landing(rows):
+def build_landing(rows, posted=()):
+    """index.html, the About page. posted: the temporary signs, [(what the sign reads,
+    the map's label there, whether the plan signs that spot)], for their table."""
     total = len(rows)
     public_count = sum(1 for r in rows if r["is_public"])
     private_count = total - public_count
@@ -540,6 +542,10 @@ def build_landing(rows):
   .stat .num { font-size: 28px; font-weight: 700; color: #2c3e50; }
   .stat .lbl { font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
   .zone-table { width: 100%; border-collapse: collapse; margin: 12px 0 20px; font-size: 13px; }
+  .posted-tag { display: inline-block; padding: 0 4px; background: #fff; color: #333; font: 700 12px/16px sans-serif;
+    border: 1px solid #555; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+  .posted-list { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 8px 0 16px; font-size: 13px; }
+  .posted-pair { white-space: nowrap; }
   .zone-table th { text-align: left; padding: 8px 10px; background: #f7f7f7;
                    border-bottom: 2px solid #ddd; font-size: 12px; color: #555;
                    text-transform: uppercase; letter-spacing: 0.5px; }
@@ -679,6 +685,24 @@ NAV_PLACEHOLDER
     <img src="sign_samples/F4.png" alt="Sample sign F4: Holliston, Fairbanks, with The Trustees and DCR logos" style="width:200px">
   </div>
 
+  <h2>Temporary Signs</h2>
+  <p>Before the real signs go up, we&rsquo;ve put up temporary ones at intersections around
+  the Adams Street Town Forest, to try the idea out on the trail. They&rsquo;re numbered from
+  an earlier version of the plan. We&rsquo;ve renumbered the zone since, as the plan took
+  shape, so most of them read differently from the map: the sign reading
+  <span class="posted-tag">TEMP_EX_SIGN</span>, for instance, stands at the intersection the
+  map calls TEMP_EX_MAP. TEMP_AT_JUNCTIONS The real signs, when they go up, will match the map.</p>
+  <p style="margin-top:10px">The map shows them, so you can find your way by either number:</p>
+  <ul style="margin:8px 0 8px 20px">
+    <li>Close in, a small white tag beside an intersection&rsquo;s dot shows what its temporary
+    sign reads, like this: <span class="posted-tag">TEMP_EX_SIGN</span></li>
+    <li>Tap the intersection, and its details say &ldquo;Sign now: TEMP_EX_SIGN&rdquo;.</li>
+    <li>Out on the trail, the map says where you are by both: &ldquo;You are at TEMP_EX_MAP (its
+    temporary sign reads TEMP_EX_SIGN)&rdquo;.</li>
+  </ul>
+  <p style="margin-top:10px">Each temporary sign, and the map&rsquo;s number for where it stands:</p>
+  <div class="posted-list">TEMP_SIGNS</div>
+
   <h2>Entry Kiosks</h2>
   <p>Kiosks at major entry points will have a full map of the area, a description of the
   signage system, and descriptions and logos for all towns and organizations represented.
@@ -723,6 +747,17 @@ NAV_PLACEHOLDER
     html = html.replace("OWNER_COUNT", str(len(owners)))
     html = html.replace("PUBLIC_PCT", str(pct))
     html = html.replace("PAGE_CSS", PAGE_CSS)
+    # The example and the count, from the signs as they are now (numbers can change)
+    ex = next(((sign, label) for sign, label, signed in posted if signed and sign != label), ("A3", "A5"))
+    at_junctions = sum(1 for p in posted if not p[2])
+    count = "One stands at a junction" if at_junctions == 1 else "%s stand at junctions" % (
+        {2: "Two", 3: "Three", 4: "Four"}.get(at_junctions, str(at_junctions)))
+    html = html.replace("TEMP_EX_SIGN", ex[0]).replace("TEMP_EX_MAP", ex[1])
+    html = html.replace("TEMP_AT_JUNCTIONS", count + " the plan no longer gives a sign." if at_junctions else "")
+    html = html.replace("TEMP_SIGNS", "".join(
+        '<span class="posted-pair"><span class="posted-tag">%s</span> &rarr; %s</span>' % (
+            sign, ('<a href="map.html?int=%s">%s</a>' % (label, label)) if signed else "a junction with no sign planned")
+        for sign, label, signed in posted))
 
     with open(rf"{PROJ}\index.html", "w", encoding="utf-8") as f:
         f.write(html)
@@ -930,7 +965,10 @@ def main():
         else:
             print("  WARNING: the temporary sign %s stands at data #%d, which isn't in the data any more" % (text, n))
 
-    build_landing(rows)
+    # (in the order the signs read: A1, A2, A2a, A3, ...)
+    order = lambda t: (int("".join(c for c in t[1:] if c.isdigit())), t)
+    build_landing(rows, [(text, here[n]["properties"]["label"], not here[n]["properties"].get("no_sign"))
+                         for n, text in sorted(POSTED_SIGNS.items(), key=lambda kv: order(kv[1])) if n in here])
     write_qr(SITE + "map.html", os.path.join(PROJ, "qr.svg"))
     # Most lines are Trailforks GPS tracks, a point every dozen meters or so: drawn as
     # curves through those points, not zigzags (before anything measures along them)
