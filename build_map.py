@@ -465,7 +465,6 @@ def nav_html(active):
         ("map.html", "Map"),
         ("zones.html", "Zones"),
         ("owners.html", "Owners"),
-        ("reports.html", "Reports"),
     ]
     parts = ['<nav class="topnav">']
     for href, label in items:

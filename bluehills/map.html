@@ -14,6 +14,11 @@
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  /* The map fills the screen and never scrolls: nothing can push the top bar off it */
+  html, body { overflow: hidden; overscroll-behavior: none; }
+  /* Text boxes at 16 px or more: an iPhone zooms the whole page in on a smaller one, and
+     doesn't zoom back out (the top bar and map controls end up off the screen) */
+  textarea, input, select { font-size: 16px; }
   a { color: #2980b9; text-decoration: none; }
   a:hover { text-decoration: underline; }
   nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px;
@@ -207,7 +212,7 @@
   .report-link { margin-top: 10px; font-size: 12px; text-align: right; }
   .report-link a { color: #777; text-decoration: underline; cursor: pointer; }
   .report-head { font-size: 13px; margin-bottom: 6px; }
-  .report textarea { width: 100%; margin: 6px 0; font: inherit; font-size: 13px; padding: 4px 6px;
+  .report textarea { width: 100%; margin: 6px 0; font: inherit; font-size: 16px; padding: 4px 6px;
     border: 1px solid #ccc; border-radius: 4px; }
   .report-warn { color: #c62828; font-size: 12px; }
   .report-fine { color: #888; font-size: 11px; margin-top: 6px; }
@@ -219,12 +224,13 @@
     padding: 6px 10px; font-size: 13px; background: #fff; color: #263238; cursor: pointer; }
   .blaze-pick:active { background: #e3f2fd; }
   .blaze-pick.on { background: #e3f2fd; border-color: #1e88e5; }
+  .my-reports { margin: 6px 0 10px; max-height: 45vh; overflow-y: auto; }
+  .my-report { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid #eceff1; font-size: 13px; }
+  .my-report > div { flex: 1; min-width: 0; }
+  .my-report-note { font-size: 12px; color: #455a64; margin-top: 2px; }
   .loop-via { display: inline-flex; align-items: center; gap: 3px; margin-right: 4px; }
   .loop-seg { font-size: 12px; }
   .loop-links { margin: -2px 0 6px; }
-  .turn-bell { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 22px; margin-left: 4px;
-    color: #607d8b; border: 1px solid #b0bec5; border-radius: 4px; cursor: pointer; background: #fff; vertical-align: middle; }
-  .turn-bell.on { color: #1e88e5; border-color: #1e88e5; background: #e3f2fd; }
   .loop-slider { display: flex; align-items: center; gap: 10px; margin: 4px 0 8px; }
   .loop-slider input { flex: 1; min-width: 0; accent-color: #1e88e5; }
   .loop-slider span { min-width: 48px; text-align: right; font-weight: 600; font-size: 14px; }
@@ -288,7 +294,7 @@
 </style>
 </head>
 <body>
-<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a><a href="reports.html" style="color:#ecf0f1;font-size:14px">Reports</a><select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;width:62px;flex:none;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 2px"><option value="">Maps</option><option value="../map.html">Upper Charles</option><option value="../saratoga/map.html">Saratoga Woods</option></select></nav>
+<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a><select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;width:62px;flex:none;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 2px"><option value="">Maps</option><option value="../map.html">Upper Charles</option><option value="../saratoga/map.html">Saratoga Woods</option></select></nav>
 <div id="map"></div>
 <div id="searchBadge"></div>
 
@@ -1310,7 +1316,7 @@ function routePanelHtml() {
     : "You've arrived at " + intPill(dest);
   // ...and the route's last pill is already that intersection, so no End chip after it
   var endChip = dest === null && !(trip.homeLabel && plan.steps[plan.steps.length - 1].label === trip.homeLabel);
-  var live = plan.live && !plan.arrived ? turnBellHtml() + ' <span class="live-tag">LIVE</span>' : '';
+  var live = plan.live && !plan.arrived ? ' <span class="live-tag">LIVE</span>' : '';
   // On a live route, also how far to the next pill and its turn; at a pill, its turn
   var nextAt = -1, hereAt = -1;
   if (plan.live && !plan.arrived) {
@@ -2154,95 +2160,14 @@ function nextLoop() {
   startTrip(loopTrip(loopAlts[loopAlt].order, loopAlts[loopAlt].len), "Couldn&rsquo;t work out that loop.");
 }
 
-// --- The next turn on the lock screen: posted as a notification when you leave the map
-// (lock the phone, switch apps) with a live route up, and taken down when you come back.
-// A web page gets no location in the background, so it's the turn as of then; opening the
-// map catches up. Phones show a page's notifications only through a service worker (sw.js,
-// which does nothing else), and on an iPhone only for the map added to the Home Screen.
-var turnSW = null;
-if ("serviceWorker" in navigator && window.Notification) {
-  navigator.serviceWorker.register("sw.js").then(function(reg) { turnSW = reg; }).catch(function() {});
+// The next turn on the lock screen (tried in 2026-10, taken out) registered a service worker,
+// sw.js. It's gone from the site, so take it off any phone that still has it. Hardly anyone
+// turned it on: delete this after 2026-11-16.
+if ("serviceWorker" in navigator && navigator.serviceWorker.getRegistrations) {
+  navigator.serviceWorker.getRegistrations().then(function(regs) {
+    regs.forEach(function(reg) { reg.unregister(); });
+  }).catch(function() {});
 }
-
-// On or off is the bell on a live route's top line, and is kept for the routes after
-// (TURN_NOTES_KEY): on once you allow notifications, until you turn it off
-var TURN_NOTES_KEY = REGION.storagePrefix + "TurnNotes";
-function turnNotesOn() {
-  var off = false;
-  try { off = localStorage.getItem(TURN_NOTES_KEY) === "off"; } catch (e) {}
-  return !!turnSW && Notification.permission === "granted" && !off;
-}
-
-function setTurnNotes(on) {
-  try { localStorage.setItem(TURN_NOTES_KEY, on ? "on" : "off"); } catch (e) {}
-  if (document.getElementById("routeInfo")) showRoutePanel();
-}
-
-var BELL_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="FILL" stroke="currentColor" stroke-width="2" stroke-linejoin="round">' +
-  '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0" fill="none"/></svg>';
-function turnBellHtml() {
-  var on = turnNotesOn();
-  return turnSW ? ' <a class="turn-bell' + (on ? ' on' : '') + '" onclick="tapTurnBell()" title="' +
-    (on ? 'Next turn on the lock screen: on' : 'Show the next turn on the lock screen') + '" aria-label="Next turn on the lock screen">' +
-    BELL_SVG.replace("FILL", on ? "currentColor" : "none") + '</a>' : '';
-}
-
-function tapTurnBell() {
-  if (Notification.permission === "granted") {
-    setTurnNotes(!turnNotesOn());
-  } else if (Notification.permission === "default") {
-    Notification.requestPermission().then(function(p) { setTurnNotes(p === "granted"); });
-  } else {
-    showPanelMsg('Notifications are blocked for this map, so it can&rsquo;t show the next turn on the lock screen. ' +
-      'To allow them, open this site&rsquo;s settings (the icon by the address, or on an iPhone, Settings &rsaquo; Notifications) and turn notifications on.');
-  }
-}
-
-// A turn in words, from the route's heading just before step i and just after
-function turnWords(i) {
-  var st = plan.steps[i], onto = ' onto ' + st.nextTrail;
-  if (isUTurn(i)) return 'turn around' + (st.nextTrail === st.trail ? ' on ' + st.nextTrail : onto);
-  var at = routePointAt(st.at), before = routePointAt(Math.max(st.at - 20, 0)), after = routePointAt(Math.min(st.at + 20, plan.total));
-  var turn = before && after && at.distanceTo(before) > 2 && at.distanceTo(after) > 2
-    ? (bearing(at, after) - bearing(before, at) + 540) % 360 - 180 : 0;
-  var side = turn > 0 ? 'right' : 'left', size = Math.abs(turn);
-  if (size < 25) return (st.nextTrail === st.trail ? 'stay on ' + st.nextTrail : 'continue' + onto);
-  return (size < 60 ? 'bear ' : size < 135 ? 'turn ' : 'sharp ') + side + onto;
-}
-
-// The notification's words: the next turn, and how far to the end; null with no live route
-function nextTurnNote() {
-  var note = null;
-  if (plan && plan.live && !plan.arrived) {
-    var trip = plan.trip, at = -1;
-    var end = trip.to !== null ? intName(trip.to) : trip.homeLabel ? intName(trip.homeLabel) : 'where you started';
-    var toGo = formatDist(Math.max(plan.total - plan.progress, 0)) + ' to ' + end;
-    plan.steps.forEach(function(st, i) {
-      var state = stepState(i);
-      if (at < 0 && !quietStep(st) && st.nextTrail && (state === "here" || state === "ahead")) at = i;
-    });
-    if (at < 0) {
-      note = {title: toGo, body: REGION.name};
-    } else {
-      var st = plan.steps[at], place = intName(st.label);
-      var where = stepState(at) === "here" ? 'At ' + place : formatDist(Math.max(st.at - plan.progress, 0)) + ' to ' + place;
-      var words = turnWords(at);
-      note = {title: where + ': ' + words.charAt(0).toUpperCase() + words.slice(1), body: toGo};
-    }
-  }
-  return note;
-}
-
-document.addEventListener("visibilitychange", function() {
-  if (turnSW && Notification.permission === "granted") {
-    var note = document.visibilityState === "hidden" && turnNotesOn() ? nextTurnNote() : null;
-    if (note) {
-      turnSW.showNotification(note.title, {body: note.body, tag: "next-turn", silent: true, icon: "icon-192.png"});
-    } else {
-      turnSW.getNotifications({tag: "next-turn"}).then(function(ns) { ns.forEach(function(n) { n.close(); }); });
-    }
-  }
-});
 
 // --- Waypoints
 
@@ -3191,9 +3116,56 @@ function showReportSheet() {
     '<textarea id="reportNote" rows="3" placeholder="What did you see?"></textarea>' +
     '<div id="reportWarn" class="report-warn"></div>' +
     '<button class="route-btn" onclick="saveNote()">Save</button> ' +
-    '<button class="route-btn" style="background:#888" onclick="closeReport()">Cancel</button>' +
-    '<div class="report-fine">Saved on this phone. Send them all from <a href="reports.html">Reports</a>.</div></div>';
+    '<button class="route-btn" style="background:#888" onclick="closeReport()">Cancel</button> ' + myReportsBtnHtml("showMyReports()") +
+    '<div class="report-fine">Reports are saved on this phone, to send together when you like.</div></div>';
   document.getElementById("infoContent").innerHTML = html;
+}
+
+// The button to your reports, with how many are waiting to send
+function myReportsBtnHtml(js) {
+  var n = unsentReports().length;
+  return '<button class="route-btn" style="background:#0d47a1" onclick="' + js + '">My reports' + (n ? ' (' + n + ')' : '') + '</button>';
+}
+
+// My reports, in the panel: the ones waiting to send, newest first, each to drop if you
+// like, and the button that sends them all (by email, as the Reports page does)
+function showMyReports() {
+  reportAbout = null;
+  var list = unsentReports().slice().reverse();
+  var html = '<div class="report"><div class="report-head"><strong>My reports</strong>' +
+    (list.length ? ' &middot; ' + list.length + ' to send' : '') + '</div>';
+  if (list.length) {
+    html += '<div class="my-reports">' + list.map(function(r) {
+      var where = r.ctx && r.ctx.trail ? r.ctx.trail + ', ' + r.ctx.stretch : r.ctx && r.ctx.near ? 'At ' + r.ctx.near : '';
+      return '<div class="my-report"><div><strong>' + esc(reportHeadline(r)) + '</strong>' +
+        '<div class="report-fine">' + esc(new Date(r.when).toLocaleString([], {weekday: "short", hour: "numeric", minute: "2-digit"})) +
+        (where ? ' &middot; ' + esc(where) : '') + '</div>' +
+        (r.text && !(r.kind === "blaze" && r.blaze === "other") ? '<div class="my-report-note">' + esc(r.text) + '</div>' : '') +
+        '</div><a class="stop-x" title="Drop this report" onclick="dropMyReport(' + jsArg(r.id) + ')">&#x2715;</a></div>';
+    }).join('') + '</div>' +
+      '<button class="route-btn" onclick="sendMyReports()">Send ' + (list.length === 1 ? 'it' : 'all ' + list.length) + '</button> ';
+  } else {
+    html += '<div class="report-fine" style="margin:6px 0 8px">None waiting to send. Ones you save with the Report button show up here.</div>';
+  }
+  html += '<button class="route-btn" style="background:#888" onclick="closeReport()">Back to the map</button>' +
+    '<div class="report-fine"><a href="reports.html">All your reports, the sent ones too</a></div></div>';
+  document.getElementById("infoContent").innerHTML = html;
+}
+
+function dropMyReport(id) {
+  dropReport(id);
+  updateReportCount();
+  showMyReports();
+}
+
+// Sending opens an email with them all (sendReports): once it's open, they count as sent
+function sendMyReports() {
+  var n = sendReports();
+  updateReportCount();
+  document.getElementById("infoContent").innerHTML = '<div class="report"><div class="report-head"><strong>' +
+    (n === 1 ? 'Your report is' : 'Your ' + n + ' reports are') + ' in a new email.</strong></div>' +
+    '<div class="report-fine" style="margin:4px 0 8px">Send it from your email app. Thanks!</div>' +
+    '<button class="route-btn" onclick="closeReport()">Back to the map</button></div>';
 }
 
 function saveBlaze(key) {
@@ -3214,21 +3186,21 @@ function saveSignReport() {
 
 // After saving: a note can be added, or the report taken back
 function reportSaved(r, ask) {
-  var n = unsentReports().length;
   document.getElementById("infoContent").innerHTML = '<div class="report">' +
     '<div class="report-head"><strong>✓ Saved:</strong> ' + esc(ask ? "Blaze: another color" : reportHeadline(r)) + '</div>' +
     (r.at ? '' : '<div class="report-warn">Without your location, it doesn\'t say where.</div>') +
     '<textarea id="savedNote" rows="2" placeholder="' + esc(ask || "Add a note? (optional)") + '"></textarea>' +
     '<button class="route-btn" onclick="noteSaved(' + jsArg(r.id) + ')">Done</button> ' +
     '<button class="route-btn" style="background:#0d47a1" onclick="noteSaved(' + jsArg(r.id) + ', true)">Report another</button> ' +
-    '<button class="route-btn" style="background:#888" onclick="undoReport(' + jsArg(r.id) + ')">Undo</button>' +
-    '<div class="report-fine">' + n + ' report' + (n === 1 ? '' : 's') + ' waiting to send, on <a href="reports.html">Reports</a>.</div></div>';
+    '<button class="route-btn" style="background:#888" onclick="undoReport(' + jsArg(r.id) + ')">Undo</button> ' +
+    myReportsBtnHtml("noteSaved(" + jsArg(r.id) + ", 'list')") + '</div>';
 }
 
-function noteSaved(id, another) {
+// then: "another" for the Report sheet again, "list" for your reports, or else the map
+function noteSaved(id, then) {
   var t = document.getElementById("savedNote").value.trim();
   if (t) changeReport(id, function(r) { r.text = t; });
-  if (another) showReportSheet(); else closeReport();
+  if (then === "list") showMyReports(); else if (then) showReportSheet(); else closeReport();
 }
 
 function undoReport(id) {
@@ -3496,6 +3468,8 @@ var trailCum = trailData.features.map(function(f) {
 // stretches; direction is +1 or -1 along the trail for one-way blazes, 0 for the rest.
 var blazeKeys = Object.keys(REGION.blazes || {});
 var BLAZE_ARROW_M = 150, BLAZE_ARROW_ZOOM = 15;
+var BLAZE_RECT_LEN = 9, BLAZE_RECT_WIDE = 4.5, BLAZE_RECT_GAP = 13;   // px; a second blaze sharing
+var BLAZE_RECT_TURN = 11;                                              // a stretch, this far on
 var blazeArrows = L.layerGroup();
 
 // A small sample of a blaze's mark, for the legend, trail details, and route steps
@@ -3535,12 +3509,19 @@ trailData.features.forEach(function(f, ti) {
   var keysHere = blazeKeys.filter(function(k) { return (f.properties.blazes || []).some(function(r) { return r[0] === k; }); });
   (f.properties.blazes || []).forEach(function(r) {
     var b = REGION.blazes[r[0]], pts = sliceTrail(ti, r[1], r[2]);
-    var rect = b.style === "blazes";
-    var line = {dashArray: rect ? "4,12" : "0.1,10", dashOffset: String(keysHere.indexOf(r[0]) * 5),
-                lineCap: rect ? "butt" : "round", interactive: false, opacity: 1};
-    if (b.style !== "arrows") {
-      blazeLayer.addLayer(L.polyline(pts, L.extend({}, line, {color: rect ? "#fff" : "#333", weight: rect ? 8 : 5})));
-      blazeLayer.addLayer(L.polyline(pts, L.extend({}, line, {color: b.color, weight: rect ? 5 : 4})));
+    var turn = keysHere.indexOf(r[0]);
+    if (b.style === "blazes") {
+      // Painted blazes: rectangles twice as long as they're wide, lying along the trail, each
+      // on a white one a pixel bigger all round (a dash a pixel earlier and longer)
+      var at = turn * BLAZE_RECT_TURN;
+      blazeLayer.addLayer(L.polyline(pts, {dashArray: (BLAZE_RECT_LEN + 2) + "," + (BLAZE_RECT_GAP - 2), dashOffset: String(at + 1),
+                                           lineCap: "butt", interactive: false, opacity: 1, color: "#fff", weight: BLAZE_RECT_WIDE + 2}));
+      blazeLayer.addLayer(L.polyline(pts, {dashArray: BLAZE_RECT_LEN + "," + BLAZE_RECT_GAP, dashOffset: String(at),
+                                           lineCap: "butt", interactive: false, opacity: 1, color: b.color, weight: BLAZE_RECT_WIDE}));
+    } else if (b.style !== "arrows") {
+      var line = {dashArray: "0.1,10", dashOffset: String(turn * 5), lineCap: "round", interactive: false, opacity: 1};
+      blazeLayer.addLayer(L.polyline(pts, L.extend({}, line, {color: "#333", weight: 5})));
+      blazeLayer.addLayer(L.polyline(pts, L.extend({}, line, {color: b.color, weight: 4})));
     }
     if (r[3]) {
       for (var s = r[1] + 60; s < r[2] - 20; s += BLAZE_ARROW_M) {
@@ -4353,9 +4334,21 @@ function crumbLatLngs() {
   return out;
 }
 
-var crumbLine = L.polyline(crumbLatLngs(), {
-  color: "#1e88e5", weight: 4, opacity: 0.6, dashArray: "1,8", lineCap: "round", interactive: false
+// Rings: a white dot in a blue one, so they stand out on any trail line and can't be taken
+// for a blaze (blazes are solid dots and dashes, blue ones too), with the line showing
+// between them. The same dash pattern keeps the two in step.
+var CRUMB_DOTS = "1,13";
+var crumbHalo = L.polyline(crumbLatLngs(), {
+  color: "#1565c0", weight: 9, opacity: 1, dashArray: CRUMB_DOTS, lineCap: "round", interactive: false
 }).addTo(map);
+var crumbLine = L.polyline(crumbLatLngs(), {
+  color: "#fff", weight: 4.5, opacity: 1, dashArray: CRUMB_DOTS, lineCap: "round", interactive: false
+}).addTo(map);
+
+function drawCrumbs(latlngs) {
+  crumbHalo.setLatLngs(latlngs);
+  crumbLine.setLatLngs(latlngs);
+}
 
 function addCrumb(ll, acc) {
   var last = crumbs.length ? L.latLng(crumbs[crumbs.length - 1]) : null;
@@ -4370,7 +4363,7 @@ function addCrumb(ll, acc) {
       crumbFills[0] = null;
       if (entranceScanned > 0) entranceScanned--;
     }
-    crumbLine.setLatLngs(crumbLatLngs());
+    drawCrumbs(crumbLatLngs());
     try { sessionStorage.setItem(CRUMB_KEY, JSON.stringify(crumbs)); } catch (e) {}
   }
 }
@@ -4387,7 +4380,7 @@ function clearCrumbs() {
   crumbFills = [];
   entrance = null;
   entranceScanned = 0;
-  crumbLine.setLatLngs([]);
+  drawCrumbs([]);
   try { sessionStorage.removeItem(CRUMB_KEY); } catch (e) {}
   refreshLocateInfo();
 }

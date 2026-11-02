@@ -390,7 +390,6 @@ def main():
         "blazes": BLAZES,
         "placeLabels": building_labels(),
         "nav": ('<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Saratoga Woods</a>'
-                '<a href="reports.html" style="color:#ecf0f1;font-size:14px">Reports</a>'
                 + maps_menu_html("sar", "../") + '</nav>'),
     }
     os.makedirs(OUT, exist_ok=True)

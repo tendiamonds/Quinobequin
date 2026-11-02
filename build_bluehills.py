@@ -647,7 +647,6 @@ def main():
         "terrain": TERRAIN,
         "credit": 'Trails: <a href="https://www.mass.gov/orgs/department-of-conservation-recreation">Massachusetts DCR</a>',
         "nav": ('<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Blue Hills Reservation</a>'
-                '<a href="reports.html" style="color:#ecf0f1;font-size:14px">Reports</a>'
                 + maps_menu_html("bh", "../") + '</nav>'),
     }
     os.makedirs(OUT, exist_ok=True)

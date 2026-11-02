@@ -7,7 +7,9 @@ Each one is saved on the phone with where you were (and how sure the phone was o
 which way you were heading, and what the map has there: the trail, the sign-to-sign
 stretch, and the blazes it expects. Nothing is sent as you go. The Reports page lists
 what's saved, and "Send all" emails the unsent ones together, as text to read and a data
-block for the map's tools to read back in.
+block for the map's tools to read back in. On the map, the Report sheet's "My reports"
+does the same for the unsent ones (the Reports page isn't in the top bar; it keeps the
+sent ones and the field checks).
 
 Field checks (things to look at on the next walk, at particular intersections) are
 answered the same way: from a badge on the intersection, the "Check here" note when
@@ -175,7 +177,8 @@ PAGE = r"""<!DOCTYPE html>
   .choices label { border: 1px solid #b0bec5; border-radius: 18px; padding: 7px 13px; font-size: 14px; cursor: pointer; }
   .choices input { margin-right: 5px; }
   .choices label.on { background: #e3f2fd; border-color: #1565c0; }
-  textarea { width: 100%; font: inherit; font-size: 14px; padding: 6px 8px; border: 1px solid #cfd8dc; border-radius: 6px; }
+  /* 16 px: an iPhone zooms the page in on smaller text boxes, and doesn't zoom back out */
+  textarea { width: 100%; font: inherit; font-size: 16px; padding: 6px 8px; border: 1px solid #cfd8dc; border-radius: 6px; }
   .saved { font-size: 13px; color: #2e7d32; margin-top: 8px; }
   .warn { font-size: 13px; color: #c62828; margin-top: 6px; }
   .empty { font-size: 13px; color: #78909c; margin: 4px 0 12px; }
