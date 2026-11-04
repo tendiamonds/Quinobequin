@@ -4241,6 +4241,24 @@
           42.163926
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 475,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J104"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4899998,
+          42.1719649
+        ]
+      }
     }
   ]
 }

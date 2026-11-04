@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Mobile Preview — Upper Charles Forest</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 13px; color: #222; background: #e9ecef; }
+  body { display: flex; }
+  .controls { width: 250px; padding: 14px; background: #fff; border-right: 1px solid #ccc; overflow-y: auto; }
+  .controls h1 { font-size: 15px; margin: 0 0 12px; }
+  .controls h2 { font-size: 12px; text-transform: uppercase; color: #666; margin: 16px 0 6px; }
+  .controls select, .controls input[type=text] { width: 100%; padding: 5px; font-size: 13px; }
+  .controls button { padding: 5px 10px; margin: 2px 2px 2px 0; font-size: 12px; cursor: pointer;
+    border: 1px solid #999; border-radius: 4px; background: #f6f6f6; }
+  .controls button:hover { background: #e6e6e6; }
+  .controls .hint { color: #666; font-size: 12px; line-height: 1.4; }
+  #where { font-family: monospace; font-size: 12px; margin-top: 6px; }
+  .stage { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; min-width: 0; }
+  .phone { background: #111; border-radius: 36px; padding: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    transform-origin: center center; }
+  .phone iframe { display: block; border: 0; border-radius: 22px; background: #fff; }
+  .sidemap { width: 38%; min-width: 300px; border-left: 1px solid #ccc; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <h1>Mobile Preview</h1>
+
+  <h2>Device</h2>
+  <select id="device">
+    <option value="393x852">iPhone 15 (393×852)</option>
+    <option value="375x667">iPhone SE (375×667)</option>
+    <option value="430x932">iPhone 15 Pro Max (430×932)</option>
+    <option value="412x915">Pixel 8 (412×915)</option>
+    <option value="360x780">Galaxy S23 (360×780)</option>
+  </select>
+  <div style="margin-top:6px">
+    <button id="rotate">Rotate</button>
+    <button id="reload">Reload</button>
+  </div>
+
+  <h2>Start page</h2>
+  <input type="text" id="query" placeholder="e.g. int=A1">
+  <div class="hint">Extra URL parameters, applied on Reload.</div>
+
+  <h2>Your location</h2>
+  <div class="hint">Click the map on the right to put yourself there; drag the pin to walk.</div>
+  <div style="margin-top:6px">Accuracy:
+    <select id="acc" style="width:auto">
+      <option value="5">5 m</option>
+      <option value="15" selected>15 m</option>
+      <option value="50">50 m</option>
+      <option value="150">150 m</option>
+    </select>
+  </div>
+  <div id="presets" style="margin-top:8px"></div>
+  <div id="where">No location set</div>
+
+  <h2>Notes</h2>
+  <div class="hint">This shows the phone layout and fakes GPS. The mouse still acts like a mouse
+    (hover works here but not on a phone). For true touch behavior, use Chrome DevTools
+    device mode (F12, then Ctrl+Shift+M).</div>
+</div>
+
+<div class="stage" id="stage">
+  <div class="phone" id="phone"><iframe id="frame"></iframe></div>
+</div>
+
+<div class="sidemap" id="sidemap"></div>
+
+<script>
+var frame = document.getElementById("frame");
+var phone = document.getElementById("phone");
+var stage = document.getElementById("stage");
+var deviceSel = document.getElementById("device");
+var accSel = document.getElementById("acc");
+var queryBox = document.getElementById("query");
+var whereDiv = document.getElementById("where");
+var landscape = false;
+var you = null;          // [lat, lon]
+var youMarker = null;
+
+function size() {
+  var wh = deviceSel.value.split("x").map(Number);
+  var w = landscape ? wh[1] : wh[0];
+  var h = landscape ? wh[0] : wh[1];
+  frame.style.width = w + "px";
+  frame.style.height = h + "px";
+  var scale = Math.min(1, (stage.clientWidth - 30) / (w + 28), (stage.clientHeight - 30) / (h + 28));
+  phone.style.transform = "scale(" + scale + ")";
+}
+
+function reload() {
+  var q = queryBox.value.trim().replace(/^\?/, "");
+  // The timestamp makes sure a freshly rebuilt map.html is loaded, not a cached one
+  frame.src = "map.html?sim&t=" + Date.now() + (q ? "&" + q : "");
+}
+
+function pushLocation() {
+  if (you && frame.contentWindow && frame.contentWindow.simLocate) {
+    frame.contentWindow.simLocate(you[0], you[1], Number(accSel.value));
+  }
+}
+
+function setYou(lat, lon) {
+  you = [lat, lon];
+  if (youMarker) {
+    youMarker.setLatLng(you);
+  } else {
+    youMarker = L.marker(you, {draggable: true, title: "You (drag to walk)"}).addTo(side);
+    youMarker.on("drag", function(e) {
+      var ll = e.target.getLatLng();
+      you = [ll.lat, ll.lng];
+      showWhere();
+      pushLocation();
+    });
+  }
+  showWhere();
+  pushLocation();
+}
+
+function showWhere() {
+  whereDiv.textContent = you[0].toFixed(5) + ", " + you[1].toFixed(5);
+}
+
+// Side map: draws the network from the preview frame's own data once it loads
+var side = L.map("sidemap").setView([42.178, -71.5], 14);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {maxZoom: 19, attribution: "&copy; OSM"}).addTo(side);
+var networkLayer = null;
+side.on("click", function(e) { setYou(e.latlng.lat, e.latlng.lng); });
+
+frame.addEventListener("load", function() {
+  var w = frame.contentWindow;
+  if (!networkLayer && w.trailData) {
+    networkLayer = L.layerGroup().addTo(side);
+    L.geoJSON(w.trailData, {style: {color: "#555", weight: 2}, interactive: false}).addTo(networkLayer);
+    var presets = document.getElementById("presets");
+    var feats = w.intData.features.slice().sort(function(a, b) {
+      return a.properties.label.localeCompare(b.properties.label, undefined, {numeric: true});
+    });
+    feats.forEach(function(f) {
+      var ll = [f.geometry.coordinates[1], f.geometry.coordinates[0]];
+      L.circleMarker(ll, {radius: 3, weight: 1, color: "#fff", fillColor: w.ZONE_COLORS[f.properties.zone],
+        fillOpacity: 1, interactive: false}).addTo(networkLayer);
+      if (f.properties.entry) {
+        var b = document.createElement("button");
+        b.textContent = "At " + f.properties.label;
+        b.onclick = function() { setYou(ll[0], ll[1]); side.panTo(ll); };
+        presets.appendChild(b);
+      }
+    });
+    side.fitBounds(networkLayer.getLayers()[0].getBounds().pad(0.05));
+  }
+  // A reload forgets the fake fix; hand it back
+  pushLocation();
+});
+
+deviceSel.onchange = size;
+document.getElementById("rotate").onclick = function() { landscape = !landscape; size(); };
+document.getElementById("reload").onclick = reload;
+queryBox.onkeydown = function(e) { if (e.key === "Enter") reload(); };
+accSel.onchange = pushLocation;
+window.addEventListener("resize", size);
+
+size();
+reload();
+</script>
+</body>
+</html>

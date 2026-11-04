@@ -15,6 +15,12 @@ build_map_page(ints, trails, region, out_dir) writes out_dir/map.html. region is
   credit         (optional) HTML credit for the trail data, beside the map tiles' (bottom right)
   zonesPage      whether the site has a zones.html for zone tags to link to
   otherMaps      [{"name": ..., "href": ...}] links to the other regions' maps
+  summits        (optional) [{"name" or None, "lat", "lon"}] hilltops to mark with their
+                 height: each moves to the true top within SUMMIT_FIND_M in the elevation grid
+                 (needs dem), where its height is read; the highest is the region's highest point
+  towns          (optional) [{"name", "rings": [[[lon, lat], ...]], "seal"}] town outlines:
+                 well into a new one (TOWN_SURE_M), a banner says "Welcome to Milford!", with
+                 the town's seal (optional: an image's URL, white on clear, shown 28 px)
   placeLabels    (optional) [{"name", "lat", "lon"}] names for places the map tiles don't
                  label (Skidmore's residence buildings), shown up close
   nav            the page's top navigation bar (HTML)
@@ -236,6 +242,37 @@ def maps_menu_html(here, root):
             '<option value="">Maps</option>' + opts + '</select>')
 
 
+SUMMIT_FIND_M = 40   # a summit given roughly is moved to the highest ground this close
+
+
+def find_summits(summits, dem):
+    """The summits, each at the highest ground (smoothed a little, against lidar noise)
+    within SUMMIT_FIND_M of where it's given, with its height there ("ele", meters) and the
+    highest marked ("highest")"""
+    out = []
+    if summits and dem and os.path.exists(dem):
+        import numpy as np
+        z, w, s, e, n = elevation.georeference(dem)
+        rows, cols = z.shape
+        for sm in summits:
+            c = int((sm["lon"] - w) / (e - w) * cols)
+            r = int((n - sm["lat"]) / (n - s) * rows)
+            rx = int(SUMMIT_FIND_M / ((e - w) / cols * 82000)) + 1
+            ry = int(SUMMIT_FIND_M / ((n - s) / rows * 111000)) + 1
+            win = z[max(r - ry, 0):r + ry + 1, max(c - rx, 0):c + rx + 1]
+            # a 5 x 5 average at each point (about 12 m), then its highest
+            k = 2
+            pad = np.pad(win, k, mode="edge")
+            avg = sum(pad[i:i + win.shape[0], j:j + win.shape[1]] for i in range(2 * k + 1) for j in range(2 * k + 1)) / (2 * k + 1) ** 2
+            i, j = np.unravel_index(int(avg.argmax()), avg.shape)
+            rr, cc = max(r - ry, 0) + i, max(c - rx, 0) + j
+            out.append({"name": sm.get("name"), "ele": round(float(avg[i, j]), 1),
+                        "lon": round(w + (cc + 0.5) * (e - w) / cols, 6), "lat": round(n - (rr + 0.5) * (n - s) / rows, 6)})
+        top = max(out, key=lambda x: x["ele"])
+        top["highest"] = True
+    return out
+
+
 def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     """Write out_dir/map.html for a region (see the module docstring for its config).
     trail_int_map (optional): which intersections lie along each trail, as from
@@ -299,6 +336,8 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
 
     client = {k: region[k] for k in ("name", "zones", "view", "bounds", "storagePrefix", "report", "otherMaps", "zonesPage")}
     client["placeLabels"] = region.get("placeLabels", [])
+    client["summits"] = find_summits(region.get("summits", []), region.get("dem"))
+    client["towns"] = region.get("towns", [])
     client["blazes"] = region.get("blazes", {})
     client["widths"] = region.get("widths", {})
     client["terrain"] = region.get("terrain", [])
@@ -307,8 +346,8 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     client["credit"] = region.get("credit")
     html = MAP_TEMPLATE.replace("__REPORTS_JS__", REPORTS_JS)
     # Legend rows only for kinds of marker this region has
-    for kind in ("post", "landmark", "road", "posted_sign"):
-        if not any(f["properties"].get(kind) for f in ints["features"] + trails["features"]):
+    for kind in ("post", "landmark", "road", "posted_sign", "summit"):
+        if not (client["summits"] if kind == "summit" else any(f["properties"].get(kind) for f in ints["features"] + trails["features"])):
             html = re.sub(r'  <div class="legend-row" data-legend="%s">.*\n' % kind, "", html)
         html = html.replace(' data-legend="%s"' % kind, "")
     html = html.replace("__REGION_JSON__", json.dumps(client))
@@ -554,6 +593,13 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   .int-terminus { display: inline-block; width: 12px; height: 12px; background: #333;
     border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,0.3); }
 
+  .summit-icon { display: flex; align-items: center; gap: 3px; white-space: nowrap; cursor: pointer; }
+  .summit-icon span { font: 600 11px sans-serif; color: #5d4037;
+    text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff; }
+  #banner { display: none; position: fixed; top: 54px; left: 50%; transform: translateX(-50%); z-index: 1500;
+    max-width: 92vw; background: #263238; color: #fff; padding: 8px 14px; border-radius: 18px; font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #banner .seal { width: 28px; height: 28px; vertical-align: middle; margin: -6px 8px -6px -6px; }
   #searchBadge {
     position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 2000;
     background: rgba(0,0,0,0.82); color: #fff; font: 600 22px/1 monospace;
@@ -731,6 +777,7 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
 __NAV__
 <div id="map"></div>
 <div id="searchBadge"></div>
+<div id="banner" role="status"></div>
 
 <div class="info-panel" id="infoPanel">
   <button class="panel-size" id="panelSize" onclick="togglePanelSize()"></button>
@@ -754,6 +801,7 @@ __NAV__
   <div class="legend-row" data-legend="road"><div class="legend-line" style="background:repeating-linear-gradient(90deg,#757575 0 6px,transparent 6px 12px)"></div> Road link</div>
   <div class="legend-row" data-legend="posted_sign"><span class="posted-badge" style="margin:0 4px 0 0;cursor:default">A3</span> Temporary sign (older number)</div>
   <div class="legend-row" data-legend="post"><span class="post-badge" style="margin:0 6px 0 1px;cursor:default">1</span> Numbered post</div>
+  <div class="legend-row" data-legend="summit"><span style="margin:0 6px 0 2px;display:inline-flex"><svg width="14" height="12" viewBox="0 0 14 12"><path d="M7 1 L13 11 H1 Z" fill="#8d6e63" stroke="#4e342e" stroke-width="1.2" stroke-linejoin="round"/></svg></span> Summit (and its height)</div>
   <div class="legend-row" data-legend="landmark"><span style="margin:0 4px 0 0;display:inline-flex"><svg width="22" height="18" viewBox="0 0 20 16"><path d="M2 14 L1 9 L4 4 L9 2 L14 3 L18 7 L19 12 L17 15 L5 15 Z" fill="#9e9e9e" stroke="#424242" stroke-width="1.3" stroke-linejoin="round"/></svg></span> Landmark</div>
 </div>
 
@@ -1171,6 +1219,70 @@ function showPlaceLabels() {
 if (REGION.placeLabels.length) {
   map.on("zoomend", showPlaceLabels);
   showPlaceLabels();
+}
+
+// Summits (REGION.summits): a small triangle, with the name (if any) and height, from close
+// in. Tapping one says how high, and how far it is from the nearest trail.
+var SUMMIT_ZOOM = 14, summitLayer = L.layerGroup();
+var SUMMIT_SVG = '<svg width="14" height="12" viewBox="0 0 14 12"><path d="M7 1 L13 11 H1 Z" fill="#8d6e63" stroke="#4e342e" stroke-width="1.2" stroke-linejoin="round"/></svg>';
+REGION.summits.forEach(function(sm, i) {
+  summitLayer.addLayer(L.marker([sm.lat, sm.lon], {keyboard: false, title: (sm.name || "Summit") + ", " + feet(sm.ele),
+    icon: L.divIcon({className: "", iconSize: [0, 0], iconAnchor: [7, 6],
+      html: '<div class="summit-icon">' + SUMMIT_SVG + '<span>' + (sm.name ? esc(sm.name) + ' &middot; ' : '') + feet(sm.ele) + '</span></div>'})
+  }).on("click", function(e) { L.DomEvent.stopPropagation(e); showSummit(i); }));
+});
+function showSummits() {
+  if (map.getZoom() >= SUMMIT_ZOOM) summitLayer.addTo(map);
+  else summitLayer.remove();
+}
+if (REGION.summits.length) {
+  map.on("zoomend", showSummits);
+  showSummits();
+}
+
+function showSummit(i) {
+  var sm = REGION.summits[i], ll = L.latLng(sm.lat, sm.lon), snap = snapToTrail(ll);
+  showPanelMsg(SUMMIT_SVG + ' <strong>' + esc(sm.name || "Summit") + '</strong>, ' + feet(sm.ele) + ' (' + Math.round(sm.ele) + ' m)' +
+    (sm.highest ? '<br>The highest point in the ' + esc(REGION.name.replace(/ Reservation$/, "")) : '') +
+    (snap.d < Infinity ? '<br>' + (snap.d < 15 ? 'On ' : formatDist(snap.d) + ' from ') + '<em>' + esc(snap.name) + '</em>' : ''));
+}
+
+// Crossing a town line (REGION.towns): "Welcome to Milford!" for a few seconds, once you're well
+// into the new town (TOWN_SURE_M inside it), so a trail weaving along a line doesn't keep
+// announcing it. An outing's first town is just noted.
+var TOWN_SURE_M = 50, TOWN_ACC_M = 30, TOWN_KEY = REGION.storagePrefix + "Town";
+var townNow = null;
+try { townNow = sessionStorage.getItem(TOWN_KEY); } catch (e) {}
+
+// The town at a point, and how far it is from that town's line: {town, edge} (meters), or null
+function townAt(ll) {
+  var px = ll.lng * 82000, py = ll.lat * 111000, found = null;
+  REGION.towns.forEach(function(t) {
+    t.rings.forEach(function(ring) {
+      var inside = false, edge = Infinity;
+      for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        var ax = ring[j][0] * 82000, ay = ring[j][1] * 111000, bx = ring[i][0] * 82000, by = ring[i][1] * 111000;
+        if ((by > py) !== (ay > py) && px < (ax - bx) * (py - by) / (ay - by) + bx) inside = !inside;
+        var vx = bx - ax, vy = by - ay, l2 = vx * vx + vy * vy;
+        var u = l2 ? Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / l2)) : 0;
+        edge = Math.min(edge, Math.hypot(px - ax - u * vx, py - ay - u * vy));
+      }
+      if (inside) found = {town: t, edge: edge};
+    });
+  });
+  return found;
+}
+
+function checkTown(ll, acc) {
+  if (REGION.towns.length && acc <= TOWN_ACC_M) {
+    var t = townAt(ll);
+    if (t && t.edge >= TOWN_SURE_M && t.town.name !== townNow) {
+      if (townNow) showBanner((t.town.seal ? '<img class="seal" alt="" src="' + esc(t.town.seal) + '">' : '') +
+        'Welcome to ' + esc(t.town.name) + '!');
+      townNow = t.town.name;
+      try { sessionStorage.setItem(TOWN_KEY, townNow); } catch (e) {}
+    }
+  }
 }
 
 function ownerSlug(s) {
@@ -3513,8 +3625,31 @@ function saveSignReport() {
   reportSaved(saveReport({kind: "sign", text: ""}));
 }
 
-// After saving: a note can be added, or the report taken back
+// After saving: back where you were, with a banner for a few seconds saying what was saved
+// (one saved by mistake has its x in My reports). "Another color" asks which color first.
+var BANNER_MS = 6000, bannerTimer = null;
 function reportSaved(r, ask) {
+  if (ask) {
+    savedSheet(r, ask);
+  } else {
+    closeReport();
+    // (a note by the start of what it says)
+    var what = r.kind === "note" ? esc('Note: ' + r.text.slice(0, 40)) + (r.text.length > 40 ? '&hellip;' : '') : esc(reportHeadline(r));
+    showBanner('&#x2713; Saved: ' + what + (r.at ? '' : ' (without where you were)'));
+  }
+}
+
+// A banner near the top for a few seconds: what was saved, or a town line crossed
+function showBanner(html) {
+  var el = document.getElementById("banner");
+  el.innerHTML = html;
+  el.style.display = "block";
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(function() { el.style.display = "none"; }, BANNER_MS);
+}
+
+// "Another color": the saved report, with a box to say which
+function savedSheet(r, ask) {
   document.getElementById("infoContent").innerHTML = '<div class="report">' +
     '<div class="report-head"><strong>✓ Saved:</strong> ' + esc(ask ? "Blaze: another color" : reportHeadline(r)) + '</div>' +
     (r.at ? '' : '<div class="report-warn">Without your location, it doesn\'t say where.</div>') +
@@ -4576,9 +4711,6 @@ function nearEntry(ll, m) {
   return entryLabels().some(function(label) { return ll.distanceTo(intMarkers[label].getLatLng()) <= m; });
 }
 
-// Time since the fix before this one; a long one means the phone stopped reporting
-var fixGapMs = 0;
-
 // Called with each fix, before it is added as a crumb. The place rules only trust fixes
 // good enough to tell: a rough fix can land a kilometer off, or near an entry you aren't at.
 // Stopping near an exit only counts if you also come back near one (the same lot or
@@ -4586,7 +4718,6 @@ var fixGapMs = 0;
 function checkFreshStart(ll, acc) {
   var last = readLastFix();
   var gap = last ? Date.now() - last.t : Infinity;
-  fixGapMs = gap;
   var left = distFromNetwork(ll) - acc > FAR_FROM_NETWORK_M || gap >= NEW_DAY_GAP_MS ||
     (gap >= EXIT_GAP_MS && last.acc <= EXIT_NEAR_M && acc <= EXIT_NEAR_M &&
      nearEntry(L.latLng(last.lat, last.lng), EXIT_NEAR_M) && nearEntry(ll, EXIT_NEAR_M));
@@ -4608,10 +4739,13 @@ if (!lastFixOnLoad || Date.now() - lastFixOnLoad.t >= NEW_DAY_GAP_MS) {
 }
 
 // The phone stops reporting while the screen is off, leaving gaps in the crumbs. Rather
-// than cut across the woods, fill a gap with the shortest way along the trails.
+// than cut across the woods, fill a gap with the way you most likely went: along the route
+// you're following, if you're still on it, or else the shortest way along the trails.
 var CRUMB_GAP_M = 30;   // farther apart than this counts as a gap
 // Only fill where the phone went quiet: GPS jitter while standing still can put a crumb
-// on a neighboring trail, and a filled route there would be a phantom loop
+// on a neighboring trail, and a filled route there would be a phantom loop. Quiet is time
+// since the last crumb, not the last fix: a phone waking up gives a few rough fixes (not
+// crumbs) before a good one, and those mustn't hide the gap.
 var CRUMB_QUIET_MS = 20 * 1000;
 
 // Trail points from a to b along the shortest trail route, or null to draw a straight line
@@ -4650,7 +4784,38 @@ function trailPathBetween(a, b) {
 // A crumb's 4th element is 1 when the phone was quiet just before it.
 function crumbFill(i) {
   var a = L.latLng(crumbs[i - 1][0], crumbs[i - 1][1]), b = L.latLng(crumbs[i][0], crumbs[i][1]);
-  return crumbs[i][3] && a.distanceTo(b) > CRUMB_GAP_M ? trailPathBetween(a, b) : null;
+  return crumbs[i][3] && a.distanceTo(b) > CRUMB_GAP_M ? routePathBetween(a, b) || trailPathBetween(a, b) : null;
+}
+
+// On a live route you were still on: the route's points from where you were on it (a, at
+// its progress) on to where you are (b, the nearest point of the route ahead), or null;
+// the route's stops in between count as done. (Called before the route takes in b, so its
+// progress is still a's.)
+function routePathBetween(a, b) {
+  var pts = null;
+  if (plan && plan.live && !plan.arrived && plan.progress !== null) {
+    var from = plan.progress, here = routePointAt(from);
+    if (here && here.distanceTo(a) <= OFF_ROUTE_M) {
+      var px = b.lng * 82000, py = b.lat * 111000, best = null;
+      plan.segs.forEach(function(seg) {
+        for (var k = 0; k < seg.pts.length - 1; k++) {
+          var ax = seg.pts[k].lng * 82000, ay = seg.pts[k].lat * 111000;
+          var vx = seg.pts[k + 1].lng * 82000 - ax, vy = seg.pts[k + 1].lat * 111000 - ay, l2 = vx * vx + vy * vy;
+          var t = l2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / l2)) : 0;
+          var d = Math.hypot(px - ax - t * vx, py - ay - t * vy), at = seg.s0 + seg.cum[k] + t * (seg.cum[k + 1] - seg.cum[k]);
+          if (d <= OFF_ROUTE_M && at > from && (!best || d < best.d)) best = {d: d, at: at};
+        }
+      });
+      // (a route far longer than the gap probably isn't what happened)
+      var straight = a.distanceTo(b);
+      if (best && best.at - from <= Math.max(3 * straight, straight + 400)) {
+        pts = routeLineBetween(from, best.at);
+        // You went the route's way, so its stops along there are done, not missed
+        plan.steps.forEach(function(st) { if (st.stop && st.at > from && st.at <= best.at) st.stop.done = true; });
+      }
+    }
+  }
+  return pts && pts.length ? pts : null;
 }
 var crumbFills = crumbs.map(function(c, i) { return i > 0 ? crumbFill(i) : null; });
 
@@ -4680,10 +4845,12 @@ function drawCrumbs(latlngs) {
 }
 
 function addCrumb(ll, acc) {
-  var last = crumbs.length ? L.latLng(crumbs[crumbs.length - 1]) : null;
+  // (a crumb is [lat, lng, time] or, after a quiet spell, [lat, lng, time, 1]: Leaflet takes
+  // the first but not the second as a point, so the two numbers go in on their own)
+  var prev = crumbs[crumbs.length - 1], last = prev ? L.latLng(prev[0], prev[1]) : null;
   if (acc <= 40 && (!last || last.distanceTo(ll) >= 5) && distFromNetwork(ll) <= FAR_FROM_NETWORK_M) {
     var crumb = [+ll.lat.toFixed(6), +ll.lng.toFixed(6), Date.now()];
-    if (fixGapMs >= CRUMB_QUIET_MS) crumb.push(1);
+    if (prev && crumb[2] - prev[2] >= CRUMB_QUIET_MS) crumb.push(1);
     crumbs.push(crumb);
     crumbFills.push(crumbs.length > 1 ? crumbFill(crumbs.length - 1) : null);
     if (crumbs.length > 5000) {
@@ -4705,6 +4872,8 @@ function trackedM() {
 }
 
 function clearCrumbs() {
+  townNow = null;
+  try { sessionStorage.removeItem(TOWN_KEY); } catch (e) {}
   crumbs = [];
   crumbFills = [];
   entrance = null;
@@ -4819,6 +4988,7 @@ function onLocation(pos) {
   userAccuracy = pos.coords.accuracy;
   checkFreshStart(userLatLng, userAccuracy);
   addCrumb(userLatLng, userAccuracy);
+  checkTown(userLatLng, userAccuracy);
   updateMoveHeading(pos, userLatLng);
   if (pendingTrip) {
     var resumed = pendingTrip;

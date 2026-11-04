@@ -1,4 +1,58 @@
 __pycache__/
-# The park's own trail map: kept locally, not republished (bluehills_pdf.py reads it)
-bluehills_data/blue-hills-trail-map-2020.pdf
+# The lidar, downloaded again by a build when it's missing (elevation.py)
 elevation_cache/
+
+# Other people's maps: kept locally, not republished
+bluehills_data/blue-hills-trail-map-2020.pdf
+/nemba_vietnam_map_2012.pdf
+/zone_images/
+saratoga_data/*.pdf
+saratoga_data/*.png
+# ...and the working files from fitting the Saratoga one (saratoga_data/sara_fit.py)
+saratoga_data/built.json
+saratoga_data/sara_T.npy
+saratoga_data/osm_buildings.json
+saratoga_data/osm_paths.json
+saratoga_data/osm_probe.json
+
+# Kiosk and parking-lot flyers: printed, not published
+/flyer/
+
+# The full parcel downloads (the build uses the trimmed uc_data/parcels.geojson)
+/parcels.geojson
+/parcels_all.geojson
+/parcels_hopkinton_milford.geojson
+/openspace.geojson
+
+# The first trail and sign drafts (August-September 2026): one-off scripts and what they
+# made, replaced by build_map.py's numbering and the trail editor
+/analyze_numbering.py
+/analyze_snap.py
+/assign_zones.py
+/number_zones.py
+/update_connectors.py
+/download_trails.py
+/build_filtered_map.py
+/build_identify_map.py
+/build_intersection_map.py
+/build_pruner_map.py
+/build_review_map.py
+/build_selector_map.py
+/map_*.html
+/name_trails.html
+/osm_geometry_preview.html
+/lost_ends.html
+/stray_data.json
+/stray_preview.html
+/hopkinton_sample.geojson
+/intersections.geojson
+/intersections.gpx
+/intersections_*.geojson
+!/intersections_zoned.geojson
+/pdf_markers*.geojson
+/osm_raw.xml
+/trails.geojson
+/trails.gpx
+/trails_filtered.geojson
+/trails_matched.gpx
+/trails_trailforks.geojson

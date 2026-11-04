@@ -22,14 +22,15 @@ Writes intersections_zoned.geojson and trails_selected.geojson.
 
 import io
 import json
+import os
 import math
 import sys
 import contextlib
 import importlib.util
 
-PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
-INTS = PROJ + r"\intersections_zoned.geojson"
-TRAILS = PROJ + r"\trails_selected.geojson"
+PROJ = os.path.dirname(os.path.abspath(__file__))
+INTS = os.path.join(PROJ, "intersections_zoned.geojson")
+TRAILS = os.path.join(PROJ, "trails_selected.geojson")
 
 TOUCH_M = 5        # a trail end this close to another trail meets it
 NEAR_INT_M = 25    # an existing intersection this close that joins both trails covers it
@@ -84,7 +85,7 @@ def network():
     """The data, labeled the way the build labels it, and which trails each place joins"""
     ints = json.load(open(INTS, encoding="utf-8"))
     trails = json.load(open(TRAILS, encoding="utf-8"))
-    spec = importlib.util.spec_from_file_location("bm", PROJ + r"\build_map.py")
+    spec = importlib.util.spec_from_file_location("bm", os.path.join(PROJ, "build_map.py"))
     bm = importlib.util.module_from_spec(spec)
     with contextlib.redirect_stdout(io.StringIO()):
         spec.loader.exec_module(bm)

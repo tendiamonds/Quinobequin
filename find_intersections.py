@@ -4,10 +4,11 @@ meet or cross. Outputs an updated intersections_zoned.geojson with
 existing non-E intersections preserved and new E intersections added.
 """
 import json
+import os
 import math
 from collections import defaultdict
 
-PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
+PROJ = os.path.dirname(os.path.abspath(__file__))
 
 # E zone bounding box (tight, based on actual E intersection extent + small buffer)
 E_BOUNDS = {
@@ -301,7 +302,7 @@ for i, (lon, lat, degree) in enumerate(final):
 all_features = non_e + new_e_features
 output = {"type": "FeatureCollection", "features": all_features}
 
-out_path = rf"{PROJ}\intersections_e_draft.geojson"
+out_path = os.path.join(PROJ, "intersections_e_draft.geojson")
 with open(out_path, "w") as f:
     json.dump(output, f, indent=2)
 

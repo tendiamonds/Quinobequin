@@ -120,6 +120,13 @@
   .int-terminus { display: inline-block; width: 12px; height: 12px; background: #333;
     border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 2px rgba(0,0,0,0.3); }
 
+  .summit-icon { display: flex; align-items: center; gap: 3px; white-space: nowrap; cursor: pointer; }
+  .summit-icon span { font: 600 11px sans-serif; color: #5d4037;
+    text-shadow: 1px 1px 0 #fff, -1px 1px 0 #fff, 1px -1px 0 #fff, -1px -1px 0 #fff; }
+  #banner { display: none; position: fixed; top: 54px; left: 50%; transform: translateX(-50%); z-index: 1500;
+    max-width: 92vw; background: #263238; color: #fff; padding: 8px 14px; border-radius: 18px; font-size: 14px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #banner .seal { width: 28px; height: 28px; vertical-align: middle; margin: -6px 8px -6px -6px; }
   #searchBadge {
     position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 2000;
     background: rgba(0,0,0,0.82); color: #fff; font: 600 22px/1 monospace;
@@ -297,6 +304,7 @@
 <nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Saratoga Woods</a><select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;width:62px;flex:none;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 2px"><option value="">Maps</option><option value="../map.html">Upper Charles</option><option value="../bluehills/map.html">Blue Hills</option></select></nav>
 <div id="map"></div>
 <div id="searchBadge"></div>
+<div id="banner" role="status"></div>
 
 <div class="info-panel" id="infoPanel">
   <button class="panel-size" id="panelSize" onclick="togglePanelSize()"></button>
@@ -322,7 +330,7 @@
 
 <script>
 // The region this map is for: name, zones, starting view, bounds, and so on (trailmap.py)
-var REGION = {"name": "Saratoga Woods", "zones": {"N": {"name": "North Woods", "color": "#006a52"}, "D": {"name": "Daniels Road", "color": "#455a64"}, "G": {"name": "Graphite Range", "color": "#5d4037"}}, "view": {"center": [43.1219805, -73.7856484], "zoom": 14}, "bounds": [[43.0989286, -73.8026126], [43.1450324, -73.7686842]], "storagePrefix": "sar", "report": {"email": "tendiamonds@gmail.com", "signReports": false}, "otherMaps": [{"name": "Upper Charles", "href": "../map.html"}, {"name": "Blue Hills", "href": "../bluehills/map.html"}], "zonesPage": false, "placeLabels": [{"name": "1", "lat": 43.100735, "lon": -73.786925}, {"name": "10", "lat": 43.100004, "lon": -73.788773}, {"name": "11", "lat": 43.100782, "lon": -73.786234}, {"name": "12", "lat": 43.100203, "lon": -73.789202}, {"name": "14", "lat": 43.1007, "lon": -73.788591}, {"name": "2", "lat": 43.100566, "lon": -73.787414}, {"name": "3", "lat": 43.100485, "lon": -73.788224}, {"name": "4", "lat": 43.101835, "lon": -73.785145}, {"name": "5", "lat": 43.100122, "lon": -73.787727}, {"name": "6", "lat": 43.101268, "lon": -73.785538}, {"name": "7", "lat": 43.100181, "lon": -73.786555}, {"name": "8", "lat": 43.101091, "lon": -73.785844}, {"name": "9", "lat": 43.100509, "lon": -73.786019}, {"name": "A", "lat": 43.097228, "lon": -73.788562}, {"name": "B", "lat": 43.09769, "lon": -73.788277}, {"name": "F", "lat": 43.099057, "lon": -73.787903}, {"name": "G", "lat": 43.098216, "lon": -73.789129}, {"name": "H", "lat": 43.098498, "lon": -73.789085}, {"name": "I", "lat": 43.098633, "lon": -73.788307}, {"name": "J", "lat": 43.09914, "lon": -73.78854}, {"name": "K", "lat": 43.099453, "lon": -73.788005}, {"name": "L", "lat": 43.09966, "lon": -73.78743}], "blazes": {"red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}, "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"}, "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}, "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"}, "purple": {"name": "Purple-blazed trail", "marks": "purple blazes", "color": "#8e24aa", "style": "blazes"}, "brown": {"name": "Brown trail (SMBA map)", "marks": "shown brown on the SMBA map", "pick": "brown blazes", "color": "#a0522d", "style": "blazes"}, "black": {"name": "Black trail (SMBA map)", "marks": "shown black on the SMBA map", "pick": "black blazes", "color": "#212121", "style": "blazes"}}, "widths": {}, "terrain": [], "eleStep": 10, "checks": [], "credit": null};
+var REGION = {"name": "Saratoga Woods", "zones": {"N": {"name": "North Woods", "color": "#006a52"}, "D": {"name": "Daniels Road", "color": "#455a64"}, "G": {"name": "Graphite Range", "color": "#5d4037"}}, "view": {"center": [43.1219805, -73.7856484], "zoom": 14}, "bounds": [[43.0989286, -73.8026126], [43.1450324, -73.7686842]], "storagePrefix": "sar", "report": {"email": "tendiamonds@gmail.com", "signReports": false}, "otherMaps": [{"name": "Upper Charles", "href": "../map.html"}, {"name": "Blue Hills", "href": "../bluehills/map.html"}], "zonesPage": false, "placeLabels": [{"name": "1", "lat": 43.100735, "lon": -73.786925}, {"name": "10", "lat": 43.100004, "lon": -73.788773}, {"name": "11", "lat": 43.100782, "lon": -73.786234}, {"name": "12", "lat": 43.100203, "lon": -73.789202}, {"name": "14", "lat": 43.1007, "lon": -73.788591}, {"name": "2", "lat": 43.100566, "lon": -73.787414}, {"name": "3", "lat": 43.100485, "lon": -73.788224}, {"name": "4", "lat": 43.101835, "lon": -73.785145}, {"name": "5", "lat": 43.100122, "lon": -73.787727}, {"name": "6", "lat": 43.101268, "lon": -73.785538}, {"name": "7", "lat": 43.100181, "lon": -73.786555}, {"name": "8", "lat": 43.101091, "lon": -73.785844}, {"name": "9", "lat": 43.100509, "lon": -73.786019}, {"name": "A", "lat": 43.097228, "lon": -73.788562}, {"name": "B", "lat": 43.09769, "lon": -73.788277}, {"name": "F", "lat": 43.099057, "lon": -73.787903}, {"name": "G", "lat": 43.098216, "lon": -73.789129}, {"name": "H", "lat": 43.098498, "lon": -73.789085}, {"name": "I", "lat": 43.098633, "lon": -73.788307}, {"name": "J", "lat": 43.09914, "lon": -73.78854}, {"name": "K", "lat": 43.099453, "lon": -73.788005}, {"name": "L", "lat": 43.09966, "lon": -73.78743}], "summits": [], "towns": [], "blazes": {"red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}, "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"}, "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}, "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"}, "purple": {"name": "Purple-blazed trail", "marks": "purple blazes", "color": "#8e24aa", "style": "blazes"}, "brown": {"name": "Brown trail (SMBA map)", "marks": "shown brown on the SMBA map", "pick": "brown blazes", "color": "#a0522d", "style": "blazes"}, "black": {"name": "Black trail (SMBA map)", "marks": "shown black on the SMBA map", "pick": "black blazes", "color": "#212121", "style": "blazes"}}, "widths": {}, "terrain": [], "eleStep": 10, "checks": [], "credit": null};
 var ZONE_COLORS = {}, ZONE_NAMES = {};
 Object.keys(REGION.zones).forEach(function(z) {
   ZONE_COLORS[z] = REGION.zones[z].color;
@@ -734,6 +742,70 @@ function showPlaceLabels() {
 if (REGION.placeLabels.length) {
   map.on("zoomend", showPlaceLabels);
   showPlaceLabels();
+}
+
+// Summits (REGION.summits): a small triangle, with the name (if any) and height, from close
+// in. Tapping one says how high, and how far it is from the nearest trail.
+var SUMMIT_ZOOM = 14, summitLayer = L.layerGroup();
+var SUMMIT_SVG = '<svg width="14" height="12" viewBox="0 0 14 12"><path d="M7 1 L13 11 H1 Z" fill="#8d6e63" stroke="#4e342e" stroke-width="1.2" stroke-linejoin="round"/></svg>';
+REGION.summits.forEach(function(sm, i) {
+  summitLayer.addLayer(L.marker([sm.lat, sm.lon], {keyboard: false, title: (sm.name || "Summit") + ", " + feet(sm.ele),
+    icon: L.divIcon({className: "", iconSize: [0, 0], iconAnchor: [7, 6],
+      html: '<div class="summit-icon">' + SUMMIT_SVG + '<span>' + (sm.name ? esc(sm.name) + ' &middot; ' : '') + feet(sm.ele) + '</span></div>'})
+  }).on("click", function(e) { L.DomEvent.stopPropagation(e); showSummit(i); }));
+});
+function showSummits() {
+  if (map.getZoom() >= SUMMIT_ZOOM) summitLayer.addTo(map);
+  else summitLayer.remove();
+}
+if (REGION.summits.length) {
+  map.on("zoomend", showSummits);
+  showSummits();
+}
+
+function showSummit(i) {
+  var sm = REGION.summits[i], ll = L.latLng(sm.lat, sm.lon), snap = snapToTrail(ll);
+  showPanelMsg(SUMMIT_SVG + ' <strong>' + esc(sm.name || "Summit") + '</strong>, ' + feet(sm.ele) + ' (' + Math.round(sm.ele) + ' m)' +
+    (sm.highest ? '<br>The highest point in the ' + esc(REGION.name.replace(/ Reservation$/, "")) : '') +
+    (snap.d < Infinity ? '<br>' + (snap.d < 15 ? 'On ' : formatDist(snap.d) + ' from ') + '<em>' + esc(snap.name) + '</em>' : ''));
+}
+
+// Crossing a town line (REGION.towns): "Welcome to Milford!" for a few seconds, once you're well
+// into the new town (TOWN_SURE_M inside it), so a trail weaving along a line doesn't keep
+// announcing it. An outing's first town is just noted.
+var TOWN_SURE_M = 50, TOWN_ACC_M = 30, TOWN_KEY = REGION.storagePrefix + "Town";
+var townNow = null;
+try { townNow = sessionStorage.getItem(TOWN_KEY); } catch (e) {}
+
+// The town at a point, and how far it is from that town's line: {town, edge} (meters), or null
+function townAt(ll) {
+  var px = ll.lng * 82000, py = ll.lat * 111000, found = null;
+  REGION.towns.forEach(function(t) {
+    t.rings.forEach(function(ring) {
+      var inside = false, edge = Infinity;
+      for (var i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        var ax = ring[j][0] * 82000, ay = ring[j][1] * 111000, bx = ring[i][0] * 82000, by = ring[i][1] * 111000;
+        if ((by > py) !== (ay > py) && px < (ax - bx) * (py - by) / (ay - by) + bx) inside = !inside;
+        var vx = bx - ax, vy = by - ay, l2 = vx * vx + vy * vy;
+        var u = l2 ? Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / l2)) : 0;
+        edge = Math.min(edge, Math.hypot(px - ax - u * vx, py - ay - u * vy));
+      }
+      if (inside) found = {town: t, edge: edge};
+    });
+  });
+  return found;
+}
+
+function checkTown(ll, acc) {
+  if (REGION.towns.length && acc <= TOWN_ACC_M) {
+    var t = townAt(ll);
+    if (t && t.edge >= TOWN_SURE_M && t.town.name !== townNow) {
+      if (townNow) showBanner((t.town.seal ? '<img class="seal" alt="" src="' + esc(t.town.seal) + '">' : '') +
+        'Welcome to ' + esc(t.town.name) + '!');
+      townNow = t.town.name;
+      try { sessionStorage.setItem(TOWN_KEY, townNow); } catch (e) {}
+    }
+  }
 }
 
 function ownerSlug(s) {
@@ -3184,8 +3256,31 @@ function saveSignReport() {
   reportSaved(saveReport({kind: "sign", text: ""}));
 }
 
-// After saving: a note can be added, or the report taken back
+// After saving: back where you were, with a banner for a few seconds saying what was saved
+// (one saved by mistake has its x in My reports). "Another color" asks which color first.
+var BANNER_MS = 6000, bannerTimer = null;
 function reportSaved(r, ask) {
+  if (ask) {
+    savedSheet(r, ask);
+  } else {
+    closeReport();
+    // (a note by the start of what it says)
+    var what = r.kind === "note" ? esc('Note: ' + r.text.slice(0, 40)) + (r.text.length > 40 ? '&hellip;' : '') : esc(reportHeadline(r));
+    showBanner('&#x2713; Saved: ' + what + (r.at ? '' : ' (without where you were)'));
+  }
+}
+
+// A banner near the top for a few seconds: what was saved, or a town line crossed
+function showBanner(html) {
+  var el = document.getElementById("banner");
+  el.innerHTML = html;
+  el.style.display = "block";
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(function() { el.style.display = "none"; }, BANNER_MS);
+}
+
+// "Another color": the saved report, with a box to say which
+function savedSheet(r, ask) {
   document.getElementById("infoContent").innerHTML = '<div class="report">' +
     '<div class="report-head"><strong>✓ Saved:</strong> ' + esc(ask ? "Blaze: another color" : reportHeadline(r)) + '</div>' +
     (r.at ? '' : '<div class="report-warn">Without your location, it doesn\'t say where.</div>') +
@@ -4247,9 +4342,6 @@ function nearEntry(ll, m) {
   return entryLabels().some(function(label) { return ll.distanceTo(intMarkers[label].getLatLng()) <= m; });
 }
 
-// Time since the fix before this one; a long one means the phone stopped reporting
-var fixGapMs = 0;
-
 // Called with each fix, before it is added as a crumb. The place rules only trust fixes
 // good enough to tell: a rough fix can land a kilometer off, or near an entry you aren't at.
 // Stopping near an exit only counts if you also come back near one (the same lot or
@@ -4257,7 +4349,6 @@ var fixGapMs = 0;
 function checkFreshStart(ll, acc) {
   var last = readLastFix();
   var gap = last ? Date.now() - last.t : Infinity;
-  fixGapMs = gap;
   var left = distFromNetwork(ll) - acc > FAR_FROM_NETWORK_M || gap >= NEW_DAY_GAP_MS ||
     (gap >= EXIT_GAP_MS && last.acc <= EXIT_NEAR_M && acc <= EXIT_NEAR_M &&
      nearEntry(L.latLng(last.lat, last.lng), EXIT_NEAR_M) && nearEntry(ll, EXIT_NEAR_M));
@@ -4279,10 +4370,13 @@ if (!lastFixOnLoad || Date.now() - lastFixOnLoad.t >= NEW_DAY_GAP_MS) {
 }
 
 // The phone stops reporting while the screen is off, leaving gaps in the crumbs. Rather
-// than cut across the woods, fill a gap with the shortest way along the trails.
+// than cut across the woods, fill a gap with the way you most likely went: along the route
+// you're following, if you're still on it, or else the shortest way along the trails.
 var CRUMB_GAP_M = 30;   // farther apart than this counts as a gap
 // Only fill where the phone went quiet: GPS jitter while standing still can put a crumb
-// on a neighboring trail, and a filled route there would be a phantom loop
+// on a neighboring trail, and a filled route there would be a phantom loop. Quiet is time
+// since the last crumb, not the last fix: a phone waking up gives a few rough fixes (not
+// crumbs) before a good one, and those mustn't hide the gap.
 var CRUMB_QUIET_MS = 20 * 1000;
 
 // Trail points from a to b along the shortest trail route, or null to draw a straight line
@@ -4321,7 +4415,38 @@ function trailPathBetween(a, b) {
 // A crumb's 4th element is 1 when the phone was quiet just before it.
 function crumbFill(i) {
   var a = L.latLng(crumbs[i - 1][0], crumbs[i - 1][1]), b = L.latLng(crumbs[i][0], crumbs[i][1]);
-  return crumbs[i][3] && a.distanceTo(b) > CRUMB_GAP_M ? trailPathBetween(a, b) : null;
+  return crumbs[i][3] && a.distanceTo(b) > CRUMB_GAP_M ? routePathBetween(a, b) || trailPathBetween(a, b) : null;
+}
+
+// On a live route you were still on: the route's points from where you were on it (a, at
+// its progress) on to where you are (b, the nearest point of the route ahead), or null;
+// the route's stops in between count as done. (Called before the route takes in b, so its
+// progress is still a's.)
+function routePathBetween(a, b) {
+  var pts = null;
+  if (plan && plan.live && !plan.arrived && plan.progress !== null) {
+    var from = plan.progress, here = routePointAt(from);
+    if (here && here.distanceTo(a) <= OFF_ROUTE_M) {
+      var px = b.lng * 82000, py = b.lat * 111000, best = null;
+      plan.segs.forEach(function(seg) {
+        for (var k = 0; k < seg.pts.length - 1; k++) {
+          var ax = seg.pts[k].lng * 82000, ay = seg.pts[k].lat * 111000;
+          var vx = seg.pts[k + 1].lng * 82000 - ax, vy = seg.pts[k + 1].lat * 111000 - ay, l2 = vx * vx + vy * vy;
+          var t = l2 > 0 ? Math.max(0, Math.min(1, ((px - ax) * vx + (py - ay) * vy) / l2)) : 0;
+          var d = Math.hypot(px - ax - t * vx, py - ay - t * vy), at = seg.s0 + seg.cum[k] + t * (seg.cum[k + 1] - seg.cum[k]);
+          if (d <= OFF_ROUTE_M && at > from && (!best || d < best.d)) best = {d: d, at: at};
+        }
+      });
+      // (a route far longer than the gap probably isn't what happened)
+      var straight = a.distanceTo(b);
+      if (best && best.at - from <= Math.max(3 * straight, straight + 400)) {
+        pts = routeLineBetween(from, best.at);
+        // You went the route's way, so its stops along there are done, not missed
+        plan.steps.forEach(function(st) { if (st.stop && st.at > from && st.at <= best.at) st.stop.done = true; });
+      }
+    }
+  }
+  return pts && pts.length ? pts : null;
 }
 var crumbFills = crumbs.map(function(c, i) { return i > 0 ? crumbFill(i) : null; });
 
@@ -4351,10 +4476,12 @@ function drawCrumbs(latlngs) {
 }
 
 function addCrumb(ll, acc) {
-  var last = crumbs.length ? L.latLng(crumbs[crumbs.length - 1]) : null;
+  // (a crumb is [lat, lng, time] or, after a quiet spell, [lat, lng, time, 1]: Leaflet takes
+  // the first but not the second as a point, so the two numbers go in on their own)
+  var prev = crumbs[crumbs.length - 1], last = prev ? L.latLng(prev[0], prev[1]) : null;
   if (acc <= 40 && (!last || last.distanceTo(ll) >= 5) && distFromNetwork(ll) <= FAR_FROM_NETWORK_M) {
     var crumb = [+ll.lat.toFixed(6), +ll.lng.toFixed(6), Date.now()];
-    if (fixGapMs >= CRUMB_QUIET_MS) crumb.push(1);
+    if (prev && crumb[2] - prev[2] >= CRUMB_QUIET_MS) crumb.push(1);
     crumbs.push(crumb);
     crumbFills.push(crumbs.length > 1 ? crumbFill(crumbs.length - 1) : null);
     if (crumbs.length > 5000) {
@@ -4376,6 +4503,8 @@ function trackedM() {
 }
 
 function clearCrumbs() {
+  townNow = null;
+  try { sessionStorage.removeItem(TOWN_KEY); } catch (e) {}
   crumbs = [];
   crumbFills = [];
   entrance = null;
@@ -4490,6 +4619,7 @@ function onLocation(pos) {
   userAccuracy = pos.coords.accuracy;
   checkFreshStart(userLatLng, userAccuracy);
   addCrumb(userLatLng, userAccuracy);
+  checkTown(userLatLng, userAccuracy);
   updateMoveHeading(pos, userLatLng);
   if (pendingTrip) {
     var resumed = pendingTrip;

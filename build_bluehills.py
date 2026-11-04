@@ -29,7 +29,7 @@ from reports import build_reports_page
 from trailmap import build_map_page, dist_m, maps_menu_html
 import make_favicon
 
-PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
+PROJ = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(PROJ, "bluehills_data")
 OUT = os.path.join(PROJ, "bluehills")
 ENTRY_LOT_M = 200        # a parking lot this close to a numbered intersection makes it an entry

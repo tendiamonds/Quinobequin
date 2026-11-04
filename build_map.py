@@ -20,7 +20,7 @@ from reports import build_reports_page
 from crs import CRS, holders_text, sign_checks, sign_crs
 from trailmap import build_map_page, build_trail_int_map, curve_trails, dist_m, maps_menu_html
 
-PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
+PROJ = os.path.dirname(os.path.abspath(__file__))
 SITE = "https://tendiamonds.github.io/Quinobequin/"   # where the site is published
 TOWNS = {136: "Holliston", 139: "Hopkinton", 185: "Milford"}
 
@@ -65,6 +65,18 @@ ZONE_NAMES = {
 }
 
 
+def town_lines():
+    """The town lines, for "Welcome to Milford!" (uc_towns.py downloads them), each with its
+    seal from seals/ (white, made from the shirts' seals) where there is one"""
+    path = os.path.join(PROJ, "uc_data", "towns.json")
+    towns = json.load(open(path, encoding="utf-8")) if os.path.exists(path) else []
+    for t in towns:
+        seal = "seals/%s.png" % t["name"].lower()
+        if os.path.exists(os.path.join(PROJ, seal)):
+            t["seal"] = seal
+    return towns
+
+
 def region():
     """This site's settings for the shared map app (trailmap.py)"""
     return {
@@ -78,6 +90,16 @@ def region():
         "report": {"email": "tendiamonds@gmail.com", "signReports": False},
         "checks": sign_checks(),
         "otherMaps": [{"name": "Blue Hills", "href": "bluehills/map.html"}],
+        "towns": town_lines(),
+        # Hilltops beside the trails (from the lidar, 2026-11-04; trailmap finds each true
+        # top and its height). Names are OpenStreetMap's, where it has one.
+        "summits": [
+            {"name": "Rocky Woods Range", "lat": 42.16791, "lon": -71.50136},   # on Nemba Way: the forest's highest
+            {"name": None, "lat": 42.17834, "lon": -71.48936},                  # by A17, just off Right Turn Clyde
+            {"name": None, "lat": 42.18358, "lon": -71.50061},                  # on Battle Scar
+            {"name": None, "lat": 42.17685, "lon": -71.48523},                  # on the Driveway Access Trail, by Adams Street
+            {"name": "College Rock", "lat": 42.194540, "lon": -71.499507},      # College Rock Park (OSM's peak)
+        ],
         "zonesPage": True,
         "nav": nav_html("map"),
         # Blazed trails, from NEMBA's 2012 map (uc_blazes.py), corrected from the ground;
@@ -319,11 +341,12 @@ def renumber(feats):
 
 
 def load_and_process():
-    with open(rf"{PROJ}\parcels_all.geojson") as f:
+    # who owns the land at each intersection: the assessors' parcels near them (MassGIS)
+    with open(os.path.join(PROJ, "uc_data", "parcels.geojson"), encoding="utf-8") as f:
         parcels = json.load(f)
-    with open(rf"{PROJ}\intersections_zoned.geojson") as f:
+    with open(os.path.join(PROJ, "intersections_zoned.geojson")) as f:
         ints = json.load(f)
-    with open(rf"{PROJ}\trails_selected.geojson") as f:
+    with open(os.path.join(PROJ, "trails_selected.geojson")) as f:
         trails = json.load(f)
 
     # Until the signs go up (RENUMBER), every build numbers each zone afresh, in its order
@@ -758,7 +781,7 @@ NAV_PLACEHOLDER
             sign, ('<a href="map.html?int=%s">%s</a>' % (label, label)) if signed else "a junction with no sign planned")
         for sign, label, signed in posted))
 
-    with open(rf"{PROJ}\index.html", "w", encoding="utf-8") as f:
+    with open(os.path.join(PROJ, "index.html"), "w", encoding="utf-8") as f:
         f.write(html)
     print("Wrote index.html")
 
@@ -804,7 +827,7 @@ def build_zones_page(rows):
 
     lines.append("</div></body></html>")
 
-    with open(rf"{PROJ}\zones.html", "w", encoding="utf-8") as f:
+    with open(os.path.join(PROJ, "zones.html"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
     print("Wrote zones.html")
 
@@ -896,7 +919,7 @@ def build_owners_page(rows):
     html = html.replace("TOTAL", str(total_pub + total_priv))
     html = html.replace("OWNER_CT", str(len(public) + len(private)))
 
-    with open(rf"{PROJ}\owners.html", "w", encoding="utf-8") as f:
+    with open(os.path.join(PROJ, "owners.html"), "w", encoding="utf-8") as f:
         f.write(html)
     print("Wrote owners.html")
 
@@ -976,7 +999,7 @@ def main():
     build_map_page(ints, trails, region(), PROJ)
     build_zones_page(rows)
     build_owners_page(rows)
-    build_reports_page(rf"{PROJ}\reports.html", title="Reports — Upper Charles Forest", css=PAGE_CSS,
+    build_reports_page(os.path.join(PROJ, "reports.html"), title="Reports — Upper Charles Forest", css=PAGE_CSS,
                        nav=nav_html("reports"), storage_prefix=region()["storagePrefix"],
                        email=region()["report"]["email"], blazes=region()["blazes"], checks=sign_checks(),
                        checks_intro="Signs to check on the next walk, nearest first. On the map, they have a ? badge.")

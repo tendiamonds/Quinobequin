@@ -11,30 +11,31 @@ Exports updated GeoJSON files that can be dropped back into the project.
 """
 
 import json
+import os
 
-PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
+PROJ = os.path.dirname(os.path.abspath(__file__))
 
 
 def main():
     import sys
-    trail_file = sys.argv[1] if len(sys.argv) > 1 else rf"{PROJ}\trails_selected.geojson"
+    trail_file = sys.argv[1] if len(sys.argv) > 1 else os.path.join(PROJ, "trails_selected.geojson")
     with open(trail_file) as f:
         trails = json.load(f)
-    int_file = sys.argv[2] if len(sys.argv) > 2 else rf"{PROJ}\intersections_zoned.geojson"   # the project's own, current
+    int_file = sys.argv[2] if len(sys.argv) > 2 else os.path.join(PROJ, "intersections_zoned.geojson")   # the project's own, current
     print("Trail source: %s" % trail_file)
     print("Intersection source: %s" % int_file)
     with open(int_file) as f:
         ints = json.load(f)
     # Trails that can be added: OSM's paths and the Trailforks snapshot's trails not already
     # on the map (trails_available.geojson), shown dashed red to click and add
-    with open(rf"{PROJ}\trails_available.geojson", encoding="utf-8") as f:
+    with open(os.path.join(PROJ, "trails_available.geojson"), encoding="utf-8") as f:
         old_trails = json.load(f)
 
     html = TEMPLATE.replace("__TRAIL_DATA__", json.dumps(trails))
     html = html.replace("__INT_DATA__", json.dumps(ints))
     html = html.replace("__OLD_TRAIL_DATA__", json.dumps(old_trails))
 
-    with open(rf"{PROJ}\trail_editor.html", "w", encoding="utf-8") as f:
+    with open(os.path.join(PROJ, "trail_editor.html"), "w", encoding="utf-8") as f:
         f.write(html)
     print("Wrote trail_editor.html (%d trails, %d intersections, %d available)" % (
         len(trails["features"]), len(ints["features"]), len(old_trails["features"])))

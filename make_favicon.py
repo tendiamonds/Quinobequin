@@ -15,7 +15,7 @@ import json
 import os
 from PIL import Image, ImageDraw, ImageFont
 
-PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
+PROJ = os.path.dirname(os.path.abspath(__file__))
 BROWN = "#7a3122"   # same as the Upper Charles signs
 NAVY = "#2c3e50"    # the sites' top bar
 FONT = r"C:\Windows\Fonts\arialbd.ttf"

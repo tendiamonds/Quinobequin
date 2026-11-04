@@ -24,7 +24,7 @@ import time
 import urllib.parse
 import urllib.request
 
-PROJ = r"C:\Users\jbreslau\OneDrive - MathWorks\Documents\MATLAB\holliston_trails"
+PROJ = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.join(PROJ, "bluehills_data")
 BBOX = "(42.180,-71.180,42.250,-71.020)"   # south, west, north, east around the reservation
 # DCR's ArcGIS layers (found by a friend making another Blue Hills map). A query returns at
