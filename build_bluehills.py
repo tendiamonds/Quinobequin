@@ -635,7 +635,7 @@ def main():
         "view": {"center": [(min(lats) + max(lats)) / 2, (min(lons) + max(lons)) / 2], "zoom": 13},
         "bounds": [[min(lats), min(lons)], [max(lats), max(lons)]],
         "storagePrefix": "bh",
-        "report": {"email": "tendiamonds@gmail.com", "signReports": True},
+        "report": {"email": "tendiamonds@gmail.com", "name": "Jason Breslau", "signReports": True},
         "checks": [],
         # DCR marks each piece's blazes, so they already run piece to piece; not snapped
         "blazeStops": None,
@@ -657,7 +657,7 @@ def main():
     make_favicon.make_icons(OUT, label="BH", color="#1f4e79", name="Blue Hills Reservation", short_name="Blue Hills")
     build_reports_page(os.path.join(OUT, "reports.html"), title="Reports — Blue Hills Reservation", css=CHECKS_CSS,
                        nav=region["nav"], storage_prefix=region["storagePrefix"], email=region["report"]["email"],
-                       blazes=BLAZES, checks=[])
+                       name=region["report"]["name"], blazes=BLAZES, checks=[])
 
     for k in WIDTHS:
         print("  %-14s %.1f km" % (k, total["width " + k] / 1000))

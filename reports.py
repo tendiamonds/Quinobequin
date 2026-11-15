@@ -2,7 +2,9 @@
 Reports, saved as you go and sent together. Shared by the regions' sites.
 
 Out on a walk, a report takes a tap or two from the map (its Report button, or "Report"
-in a trail's or intersection's details): a blaze you can see, picked by color, or a note.
+in a trail's or intersection's details): a blaze you can see, picked by color; something
+in the way (a tree down, a washout, flooding); a bridge, marked at its start and its end;
+or a note.
 Each one is saved on the phone with where you were (and how sure the phone was of it),
 which way you were heading, and what the map has there: the trail, the sign-to-sign
 stretch, and the blazes it expects. Nothing is sent as you go. The Reports page lists
@@ -16,10 +18,13 @@ answered the same way: from a badge on the intersection, the "Check here" note w
 you're near one, or the Reports page. An answer is a report like any other.
 
   build_reports_page(path, title=..., css=..., nav=..., storage_prefix=..., email=...,
-                     blazes=..., checks=..., checks_intro=...)
+                     blazes=..., checks=..., checks_intro=..., name=...)
+
+The email goes to a named person (REPORT_NAME), and the pages say who, before you send.
 
 REPORTS_JS is the part the map shares (trailmap.py): it expects REPORTS_KEY,
-REPORT_EMAIL, REPORT_TITLE, REPORT_BLAZES and REPORT_CHECKS to be defined first.
+REPORT_EMAIL, REPORT_NAME, REPORT_TITLE, REPORT_BLAZES and REPORT_CHECKS to be defined
+first.
 """
 
 import html
@@ -28,11 +33,13 @@ import os
 
 REPORTS_JS = r"""
 // --- Saved reports (reports.py), shared by the map and the Reports page through the
-// phone's storage. A report: {id, when, kind ("blaze", "note", "check" or "sign"),
-// blaze (a blaze key, "other" or "none"), check (its id), answer, text, at ({lat, lon,
-// acc} or null), heading (degrees or null), about ({what: "int" or "trail", ref, extra}
-// or null), ctx (what the map had there: {trail, stretch, expect: [blaze keys], near,
-// nearM}), sent (when, or null)}
+// phone's storage. A report: {id, when, kind ("blaze", "obstruction", "bridge", "note",
+// "check" or "sign"), blaze (a blaze key, "other" or "none"), obstruction (an
+// OBSTRUCTIONS key), check (its id), answer, text, at ({lat, lon, acc} or null), heading
+// (degrees or null), about ({what: "int" or "trail", ref, extra} or null), ctx (what the
+// map had there: {trail, stretch, expect: [blaze keys], near, nearM}), sent (when, or
+// null)}. A bridge's at and ctx are its start; end ({lat, lon, acc}, or null until you
+// get there) and lengthM its far end.
 function loadReports() {
   try { return JSON.parse(localStorage.getItem(REPORTS_KEY)) || []; } catch (e) { return []; }
 }
@@ -60,11 +67,30 @@ function checkAnswer(id) {
   return hits.length ? hits[hits.length - 1] : null;
 }
 
+// Who the reports go to, as the pages say it: "Jason Breslau (tendiamonds@gmail.com)"
+function reportsTo() { return REPORT_NAME ? REPORT_NAME + " (" + REPORT_EMAIL + ")" : REPORT_EMAIL; }
+
+var OBSTRUCTIONS = {tree: "Tree down", washout: "Washout", flooded: "Flooded", other: "Something else"};
+
 function blazeWords(key) {
   return key === "none" ? "no blaze here" : key === "other" ? "another color"
     : REPORT_BLAZES[key] ? REPORT_BLAZES[key].pick || REPORT_BLAZES[key].marks : key;
 }
+// Where a report was, in words to follow its headline: " on Holliston Highway, A22–A20"
+function placeWords(x) {
+  return !x ? "" : x.trail ? " on " + x.trail + ", " + x.stretch
+    : x.near ? (x.nearM ? ", off trail " + x.nearM + " m from " + x.near : " at " + x.near) : "";
+}
+// The kinds whose headline says where (so the lines under it needn't)
+function headlineHasPlace(r) { return r.kind === "obstruction" || r.kind === "bridge"; }
+function feetWords(m) { return Math.round(m * 3.28084) + " ft"; }
 function reportHeadline(r) {
+  // Something else in the way: what was typed for it
+  if (r.kind === "obstruction") {
+    return (r.obstruction === "other" ? "Obstruction" + (r.text ? ": " + r.text : "") : OBSTRUCTIONS[r.obstruction] || "Obstruction") +
+      placeWords(r.ctx);
+  }
+  if (r.kind === "bridge") return "Bridge" + placeWords(r.ctx) + (r.end ? ", " + feetWords(r.lengthM) + " long" : " (its start only)");
   // Another color: the color is what was typed for it ("purple"), if anything
   if (r.kind === "blaze" && r.blaze === "other") return "Blaze: " + (r.text || "another color (not said which)");
   if (r.kind === "blaze") return "Blaze: " + blazeWords(r.blaze);
@@ -75,6 +101,9 @@ function reportHeadline(r) {
   if (r.kind === "sign") return "Standing at sign " + (r.about ? r.about.ref : "");
   return "Note";
 }
+// Another color's text is the color, and something else in the way's is what it is: both
+// are in the headline
+function textIsHeadline(r) { return (r.kind === "blaze" || r.kind === "obstruction") && (r.blaze || r.obstruction) === "other"; }
 function fmtCoords(at) { return at.lat.toFixed(6) + ", " + at.lon.toFixed(6); }
 // The lines under a report's headline, for the list and the email
 function reportDetails(r) {
@@ -84,16 +113,17 @@ function reportDetails(r) {
     if (c) out.push(c.question);
   }
   if (r.about && r.kind !== "check") out.push("About: " + (r.about.what === "trail" ? "trail " : "") + r.about.ref + (r.about.extra ? " (" + r.about.extra + ")" : ""));
-  var x = r.ctx;
+  var x = headlineHasPlace(r) ? null : r.ctx;
   if (x && x.trail) {
     out.push("On " + x.trail + ", " + x.stretch +
              (r.kind === "blaze" ? " (the map has " + (x.expect && x.expect.length ? x.expect.map(blazeWords).join(", ") : "no blaze") + ")" : ""));
   } else if (x && x.near) {
     out.push(x.nearM ? "Off trail, " + x.nearM + " m from " + x.near : "At " + x.near);
   }
-  out.push(r.at ? "At " + fmtCoords(r.at) + " (+/- " + r.at.acc + " m)" + (r.heading !== null && r.heading !== undefined ? ", heading " + r.heading + "°" : "")
+  out.push(r.at ? (r.kind === "bridge" ? "Starts at " : "At ") + fmtCoords(r.at) + " (+/- " + r.at.acc + " m)" + (r.heading !== null && r.heading !== undefined ? ", heading " + r.heading + "°" : "")
                 : "Location not available");
-  if (r.text && !(r.kind === "blaze" && r.blaze === "other")) out.push("Note: " + r.text);
+  if (r.end) out.push("Ends at " + fmtCoords(r.end) + " (+/- " + r.end.acc + " m)");
+  if (r.text && !textIsHeadline(r)) out.push("Note: " + r.text);
   return out;
 }
 function reportsText(list) {
@@ -109,7 +139,9 @@ function reportsText(list) {
 function sendReports() {
   var list = unsentReports();
   if (list.length) {
-    location.href = "mailto:" + REPORT_EMAIL + "?subject=" + encodeURIComponent(REPORT_TITLE + ": " + list.length + " report" +
+    // To "Jason Breslau <tendiamonds@gmail.com>" (the @ left as is: some mail apps don't decode it)
+    var to = REPORT_NAME ? encodeURIComponent(REPORT_NAME) + "%20%3C" + REPORT_EMAIL + "%3E" : REPORT_EMAIL;
+    location.href = "mailto:" + to + "?subject=" + encodeURIComponent(REPORT_TITLE + ": " + list.length + " report" +
       (list.length === 1 ? "" : "s")) + "&body=" + encodeURIComponent(reportsText(list));
     var now = new Date().toISOString(), all = loadReports();
     all.forEach(function(r) { if (!r.sent) r.sent = now; });
@@ -196,6 +228,7 @@ Report button is the quickest way: a tap on a blaze's color records it right whe
   <button class="btn2 quiet" onclick="copyAll()">Copy</button>
   <button class="btn2" id="sendBtn" onclick="sendAll()">Send all</button>
 </div>
+<div class="where" id="sendsTo"></div>
 <div class="msg" id="msg"></div>
 <div class="where" id="where">Finding where you are… (allow location so reports record where you are)</div>
 
@@ -220,7 +253,7 @@ Report button is the quickest way: a tap on a blaze's color records it right whe
   <button class="btn2 quiet" onclick="clearSent()">Clear sent reports</button></details>
 </div>
 <script>
-var REPORTS_KEY = __KEY__, REPORT_EMAIL = __EMAIL__, REPORT_TITLE = __TITLE_JS__;
+var REPORTS_KEY = __KEY__, REPORT_EMAIL = __EMAIL__, REPORT_NAME = __NAME__, REPORT_TITLE = __TITLE_JS__;
 var REPORT_BLAZES = __BLAZES__, REPORT_CHECKS = __CHECKS__;
 __REPORTS_JS__
 var here = null;   // {lat, lon, acc}
@@ -359,6 +392,7 @@ function render() {
   var all = loadReports(), unsent = all.filter(function(r) { return !r.sent; }), sent = all.filter(function(r) { return r.sent; });
   document.getElementById("progress").textContent = unsent.length + " not sent yet";
   document.getElementById("sendBtn").disabled = !unsent.length;
+  document.getElementById("sendsTo").textContent = "Send all sends them to " + reportsTo() + ".";
   document.getElementById("newBlazes").innerHTML = newReportHtml();
   document.getElementById("unsent").innerHTML = unsent.length ? unsent.slice().reverse().map(reportCardHtml).join('')
     : '<div class="empty">Nothing waiting to be sent.</div>';
@@ -397,7 +431,7 @@ REDIRECT = """<!DOCTYPE html><meta charset="utf-8"><title>Field checks</title>
 """
 
 
-def build_reports_page(path, title, css, nav, storage_prefix, email, blazes, checks, checks_intro=""):
+def build_reports_page(path, title, css, nav, storage_prefix, email, blazes, checks, checks_intro="", name=""):
     """Write the Reports page (reports.html), and checks.html pointing to it"""
     # The emails name the place, as the map's do ("Reports — Blue Hills" -> "Blue Hills")
     place = title.split(" — ", 1)[-1]
@@ -408,6 +442,7 @@ def build_reports_page(path, title, css, nav, storage_prefix, email, blazes, che
             .replace("__CHECKS_INTRO__", checks_intro)   # HTML, from our own build scripts
             .replace("__KEY__", json.dumps(storage_prefix + "Reports"))
             .replace("__EMAIL__", json.dumps(email))
+            .replace("__NAME__", json.dumps(name))
             .replace("__BLAZES__", json.dumps(blazes or {}))
             .replace("__CHECKS__", json.dumps(checks))
             .replace("__REPORTS_JS__", REPORTS_JS))

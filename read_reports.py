@@ -1,7 +1,7 @@
 """
 Read a batch of reports sent from a Reports page (reports.py): paste the email into a
 text file, and this lists them, blazes first, by trail and sign-to-sign stretch, each
-against what the map has there.
+against what the map has there; then what's in the way, bridges, and the rest.
 
   python read_reports.py EMAIL.txt ...
 """
@@ -28,6 +28,17 @@ def where(r):
     return "%.6f, %.6f (+/- %s m)" % (at["lat"], at["lon"], at["acc"]) if at else "no location"
 
 
+OBSTRUCTIONS = {"tree": "Tree down", "washout": "Washout", "flooded": "Flooded"}
+
+
+def place(r):
+    """Where on the map, as the reports say it: "Holliston Highway, A22–A20" or "at A5" """
+    x = r.get("ctx") or {}
+    return ("%s, %s" % (x["trail"], x["stretch"]) if x.get("trail")
+            else "off trail, %s m from %s" % (x["nearM"], x["near"]) if x.get("nearM")
+            else "at %s" % x["near"] if x.get("near") else "")
+
+
 def main(paths):
     reports = [r for p in paths for r in read(p)]
     seen = set()
@@ -52,6 +63,24 @@ def main(paths):
             for r in rs:
                 if r.get("text") and r["blaze"] != "other":
                     print("      note (%s): %s" % (r["blaze"], r["text"]))
+
+    rs = [r for r in reports if r["kind"] == "obstruction"]
+    if rs:
+        print("\nIn the way (%d):" % len(rs))
+        for r in rs:
+            what = OBSTRUCTIONS.get(r["obstruction"]) or "Obstruction" + (": " + r["text"] if r.get("text") else "")
+            note = r.get("text") if r["obstruction"] in OBSTRUCTIONS else ""
+            print("  %s  %s  %s  at %s%s" % (r["when"][:16].replace("T", " "), what, place(r), where(r),
+                  ("\n      " + note) if note else ""))
+
+    rs = [r for r in reports if r["kind"] == "bridge"]
+    if rs:
+        print("\nBridges (%d):" % len(rs))
+        for r in rs:
+            end = r.get("end")
+            print("  %s  %s  %s  to %s%s" % (r["when"][:16].replace("T", " "), place(r), where(r),
+                  where({"at": end}) + ", %d ft" % round(r["lengthM"] * 3.28084) if end and r.get("lengthM") is not None
+                  else "(no end marked)", ("\n      " + r["text"]) if r.get("text") else ""))
 
     for kind, title in (("check", "Checks"), ("sign", "Standing at a sign"), ("note", "Notes")):
         rs = [r for r in reports if r["kind"] == kind]

@@ -34,12 +34,33 @@ date as things change; dates are when something was learned or decided.
    a direction-up map (Leaflet can't rotate: a plugin like leaflet-rotate, or rotating
    the container, which turns labels sideways).
 9. Expect the conservation commission to ask to rename **Giggity**.
+10. **Next batch: one app for all the maps** (agreed 2026-11-14). A shared list of the
+    areas (name, link, outline, start points) written by every build; an **Overview** map
+    for when you're in none of them, giving distances to the nearest areas' start points
+    (each area within about 3x the nearest); switching on its own when you arrive in an
+    area, but staying where you put it once you switch by hand; the Maps menu titled with
+    the map you're on; one home-screen app. Upper Charles stays at `map.html` (QR codes).
+11. **A new area: Middlesex Fells.** DCR's statewide trails layer covers it
+    (`services1.arcgis.com/7iJyYTjCtKsZS1LR/arcgis/rest/services/DCR_Roads_and_Trails/FeatureServer/0`;
+    over 1000 pieces, GPS dated 2008-2010, half unnamed, no blaze colors, no numbered
+    intersections), and its points layer (`DCR_Roads_and_Trail_Point_Features`: trailheads,
+    parking, bridges, vistas). Still to check: OpenStreetMap's route relations there, for
+    the trails' colors (Overpass was too busy).
+12. **Try on Android:** that the report email's To shows "Jason Breslau".
+13. **Bridges on the map** (the point of the bridge reports). Each bridge report has both
+    ends; snapped to its trail, that's a stretch of it, which can be stored on the trail
+    the way blazes are and drawn with a bridge symbol (a short pair of lines with flared
+    ends). `read_reports.py` could print them ready to add. Blue Hills and the Fells may
+    have them already: DCR's points layer has bridges and boardwalks, and OSM marks
+    bridge ways.
 
 ## How the field work goes
 
-We walk the trails with the map and file reports from it (blazes by color, notes), then
-send them in a batch by email. `read_reports.py` lists a pasted email's reports against
-what the map has; we apply them to the data (blazes run sign to sign), rebuild, and push
+We walk the trails with the map and file reports from it (a blaze, by color; something in
+the way; a bridge, marked at each end; or a note), then send them in a batch by email,
+to Jason Breslau by name. Back where you started, the map offers to send them, then shows
+a walk summary picture to save or share. `read_reports.py` lists a pasted email's
+reports against what the map has; we apply them to the data (blazes run sign to sign), rebuild, and push
 the day's changes together.
 
 ## Decisions worth knowing

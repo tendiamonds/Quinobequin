@@ -68,6 +68,7 @@ Report button is the quickest way: a tap on a blaze's color records it right whe
   <button class="btn2 quiet" onclick="copyAll()">Copy</button>
   <button class="btn2" id="sendBtn" onclick="sendAll()">Send all</button>
 </div>
+<div class="where" id="sendsTo"></div>
 <div class="msg" id="msg"></div>
 <div class="where" id="where">Finding where you are… (allow location so reports record where you are)</div>
 
@@ -92,15 +93,17 @@ Report button is the quickest way: a tap on a blaze's color records it right whe
   <button class="btn2 quiet" onclick="clearSent()">Clear sent reports</button></details>
 </div>
 <script>
-var REPORTS_KEY = "sarReports", REPORT_EMAIL = "tendiamonds@gmail.com", REPORT_TITLE = "Saratoga Woods";
+var REPORTS_KEY = "sarReports", REPORT_EMAIL = "tendiamonds@gmail.com", REPORT_NAME = "Jason Breslau", REPORT_TITLE = "Saratoga Woods";
 var REPORT_BLAZES = {"red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}, "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"}, "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}, "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"}, "purple": {"name": "Purple-blazed trail", "marks": "purple blazes", "color": "#8e24aa", "style": "blazes"}, "brown": {"name": "Brown trail (SMBA map)", "marks": "shown brown on the SMBA map", "pick": "brown blazes", "color": "#a0522d", "style": "blazes"}, "black": {"name": "Black trail (SMBA map)", "marks": "shown black on the SMBA map", "pick": "black blazes", "color": "#212121", "style": "blazes"}}, REPORT_CHECKS = [];
 
 // --- Saved reports (reports.py), shared by the map and the Reports page through the
-// phone's storage. A report: {id, when, kind ("blaze", "note", "check" or "sign"),
-// blaze (a blaze key, "other" or "none"), check (its id), answer, text, at ({lat, lon,
-// acc} or null), heading (degrees or null), about ({what: "int" or "trail", ref, extra}
-// or null), ctx (what the map had there: {trail, stretch, expect: [blaze keys], near,
-// nearM}), sent (when, or null)}
+// phone's storage. A report: {id, when, kind ("blaze", "obstruction", "bridge", "note",
+// "check" or "sign"), blaze (a blaze key, "other" or "none"), obstruction (an
+// OBSTRUCTIONS key), check (its id), answer, text, at ({lat, lon, acc} or null), heading
+// (degrees or null), about ({what: "int" or "trail", ref, extra} or null), ctx (what the
+// map had there: {trail, stretch, expect: [blaze keys], near, nearM}), sent (when, or
+// null)}. A bridge's at and ctx are its start; end ({lat, lon, acc}, or null until you
+// get there) and lengthM its far end.
 function loadReports() {
   try { return JSON.parse(localStorage.getItem(REPORTS_KEY)) || []; } catch (e) { return []; }
 }
@@ -128,11 +131,30 @@ function checkAnswer(id) {
   return hits.length ? hits[hits.length - 1] : null;
 }
 
+// Who the reports go to, as the pages say it: "Jason Breslau (tendiamonds@gmail.com)"
+function reportsTo() { return REPORT_NAME ? REPORT_NAME + " (" + REPORT_EMAIL + ")" : REPORT_EMAIL; }
+
+var OBSTRUCTIONS = {tree: "Tree down", washout: "Washout", flooded: "Flooded", other: "Something else"};
+
 function blazeWords(key) {
   return key === "none" ? "no blaze here" : key === "other" ? "another color"
     : REPORT_BLAZES[key] ? REPORT_BLAZES[key].pick || REPORT_BLAZES[key].marks : key;
 }
+// Where a report was, in words to follow its headline: " on Holliston Highway, A22–A20"
+function placeWords(x) {
+  return !x ? "" : x.trail ? " on " + x.trail + ", " + x.stretch
+    : x.near ? (x.nearM ? ", off trail " + x.nearM + " m from " + x.near : " at " + x.near) : "";
+}
+// The kinds whose headline says where (so the lines under it needn't)
+function headlineHasPlace(r) { return r.kind === "obstruction" || r.kind === "bridge"; }
+function feetWords(m) { return Math.round(m * 3.28084) + " ft"; }
 function reportHeadline(r) {
+  // Something else in the way: what was typed for it
+  if (r.kind === "obstruction") {
+    return (r.obstruction === "other" ? "Obstruction" + (r.text ? ": " + r.text : "") : OBSTRUCTIONS[r.obstruction] || "Obstruction") +
+      placeWords(r.ctx);
+  }
+  if (r.kind === "bridge") return "Bridge" + placeWords(r.ctx) + (r.end ? ", " + feetWords(r.lengthM) + " long" : " (its start only)");
   // Another color: the color is what was typed for it ("purple"), if anything
   if (r.kind === "blaze" && r.blaze === "other") return "Blaze: " + (r.text || "another color (not said which)");
   if (r.kind === "blaze") return "Blaze: " + blazeWords(r.blaze);
@@ -143,6 +165,9 @@ function reportHeadline(r) {
   if (r.kind === "sign") return "Standing at sign " + (r.about ? r.about.ref : "");
   return "Note";
 }
+// Another color's text is the color, and something else in the way's is what it is: both
+// are in the headline
+function textIsHeadline(r) { return (r.kind === "blaze" || r.kind === "obstruction") && (r.blaze || r.obstruction) === "other"; }
 function fmtCoords(at) { return at.lat.toFixed(6) + ", " + at.lon.toFixed(6); }
 // The lines under a report's headline, for the list and the email
 function reportDetails(r) {
@@ -152,16 +177,17 @@ function reportDetails(r) {
     if (c) out.push(c.question);
   }
   if (r.about && r.kind !== "check") out.push("About: " + (r.about.what === "trail" ? "trail " : "") + r.about.ref + (r.about.extra ? " (" + r.about.extra + ")" : ""));
-  var x = r.ctx;
+  var x = headlineHasPlace(r) ? null : r.ctx;
   if (x && x.trail) {
     out.push("On " + x.trail + ", " + x.stretch +
              (r.kind === "blaze" ? " (the map has " + (x.expect && x.expect.length ? x.expect.map(blazeWords).join(", ") : "no blaze") + ")" : ""));
   } else if (x && x.near) {
     out.push(x.nearM ? "Off trail, " + x.nearM + " m from " + x.near : "At " + x.near);
   }
-  out.push(r.at ? "At " + fmtCoords(r.at) + " (+/- " + r.at.acc + " m)" + (r.heading !== null && r.heading !== undefined ? ", heading " + r.heading + "°" : "")
+  out.push(r.at ? (r.kind === "bridge" ? "Starts at " : "At ") + fmtCoords(r.at) + " (+/- " + r.at.acc + " m)" + (r.heading !== null && r.heading !== undefined ? ", heading " + r.heading + "°" : "")
                 : "Location not available");
-  if (r.text && !(r.kind === "blaze" && r.blaze === "other")) out.push("Note: " + r.text);
+  if (r.end) out.push("Ends at " + fmtCoords(r.end) + " (+/- " + r.end.acc + " m)");
+  if (r.text && !textIsHeadline(r)) out.push("Note: " + r.text);
   return out;
 }
 function reportsText(list) {
@@ -177,7 +203,9 @@ function reportsText(list) {
 function sendReports() {
   var list = unsentReports();
   if (list.length) {
-    location.href = "mailto:" + REPORT_EMAIL + "?subject=" + encodeURIComponent(REPORT_TITLE + ": " + list.length + " report" +
+    // To "Jason Breslau <tendiamonds@gmail.com>" (the @ left as is: some mail apps don't decode it)
+    var to = REPORT_NAME ? encodeURIComponent(REPORT_NAME) + "%20%3C" + REPORT_EMAIL + "%3E" : REPORT_EMAIL;
+    location.href = "mailto:" + to + "?subject=" + encodeURIComponent(REPORT_TITLE + ": " + list.length + " report" +
       (list.length === 1 ? "" : "s")) + "&body=" + encodeURIComponent(reportsText(list));
     var now = new Date().toISOString(), all = loadReports();
     all.forEach(function(r) { if (!r.sent) r.sent = now; });
@@ -339,6 +367,7 @@ function render() {
   var all = loadReports(), unsent = all.filter(function(r) { return !r.sent; }), sent = all.filter(function(r) { return r.sent; });
   document.getElementById("progress").textContent = unsent.length + " not sent yet";
   document.getElementById("sendBtn").disabled = !unsent.length;
+  document.getElementById("sendsTo").textContent = "Send all sends them to " + reportsTo() + ".";
   document.getElementById("newBlazes").innerHTML = newReportHtml();
   document.getElementById("unsent").innerHTML = unsent.length ? unsent.slice().reverse().map(reportCardHtml).join('')
     : '<div class="empty">Nothing waiting to be sent.</div>';

@@ -87,7 +87,7 @@ def region():
         "storagePrefix": "vtn",   # kept from when this was the Vietnam Trail Network map
         "dem": os.path.join(PROJ, "elevation_cache", "upper_charles.tif"),
         # The prototype signs up now use an abandoned numbering, so no "I'm at this sign"
-        "report": {"email": "tendiamonds@gmail.com", "signReports": False},
+        "report": {"email": "tendiamonds@gmail.com", "name": "Jason Breslau", "signReports": False},
         "checks": sign_checks(),
         "otherMaps": [{"name": "Blue Hills", "href": "bluehills/map.html"}],
         "towns": town_lines(),
@@ -1001,7 +1001,8 @@ def main():
     build_owners_page(rows)
     build_reports_page(os.path.join(PROJ, "reports.html"), title="Reports — Upper Charles Forest", css=PAGE_CSS,
                        nav=nav_html("reports"), storage_prefix=region()["storagePrefix"],
-                       email=region()["report"]["email"], blazes=region()["blazes"], checks=sign_checks(),
+                       email=region()["report"]["email"], name=region()["report"]["name"],
+                       blazes=region()["blazes"], checks=sign_checks(),
                        checks_intro="Signs to check on the next walk, nearest first. On the map, they have a ? badge.")
 
 

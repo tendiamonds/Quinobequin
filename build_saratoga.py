@@ -383,7 +383,7 @@ def main():
         "view": {"center": [(min(lats) + max(lats)) / 2, (min(lons) + max(lons)) / 2], "zoom": 14},
         "bounds": [[min(lats), min(lons)], [max(lats), max(lons)]],
         "storagePrefix": "sar",
-        "report": {"email": "tendiamonds@gmail.com", "signReports": False},
+        "report": {"email": "tendiamonds@gmail.com", "name": "Jason Breslau", "signReports": False},
         "otherMaps": [{"name": "Upper Charles", "href": "../map.html"}, {"name": "Blue Hills", "href": "../bluehills/map.html"}],
         "zonesPage": False,
         "dem": os.path.join(PROJ, "elevation_cache", "saratoga.tif"),
@@ -402,7 +402,7 @@ def main():
     make_favicon.make_icons(OUT, label="S", color="#006A52", ink="#FFD100", name="Saratoga Woods", short_name="Saratoga")
     build_reports_page(os.path.join(OUT, "reports.html"), title="Reports — Saratoga Woods", css=CHECKS_CSS,
                        nav=region["nav"], storage_prefix=region["storagePrefix"], email=region["report"]["email"],
-                       blazes=BLAZES, checks=[])
+                       name=region["report"]["name"], blazes=BLAZES, checks=[])
 
     by_zone = collections.Counter(f["properties"]["zone"] for f in features if f["properties"].get("shape"))
     km = collections.Counter()

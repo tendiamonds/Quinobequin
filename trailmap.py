@@ -9,7 +9,7 @@ build_map_page(ints, trails, region, out_dir) writes out_dir/map.html. region is
   bounds         [[south, west], [north, east]] of the trail network
   storagePrefix  prefix for what the browser keeps (settings, breadcrumbs), so two
                  regions served from the same site don't mix them up
-  report         {"email", "signReports"}: where the Reports page sends reports, and
+  report         {"email", "name", "signReports"}: who reports are sent to, and
                  whether "I'm standing at this sign" is offered (see reports.py)
   checks         (optional) field checks at intersections, as for reports.py
   credit         (optional) HTML credit for the trail data, beside the map tiles' (bottom right)
@@ -551,6 +551,9 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
     width: 20px; height: 3px; margin-right: 8px; border-radius: 2px; flex-shrink: 0;
   }
 
+  /* Zoomed out (showDetail): only the trails and the signs' dots */
+  #map.zoomed-out .marker-label, #map.zoomed-out .blaze-line, #map.zoomed-out .road-link,
+  #map.zoomed-out .leaflet-marker-icon:has(.post-badge, .lot-badge, .rock-svg, .entry-diamond, .check-badge) { display: none; }
   .marker-label {
     background: none !important; border: none !important; box-shadow: none !important;
     font-size: 10px; font-weight: bold; font-family: -apple-system, sans-serif;
@@ -704,6 +707,12 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
     padding: 6px 10px; font-size: 13px; background: #fff; color: #263238; cursor: pointer; }
   .blaze-pick:active { background: #e3f2fd; }
   .blaze-pick.on { background: #e3f2fd; border-color: #1e88e5; }
+  .report-kinds { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+  .report-kind { border: 1px solid #b0bec5; border-radius: 8px; background: #fff; padding: 12px 6px; font: inherit;
+                 font-size: 15px; font-weight: 600; color: #263238; cursor: pointer; }
+  .report-kind:active { background: #e3f2fd; }
+  .report-kind.waiting { background: #e3f2fd; border-color: #1e88e5; color: #0d47a1; }
+  .walk-img { display: block; width: 100%; max-height: 55vh; object-fit: contain; margin: 4px 0 8px; border-radius: 6px; }
   .my-reports { margin: 6px 0 10px; max-height: 45vh; overflow-y: auto; }
   .my-report { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid #eceff1; font-size: 13px; }
   .my-report > div { flex: 1; min-width: 0; }
@@ -937,8 +946,9 @@ trailData.features.forEach(function(f) {
 
 var trailLayer = L.geoJSON(trailData, {
   style: function(f) {
-    // Road links (stretches of road between trails) are dashed
-    return f.properties.road ? {color: "#757575", weight: 3, opacity: 0.6, dashArray: "6,6"} : {color: "#2c3e50", weight: 3, opacity: 0.6};
+    // Road links (stretches of road between trails) are dashed, and only from close in
+    return f.properties.road ? {color: "#757575", weight: 3, opacity: 0.6, dashArray: "6,6", className: "road-link"}
+      : {color: "#2c3e50", weight: 3, opacity: 0.6};
   },
   onEachFeature: function(feature, layer) {
     layer.on("click", function(e) {
@@ -1029,10 +1039,14 @@ function rockSvg(size) {
     '<path d="M5 6 L9 4 L12 5" fill="none" stroke="#e0e0e0" stroke-width="1.2" stroke-linecap="round"/></svg>';
 }
 
-// A dot's resting look. Signless points (Post 4, Teetering Rock) hide their dot behind
-// their badge or icon; it still shows when selected or hovered.
+var DETAIL_ZOOM = 15;
+
+// A dot's resting look: smaller zoomed out (see showDetail). Signless points (Post 4,
+// Teetering Rock) hide their dot behind their badge or icon; it still shows when selected
+// or hovered.
 function restStyle(m) {
-  return {radius: 7, weight: 2, color: "#fff", fillColor: ZONE_COLORS[m._zone] || "#1565c0",
+  var out = map.getZoom() < DETAIL_ZOOM;
+  return {radius: out ? 4 : 7, weight: out ? 1 : 2, color: "#fff", fillColor: ZONE_COLORS[m._zone] || "#1565c0",
           fillOpacity: m._hidden ? 0 : 0.85, opacity: m._hidden ? 0 : 1};
 }
 
@@ -1136,6 +1150,21 @@ intData.features.forEach(function(f) {
   labelMarkers[label] = lbl;
   lbl._zone = zone;
 });
+
+// Zoomed out, the map is just the trails and the signs' zone-colored dots, to see which
+// zone is where: the numbers, blazes, road links and badges come in at DETAIL_ZOOM (the CSS
+// for #map.zoomed-out), and the dots are smaller (restStyle)
+function showDetail() {
+  map.getContainer().classList.toggle("zoomed-out", map.getZoom() < DETAIL_ZOOM);
+  Object.keys(intMarkers).forEach(function(label) {
+    var m = intMarkers[label];
+    // (not one selected or hovered: it's in its highlight. At load, the hover lists aren't
+    // made yet)
+    if (m !== selectedMarker && label !== hoverMarker && !(hoverOwnerMarkers && hoverOwnerMarkers.indexOf(label) >= 0)) m.setStyle(restStyle(m));
+  });
+}
+map.on("zoomend", showDetail);
+showDetail();
 
 var POSTED_ZOOM = 15;
 function showPostedSigns() {
@@ -3482,8 +3511,10 @@ function clearSelection(keepRoute) {
 
 // --- Reports (reports.py). Nothing is sent from here: each report is saved on the phone
 // with where you are, which way you're heading, and what the map has there, and the
-// Reports page sends them all together. A blaze takes one tap: its color.
-var REPORTS_KEY = REGION.storagePrefix + "Reports", REPORT_EMAIL = REGION.report.email, REPORT_TITLE = REGION.name;
+// Reports page sends them all together. The Report sheet asks what kind first (a blaze,
+// something in the way, a bridge, or something else), then which: a blaze takes two taps.
+var REPORTS_KEY = REGION.storagePrefix + "Reports", REPORT_EMAIL = REGION.report.email, REPORT_NAME = REGION.report.name || "";
+var REPORT_TITLE = REGION.name;
 var REPORT_BLAZES = REGION.blazes || {}, REPORT_CHECKS = REGION.checks || [];
 __REPORTS_JS__
 
@@ -3536,30 +3567,59 @@ function reportWhereHtml() {
     ' <span class="report-acc">± ' + formatDist(userAccuracy) + '</span></div>';
 }
 
-function showReportSheet() {
+// A bridge is two reports in one: Bridge Start where it starts, then (the button now
+// says) Bridge End once you've walked across. One started this long ago isn't waiting.
+var BRIDGE_WAIT_MS = 3600 * 1000;
+
+// The bridge whose start you've marked but not its end, or null
+function openBridge() {
+  var list = unsentReports().filter(function(r) {
+    return r.kind === "bridge" && !r.end && Date.now() - new Date(r.when).getTime() < BRIDGE_WAIT_MS;
+  });
+  return list.length ? list[list.length - 1] : null;
+}
+
+// step: null for the kinds, or "blaze", "obstruction" or "other"
+function showReportSheet(step) {
   var a = reportAbout, p = a && a.what === "int" ? intFeatures[a.ref].properties : null;
   var html = '<div class="report"><div class="report-head"><strong>Report</strong>' + (a ? ' about ' + esc(aboutName(a)) : '') + '</div>' +
     reportWhereHtml();
-  if (p && REGION.report.signReports && !p.no_sign) {
-    html += '<button class="route-btn" onclick="saveSignReport()">I\'m standing at this sign</button>';
-  }
-  if (a && a.what === "int") html += checkRowsHtml(a.ref);
-  var keys = Object.keys(REGION.blazes || {});
-  if (keys.length) {
-    html += '<div class="report-sub">A blaze you can see</div><div class="blaze-picks">' +
-      keys.map(function(k) {
+  var back = '<button class="route-btn" style="background:#888" onclick="showReportSheet()">Back</button>';
+  if (step === "blaze") {
+    html += '<div class="report-sub">The blaze you can see</div><div class="blaze-picks">' +
+      Object.keys(REGION.blazes || {}).map(function(k) {
         return '<button class="blaze-pick" onclick="saveBlaze(' + jsArg(k) + ')">' + blazeMarkSvg(k) + esc(blazeWords(k)) + '</button>';
       }).join('') +
       '<button class="blaze-pick" onclick="saveBlaze(\'other\')">Another color</button>' +
-      '<button class="blaze-pick" onclick="saveBlaze(\'none\')">No blaze here</button></div>';
+      '<button class="blaze-pick" onclick="saveBlaze(\'none\')">No blaze here</button></div>' + back;
+  } else if (step === "obstruction") {
+    html += '<div class="report-sub">What\'s in the way</div><div class="blaze-picks">' +
+      Object.keys(OBSTRUCTIONS).map(function(k) {
+        return '<button class="blaze-pick" onclick="saveObstruction(' + jsArg(k) + ')">' + esc(OBSTRUCTIONS[k]) + '</button>';
+      }).join('') + '</div>' + back;
+  } else if (step === "other") {
+    html += '<textarea id="reportNote" rows="3" placeholder="What did you see?"></textarea>' +
+      '<div id="reportWarn" class="report-warn"></div>' +
+      '<button class="route-btn" onclick="saveNote()">Save</button> ' + back;
+  } else {
+    if (p && REGION.report.signReports && !p.no_sign) {
+      html += '<button class="route-btn" onclick="saveSignReport()">I\'m standing at this sign</button>';
+    }
+    if (a && a.what === "int") html += checkRowsHtml(a.ref);
+    var bridge = openBridge();
+    html += '<div class="report-kinds">' +
+      '<button class="report-kind" onclick="showReportSheet(\'blaze\')">Blaze</button>' +
+      '<button class="report-kind" onclick="showReportSheet(\'obstruction\')">Obstruction</button>' +
+      (bridge ? '<button class="report-kind waiting" onclick="endBridge()">Bridge End</button>'
+              : '<button class="report-kind" onclick="startBridge()">Bridge Start</button>') +
+      '<button class="report-kind" onclick="showReportSheet(\'other\')">Other</button></div>' +
+      (bridge ? '<div class="report-fine" style="margin:-2px 0 8px">You marked a bridge\'s start at ' +
+        esc(new Date(bridge.when).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})) +
+        '. Tap Bridge End at its far end.</div>' : '') +
+      '<button class="route-btn" style="background:#888" onclick="closeReport()">Cancel</button> ' + myReportsBtnHtml("showMyReports()") +
+      '<div class="report-fine">Reports are saved on this phone, to send together when you like.</div>';
   }
-  html += '<div class="report-sub">Something else</div>' +
-    '<textarea id="reportNote" rows="3" placeholder="What did you see?"></textarea>' +
-    '<div id="reportWarn" class="report-warn"></div>' +
-    '<button class="route-btn" onclick="saveNote()">Save</button> ' +
-    '<button class="route-btn" style="background:#888" onclick="closeReport()">Cancel</button> ' + myReportsBtnHtml("showMyReports()") +
-    '<div class="report-fine">Reports are saved on this phone, to send together when you like.</div></div>';
-  document.getElementById("infoContent").innerHTML = html;
+  document.getElementById("infoContent").innerHTML = html + '</div>';
 }
 
 // The button to your reports, with how many are waiting to send
@@ -3577,13 +3637,14 @@ function showMyReports() {
     (list.length ? ' &middot; ' + list.length + ' to send' : '') + '</div>';
   if (list.length) {
     html += '<div class="my-reports">' + list.map(function(r) {
-      var where = r.ctx && r.ctx.trail ? r.ctx.trail + ', ' + r.ctx.stretch : r.ctx && r.ctx.near ? 'At ' + r.ctx.near : '';
+      var where = headlineHasPlace(r) ? '' : r.ctx && r.ctx.trail ? r.ctx.trail + ', ' + r.ctx.stretch : r.ctx && r.ctx.near ? 'At ' + r.ctx.near : '';
       return '<div class="my-report"><div><strong>' + esc(reportHeadline(r)) + '</strong>' +
         '<div class="report-fine">' + esc(new Date(r.when).toLocaleString([], {weekday: "short", hour: "numeric", minute: "2-digit"})) +
         (where ? ' &middot; ' + esc(where) : '') + '</div>' +
-        (r.text && !(r.kind === "blaze" && r.blaze === "other") ? '<div class="my-report-note">' + esc(r.text) + '</div>' : '') +
+        (r.text && !textIsHeadline(r) ? '<div class="my-report-note">' + esc(r.text) + '</div>' : '') +
         '</div><a class="stop-x" title="Drop this report" onclick="dropMyReport(' + jsArg(r.id) + ')">&#x2715;</a></div>';
     }).join('') + '</div>' +
+      '<div class="report-fine" style="margin:0 0 6px">' + esc(sendsToWords()) + '</div>' +
       '<button class="route-btn" onclick="sendMyReports()">Send ' + (list.length === 1 ? 'it' : 'all ' + list.length) + '</button> ';
   } else {
     html += '<div class="report-fine" style="margin:6px 0 8px">None waiting to send. Ones you save with the Report button show up here.</div>';
@@ -3599,12 +3660,15 @@ function dropMyReport(id) {
   showMyReports();
 }
 
+// Said by the Send buttons, so you know before you send
+function sendsToWords() { return "Sends to " + reportsTo(); }
+
 // Sending opens an email with them all (sendReports): once it's open, they count as sent
 function sendMyReports() {
   var n = sendReports();
   updateReportCount();
   document.getElementById("infoContent").innerHTML = '<div class="report"><div class="report-head"><strong>' +
-    (n === 1 ? 'Your report is' : 'Your ' + n + ' reports are') + ' in a new email.</strong></div>' +
+    (n === 1 ? 'Your report is' : 'Your ' + n + ' reports are') + ' in a new email' + (REPORT_NAME ? ' to ' + esc(REPORT_NAME) : '') + '.</strong></div>' +
     '<div class="report-fine" style="margin:4px 0 8px">Send it from your email app. Thanks!</div>' +
     '<button class="route-btn" onclick="closeReport()">Back to the map</button></div>';
 }
@@ -3612,6 +3676,32 @@ function sendMyReports() {
 function saveBlaze(key) {
   var r = saveReport({kind: "blaze", blaze: key, text: ""});
   reportSaved(r, key === "other" ? "Which color?" : null);
+}
+
+// Something in the way: saved, then a box for a note ("big oak, needs a chainsaw"), or for
+// what it is when it's something else
+function saveObstruction(key) {
+  var r = saveReport({kind: "obstruction", obstruction: key, text: ""});
+  reportSaved(r, key === "other" ? "What's in the way?" : "Add a note? (optional)");
+}
+
+// A bridge's start needs where you are: it's the whole report until its end is marked
+function startBridge() {
+  if (!userLatLng) { showReportSheet(); return; }
+  saveReport({kind: "bridge", text: "", end: null});
+  closeReport();
+  showBanner('&#x2713; Bridge start saved. At its far end, tap Report, then Bridge End.');
+}
+
+function endBridge() {
+  var b = openBridge();
+  if (!userLatLng || !b) { showReportSheet(); return; }
+  changeReport(b.id, function(r) {
+    r.end = {lat: +userLatLng.lat.toFixed(6), lon: +userLatLng.lng.toFixed(6), acc: Math.round(userAccuracy)};
+    r.lengthM = b.at ? Math.round(userLatLng.distanceTo(L.latLng(b.at.lat, b.at.lon))) : null;
+    b = r;
+  });
+  reportSaved(b);
 }
 
 function saveNote() {
@@ -3626,7 +3716,8 @@ function saveSignReport() {
 }
 
 // After saving: back where you were, with a banner for a few seconds saying what was saved
-// (one saved by mistake has its x in My reports). "Another color" asks which color first.
+// (one saved by mistake has its x in My reports). "Another color" asks which color first,
+// and something in the way, for a note.
 var BANNER_MS = 6000, bannerTimer = null;
 function reportSaved(r, ask) {
   if (ask) {
@@ -3648,10 +3739,11 @@ function showBanner(html) {
   bannerTimer = setTimeout(function() { el.style.display = "none"; }, BANNER_MS);
 }
 
-// "Another color": the saved report, with a box to say which
+// "Another color" or something in the way: the saved report, with a box to say which, or
+// for a note
 function savedSheet(r, ask) {
   document.getElementById("infoContent").innerHTML = '<div class="report">' +
-    '<div class="report-head"><strong>✓ Saved:</strong> ' + esc(ask ? "Blaze: another color" : reportHeadline(r)) + '</div>' +
+    '<div class="report-head"><strong>✓ Saved:</strong> ' + esc(r.kind === "blaze" && r.blaze === "other" ? "Blaze: another color" : reportHeadline(r)) + '</div>' +
     (r.at ? '' : '<div class="report-warn">Without your location, it doesn\'t say where.</div>') +
     '<textarea id="savedNote" rows="2" placeholder="' + esc(ask || "Add a note? (optional)") + '"></textarea>' +
     '<button class="route-btn" onclick="noteSaved(' + jsArg(r.id) + ')">Done</button> ' +
@@ -3996,6 +4088,7 @@ trailData.features.forEach(function(f, ti) {
   });
 });
 if (blazeKeys.length) {
+  blazeLayer.eachLayer(function(l) { l.options.className = "blaze-line"; });   // (see showDetail)
   blazeLayer.addTo(map);
   var showBlazeArrows = function() {
     if (map.getZoom() >= BLAZE_ARROW_ZOOM) blazeArrows.addTo(map);
@@ -4474,8 +4567,9 @@ function locateHtml(place) {
     html += '<div class="full-only" style="color:#777;font-size:11px;margin-top:4px">GPS accuracy ±' + formatDist(userAccuracy) + '</div>';
   }
   if (crumbs.length > 1) {
-    html += '<div class="crumb-row"><span>Tracked ' + formatDist(trackedM()) + '</span>' +
-      '<a class="crumb-clear full-only" onclick="clearCrumbs()">Clear breadcrumbs</a></div>';
+    html += '<div class="crumb-row"><span>Tracked ' + formatDist(trackedM()) + ' &middot; ' + formatElapsed(trackedMs()) + '</span>' +
+      '<span class="full-only"><a class="crumb-clear" style="margin-right:12px" onclick="showWalkSummary()">Walk summary</a>' +
+      '<a class="crumb-clear" onclick="clearCrumbs()">Clear breadcrumbs</a></span></div>';
   }
   if (plan) html += '<div style="margin-top:2px">' + backToRouteBtn() + '</div>';
   else if (!awayFromTrails()) html += exitsHtml();
@@ -4858,6 +4952,7 @@ function addCrumb(ll, acc) {
       crumbFills.shift();
       crumbFills[0] = null;
       if (entranceScanned > 0) entranceScanned--;
+      if (awayScanned > 0) awayScanned--;
     }
     drawCrumbs(crumbLatLngs());
     try { sessionStorage.setItem(CRUMB_KEY, JSON.stringify(crumbs)); } catch (e) {}
@@ -4871,8 +4966,19 @@ function trackedM() {
   return m;
 }
 
+// How long you've been out: from the first crumb to the latest
+function trackedMs() { return crumbs.length > 1 ? crumbs[crumbs.length - 1][2] - crumbs[0][2] : 0; }
+
+// 0:42, 1:05
+function formatElapsed(ms) {
+  var min = Math.floor(ms / 60000);
+  return Math.floor(min / 60) + ":" + ("0" + min % 60).slice(-2);
+}
+
 function clearCrumbs() {
   townNow = null;
+  awayFromStart = false;
+  awayScanned = 0;
   try { sessionStorage.removeItem(TOWN_KEY); } catch (e) {}
   crumbs = [];
   crumbFills = [];
@@ -4881,6 +4987,264 @@ function clearCrumbs() {
   drawCrumbs([]);
   try { sessionStorage.removeItem(CRUMB_KEY); } catch (e) {}
   refreshLocateInfo();
+}
+
+// --- Back where you started: you're probably done, so the panel offers to send your
+// reports (if any wait to be sent), then shows the walk summary. Once an outing, and only
+// over the panel's where-you-are view, so it never takes over something you're doing.
+var HOME_NEAR_M = 40;    // this close to the first crumb is back where you started,
+var HOME_AWAY_M = 300;   // after being this far from it
+var HOME_KEY = REGION.storagePrefix + "BackAtStart";   // the outing asked (its first crumb's time)
+var awayFromStart = false, awayScanned = 0;
+
+function checkBackAtStart() {
+  if (crumbs.length < 2 || userAccuracy > HOME_NEAR_M || liveRouting() || !document.getElementById("locateInfo")) return;
+  var start = L.latLng(crumbs[0][0], crumbs[0][1]);
+  for (; !awayFromStart && awayScanned < crumbs.length; awayScanned++) {
+    awayFromStart = start.distanceTo(L.latLng(crumbs[awayScanned][0], crumbs[awayScanned][1])) >= HOME_AWAY_M;
+  }
+  var asked = null;
+  try { asked = sessionStorage.getItem(HOME_KEY); } catch (e) {}
+  if (awayFromStart && userLatLng.distanceTo(start) <= HOME_NEAR_M && asked !== String(crumbs[0][2])) {
+    try { sessionStorage.setItem(HOME_KEY, String(crumbs[0][2])); } catch (e) {}
+    var n = unsentReports().length;
+    if (n) {
+      clearSelection(true);
+      document.getElementById("infoContent").innerHTML = '<div class="report"><div class="report-head"><strong>Back where you started.</strong> ' +
+        'Send your ' + (n === 1 ? 'report' : n + ' reports') + '?</div>' +
+        '<div class="report-fine" style="margin:0 0 6px">' + esc(sendsToWords()) + '</div>' +
+        '<button class="route-btn" onclick="sendReports();updateReportCount();showWalkSummary()">Send</button> ' +
+        '<button class="route-btn" style="background:#888" onclick="showWalkSummary()">Not now</button></div>';
+    } else {
+      showWalkSummary();
+    }
+  }
+}
+
+// --- The walk summary: a picture of your walk to keep or share. Your breadcrumbs over the
+// trails and the signs (zone colored), with the distance, time, climb, the trails you
+// walked, and the elevation along the way (the trails' own profiles where you were on
+// one). Drawn here, without the map tiles: a page can't copy another site's images into
+// a picture.
+var WALK_W = 1080, WALK_H = 1350, WALK_STEP_M = 20;
+var walkBlob = null;   // the picture, ready to share (a share has to start right at the tap)
+
+// Points every WALK_STEP_M along the breadcrumbs: [{ll, at (meters along), snap}]
+function walkSamples(pts) {
+  var out = [], along = 0, next = 0;
+  for (var i = 1; i < pts.length; i++) {
+    var d = pts[i - 1].distanceTo(pts[i]);
+    while (next <= along + d) {
+      var t = d ? (next - along) / d : 0;
+      var ll = L.latLng(pts[i - 1].lat + t * (pts[i].lat - pts[i - 1].lat), pts[i - 1].lng + t * (pts[i].lng - pts[i - 1].lng));
+      out.push({ll: ll, at: next, snap: snapToTrail(ll)});
+      next += WALK_STEP_M;
+    }
+    along += d;
+  }
+  return out;
+}
+
+function walkStats() {
+  var pts = crumbLine.getLatLngs(), samples = walkSamples(pts), profile = [], trails = [], metersOn = {};
+  samples.forEach(function(sm) {
+    var on = sm.snap.d <= 30, e = on && REGION.eleStep ? eleAt(sm.snap.ti, sm.snap.along) : null;
+    if (e !== null) profile.push([sm.at, e]);
+    var props = on ? trailData.features[sm.snap.ti].properties : null;
+    if (props && !props.road && !/^unnamed/i.test(sm.snap.name)) {
+      if (!(sm.snap.name in metersOn)) { metersOn[sm.snap.name] = 0; trails.push(sm.snap.name); }
+      metersOn[sm.snap.name] += WALK_STEP_M;
+    }
+  });
+  return {pts: pts, dist: trackedM(), ms: trackedMs(), profile: profile,
+          climb: profile.length > 1 ? climbStats(profile).up : null,
+          trails: trails.filter(function(n) { return metersOn[n] >= 60; })};
+}
+
+function drawWalk(st) {
+  var cv = document.createElement("canvas");
+  cv.width = WALK_W;
+  cv.height = WALK_H;
+  var g = cv.getContext("2d"), FONT = "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif";
+  g.fillStyle = "#f7f6f2";
+  g.fillRect(0, 0, WALK_W, WALK_H);
+  g.fillStyle = "#2c3e50";
+  g.fillRect(0, 0, WALK_W, 14);
+
+  // Where and when
+  var start = new Date(crumbs[0][2]);
+  g.fillStyle = "#263238";
+  g.font = "700 58px " + FONT;
+  g.fillText(REGION.name, 50, 100);
+  g.fillStyle = "#607d8b";
+  g.font = "34px " + FONT;
+  g.fillText(start.toLocaleDateString([], {weekday: "long", month: "long", day: "numeric", year: "numeric"}) + ", " +
+             start.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"}), 50, 152);
+
+  // Distance, time, climb
+  var stats = [[formatDist(st.dist), "distance"], [formatElapsed(st.ms), "time"]];
+  if (st.climb !== null) stats.push([feet(st.climb), "climb"]);
+  stats.forEach(function(s, i) {
+    var x = 50 + i * 330;
+    g.fillStyle = "#0d47a1";
+    g.font = "700 64px " + FONT;
+    g.fillText(s[0], x, 250);
+    g.fillStyle = "#78909c";
+    g.font = "28px " + FONT;
+    g.fillText(s[1], x, 290);
+  });
+
+  // The map: the walk's area (at least 400 m across), filling the box
+  var box = {x: 40, y: 320, w: WALK_W - 80, h: 720}, b = L.latLngBounds(st.pts), c = b.getCenter();
+  var kx = Math.cos(c.lat * Math.PI / 180) * 111320, ky = 111320;
+  var spanX = Math.max((b.getEast() - b.getWest()) * kx, 400), spanY = Math.max((b.getNorth() - b.getSouth()) * ky, 400);
+  var scale = Math.min((box.w - 80) / spanX, (box.h - 80) / spanY);
+  var px = function(ll) {
+    return [box.x + box.w / 2 + ((ll.lng !== undefined ? ll.lng : ll[0]) - c.lng) * kx * scale,
+            box.y + box.h / 2 - ((ll.lat !== undefined ? ll.lat : ll[1]) - c.lat) * ky * scale];
+  };
+  g.save();
+  g.fillStyle = "#ffffff";
+  g.fillRect(box.x, box.y, box.w, box.h);
+  g.strokeStyle = "#cfd8dc";
+  g.lineWidth = 2;
+  g.strokeRect(box.x, box.y, box.w, box.h);
+  g.beginPath();
+  g.rect(box.x, box.y, box.w, box.h);
+  g.clip();
+  g.lineCap = g.lineJoin = "round";
+  trailData.features.forEach(function(f) {
+    var parts = f.geometry.type === "MultiLineString" ? f.geometry.coordinates : [f.geometry.coordinates];
+    g.strokeStyle = f.properties.road ? "#b0bec5" : "#8d9ba3";
+    g.lineWidth = f.properties.road ? 3 : 4;
+    g.setLineDash(f.properties.road ? [10, 10] : []);
+    parts.forEach(function(line) {
+      g.beginPath();
+      line.forEach(function(p, k) { var q = px(p); if (k) g.lineTo(q[0], q[1]); else g.moveTo(q[0], q[1]); });
+      g.stroke();
+    });
+  });
+  g.setLineDash([]);
+  var route = function(width, color) {
+    g.strokeStyle = color;
+    g.lineWidth = width;
+    g.beginPath();
+    st.pts.forEach(function(p, k) { var q = px(p); if (k) g.lineTo(q[0], q[1]); else g.moveTo(q[0], q[1]); });
+    g.stroke();
+  };
+  route(16, "#ffffff");
+  route(9, "#1565c0");
+  Object.keys(intMarkers).forEach(function(label) {
+    var m = intMarkers[label];
+    if (m._hidden) return;
+    var q = px(m.getLatLng());
+    g.beginPath();
+    g.arc(q[0], q[1], 10, 0, 2 * Math.PI);
+    g.fillStyle = ZONE_COLORS[m._zone] || "#1565c0";
+    g.fill();
+    g.lineWidth = 3;
+    g.strokeStyle = "#ffffff";
+    g.stroke();
+  });
+  // Start (green) and, if it's somewhere else, the end
+  var dot = function(ll, color) {
+    var q = px(ll);
+    g.beginPath();
+    g.arc(q[0], q[1], 15, 0, 2 * Math.PI);
+    g.fillStyle = color;
+    g.fill();
+    g.lineWidth = 5;
+    g.strokeStyle = "#ffffff";
+    g.stroke();
+  };
+  var first = st.pts[0], last = st.pts[st.pts.length - 1];
+  if (first.distanceTo(last) > HOME_NEAR_M) dot(last, "#c62828");
+  dot(first, "#2e7d32");
+  g.restore();
+
+  // Elevation along the way
+  var y0 = 1070, ph = 120;
+  if (st.profile.length > 1) {
+    var lo = Infinity, hi = -Infinity, total = st.profile[st.profile.length - 1][0] || 1;
+    st.profile.forEach(function(p) { lo = Math.min(lo, p[1]); hi = Math.max(hi, p[1]); });
+    if (hi - lo < 15) { var mid = (hi + lo) / 2; lo = mid - 7.5; hi = mid + 7.5; }
+    var ex = function(d) { return 170 + d / total * (WALK_W - 220); };
+    var ey = function(e) { return y0 + ph - (e - lo) / (hi - lo) * ph; };
+    g.beginPath();
+    g.moveTo(ex(st.profile[0][0]), y0 + ph);
+    st.profile.forEach(function(p) { g.lineTo(ex(p[0]), ey(p[1])); });
+    g.lineTo(ex(total), y0 + ph);
+    g.closePath();
+    g.fillStyle = "#dfe4e7";
+    g.fill();
+    g.beginPath();
+    st.profile.forEach(function(p, k) { if (k) g.lineTo(ex(p[0]), ey(p[1])); else g.moveTo(ex(p[0]), ey(p[1])); });
+    g.strokeStyle = "#546e7a";
+    g.lineWidth = 3;
+    g.stroke();
+    g.fillStyle = "#78909c";
+    g.font = "26px " + FONT;
+    g.fillText(feet(hi), 50, y0 + 22);
+    g.fillText(feet(lo), 50, y0 + ph);
+  }
+
+  // The trails you walked, as many lines as fit
+  g.fillStyle = "#37474f";
+  g.font = "30px " + FONT;
+  var words = st.trails.length ? ("On " + st.trails.join(", ")).split(" ") : [], line = "", y = 1250, lines = 0;
+  for (var i = 0; i < words.length && lines < 2; i++) {
+    var tryLine = line ? line + " " + words[i] : words[i];
+    if (g.measureText(tryLine).width > WALK_W - 100 && line) {
+      lines++;
+      g.fillText(lines === 2 ? line.replace(/,?$/, "…") : line, 50, y);
+      y += 40;
+      line = words[i];
+    } else {
+      line = tryLine;
+    }
+  }
+  if (line && lines < 2) g.fillText(line, 50, y);
+
+  g.fillStyle = "#90a4ae";
+  g.font = "24px " + FONT;
+  g.fillText(location.host + location.pathname.replace(/[^\/]*$/, ""), 50, WALK_H - 24);
+  return cv;
+}
+
+function walkFileName() {
+  var d = new Date(crumbs[0][2]);
+  return REGION.name.replace(/\W+/g, "-") + "-" + d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" +
+    ("0" + d.getDate()).slice(-2) + ".png";
+}
+
+function showWalkSummary() {
+  clearSelection(true);
+  walkBlob = null;
+  var cv = drawWalk(walkStats());
+  document.getElementById("infoContent").innerHTML = '<div class="report"><div class="report-head"><strong>Walk summary</strong></div>' +
+    '<img class="walk-img" alt="Your walk" src="' + cv.toDataURL("image/png") + '">' +
+    '<button class="route-btn" id="walkShare" onclick="shareWalk()">Share</button> ' +
+    '<button class="route-btn" style="background:#0d47a1" onclick="saveWalk()">Save</button> ' +
+    '<button class="route-btn" style="background:#888" onclick="closeReport()">Back to the map</button></div>';
+  cv.toBlob(function(blob) { walkBlob = blob; });
+}
+
+function shareWalk() {
+  var file = walkBlob && new File([walkBlob], walkFileName(), {type: "image/png"});
+  if (file && navigator.canShare && navigator.canShare({files: [file]})) {
+    navigator.share({files: [file], title: REGION.name}).catch(function() {});
+  } else {
+    saveWalk();
+  }
+}
+
+function saveWalk() {
+  var a = document.createElement("a");
+  a.href = document.querySelector(".walk-img").src;
+  a.download = walkFileName();
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
 }
 
 // Heading: compass when the phone provides one, otherwise direction of travel
@@ -5031,6 +5395,7 @@ function onLocation(pos) {
   } else {
     refreshLocateInfo();
   }
+  checkBackAtStart();
   if (following) map.panTo(userLatLng);
 }
 
