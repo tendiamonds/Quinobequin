@@ -65,10 +65,10 @@ def outline(trails, margin_m=OUTLINE_MARGIN_M):
 def starts(ints):
     """Where you'd start: the parking, or the trailheads if no parking is marked"""
     def pick(test):
-        return [{"name": p.get("lot") or p.get("parking_name") or p.get("place_name") or "Trailhead",
+        return [{"name": p.get("lot") or p.get("parking_name") or p.get("place_name") or ("Parking" if p.get("parking") else "Trailhead"),
                  "lat": round(f["geometry"]["coordinates"][1], 6), "lon": round(f["geometry"]["coordinates"][0], 6)}
                 for f in ints["features"] for p in [f["properties"]] if test(p)]
-    return pick(lambda p: p.get("lot") or p.get("parking_name")) or pick(lambda p: p.get("entry"))
+    return pick(lambda p: p.get("lot") or p.get("parking_name") or p.get("parking")) or pick(lambda p: p.get("entry"))
 
 
 def write_area(key, ints, trails):
@@ -140,11 +140,12 @@ OVERVIEW_TEMPLATE = r"""<!DOCTYPE html>
 <div id="map"></div>
 <div id="list"></div>
 <script>
-// Every map on the site (areas.py), and how far you are from each: as the crow flies to
-// its nearest start (parking), with directions there. Shown are the nearest, and any
-// others within NEAR_FACTOR times as far.
+// Every map on the site (areas.py). The list under the map: once your location is known,
+// the nearest maps, with how far each is (as the crow flies to its nearest start, its
+// parking) and directions there: the nearest, and any others within NEAR_FACTOR times as
+// far, LIST_MAX at most. Until then (or without it), the maps in view, as you move the map.
 var AREAS = __AREAS__;
-var NEAR_FACTOR = 3;
+var NEAR_FACTOR = 3, LIST_MAX = 6;
 
 function esc(s) { return String(s).replace(/[&<>"']/g, function(c) { return "&#" + c.charCodeAt(0) + ";"; }); }
 
@@ -222,8 +223,27 @@ function showDetail() {
   if (near) { map.removeLayer(icons); parking.addTo(map); } else { map.removeLayer(parking); drawIcons(); icons.addTo(map); }
 }
 map.on("zoomend", showDetail);
-map.fitBounds(all, {padding: [20, 20]});
-showDetail();
+
+// The list takes room from the map, so the map is told its size whenever the list
+// changes (otherwise it's centered too low, behind the list)
+function setList(html) {
+  document.getElementById("list").innerHTML = html;
+  map.invalidateSize({pan: false});
+}
+
+// The maps whose outlines are in view (or in bounds), by name
+var located = false, listNote = "";
+function inViewList(bounds) {
+  var seen = AREAS.filter(function(a) { return bounds.intersects(a.poly.getBounds()); })
+    .sort(function(x, y) { return x.name < y.name ? -1 : 1; });
+  var html = '<h2>' + (seen.length === AREAS.length ? 'The maps' : 'Maps in view: ' + seen.length + ' of ' + AREAS.length) + '</h2>' +
+    (listNote ? '<div class="note">' + listNote + '</div>' : '') +
+    seen.slice(0, LIST_MAX).map(function(a) { return areaRow(a, null); }).join('');
+  if (seen.length > LIST_MAX) html += '<div class="note">' + (seen.length - LIST_MAX) + ' more in view: zoom in, or see the Maps menu.</div>';
+  if (!seen.length) html += '<div class="note">None here: zoom out to find them.</div>';
+  return html;
+}
+map.on("moveend", function() { if (!located) setList(inViewList(map.getBounds())); });
 
 function directions(s) {
   return "https://www.google.com/maps/dir/?api=1&destination=" + s.lat + "," + s.lon;
@@ -246,10 +266,10 @@ function areaRow(a, near) {
     '<a class="btn" href="' + a.href + '">Map</a></div>';
 }
 
-// Before your location is known: every area, and a word about it
-function showAll(note) {
-  document.getElementById("list").innerHTML = '<h2>The maps</h2>' + (note ? '<div class="note">' + note + '</div>' : '') +
-    AREAS.map(function(a) { return areaRow(a, null); }).join('');
+// Before your location is known: the maps in view, and a word about it
+function showInView(note) {
+  listNote = note;
+  setList(inViewList(map.getBounds()));
 }
 
 var you = null, fitted = false;
@@ -265,10 +285,11 @@ function onLocation(pos) {
     .filter(function(r) { return r.near; }).sort(function(x, y) { return x.near.d - y.near.d; });
   if (!rows.length) return;
   var limit = Math.max(rows[0].near.d * NEAR_FACTOR, 1609);
-  var shown = rows.filter(function(r) { return r.near.d <= limit; });
-  document.getElementById("list").innerHTML = '<h2>Nearest trail maps</h2>' +
+  var shown = rows.filter(function(r) { return r.near.d <= limit; }).slice(0, LIST_MAX);
+  located = true;
+  setList('<h2>Nearest trail maps</h2>' +
     shown.map(function(r) { return areaRow(r.a, r.near); }).join('') +
-    (shown.length < rows.length ? '<div class="note">' + (rows.length - shown.length) + ' more farther away: they\'re all in the Maps menu.</div>' : '');
+    (shown.length < rows.length ? '<div class="note">' + (rows.length - shown.length) + ' more farther away: they\'re all in the Maps menu.</div>' : ''));
   if (!fitted) {
     // You and the nearest areas in view
     fitted = true;
@@ -278,13 +299,15 @@ function onLocation(pos) {
   }
 }
 
+// The list first (it takes its room), then the map fitted to what's left
+listNote = navigator.geolocation ? "Finding where you are, for how far each one is…" : "";
+document.getElementById("list").innerHTML = inViewList(all);
+map.fitBounds(all, {padding: [20, 20]});
+showDetail();
 if (navigator.geolocation) {
-  showAll("Finding where you are, for how far each one is…");
   navigator.geolocation.watchPosition(onLocation, function() {
-    showAll("Without your location, here they all are.");
+    if (!located) showInView("Without your location: the maps in view.");
   }, {enableHighAccuracy: false, maximumAge: 60000, timeout: 30000});
-} else {
-  showAll("");
 }
 </script>
 </body>

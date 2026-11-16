@@ -30,14 +30,8 @@ date as things change; dates are when something was learned or decided.
    a direction-up map (Leaflet can't rotate: a plugin like leaflet-rotate, or rotating
    the container, which turns labels sideways).
 8. Expect the conservation commission to ask to rename **Giggity**.
-9. **A new area: Middlesex Fells.** DCR's statewide trails layer covers it
-   (`services1.arcgis.com/7iJyYTjCtKsZS1LR/arcgis/rest/services/DCR_Roads_and_Trails/FeatureServer/0`;
-   over 1000 pieces, GPS dated 2008-2010, half unnamed, no blaze colors, no numbered
-   intersections), and its points layer (`DCR_Roads_and_Trail_Point_Features`: trailheads,
-   parking, bridges, vistas). Still to check: OpenStreetMap's route relations there, for
-   the trails' colors (Overpass was too busy).
-10. **Try on Android:** that the report email's To shows "Jason Breslau".
-11. **Bridges on the map** (the point of the bridge reports). Each bridge report has both
+9. **Try on Android:** that the report email's To shows "Jason Breslau".
+10. **Bridges on the map** (the point of the bridge reports). Each bridge report has both
     ends; snapped to its trail, that's a stretch of it, which can be stored on the trail
     the way blazes are and drawn with a bridge symbol (a short pair of lines with flared
     ends). `read_reports.py` could print them ready to add. Blue Hills and the Fells may
@@ -45,7 +39,7 @@ date as things change; dates are when something was learned or decided.
     bridge ways. Reported so far (2026-11-15): at C26, 33 ft, 42.186392,-71.495415 to
     42.186412,-71.495300; College Rock Run C4–C7, 43 ft, 42.189325,-71.496319 to
     42.189417,-71.496424.
-12. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
+11. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
     sync our obstruction reports with Trailforks'. Theirs are public (trail, status,
     description, coordinates; the region's list is
     `trailforks.com/region/vietnam-trail-network/reports/`), but the API needs an app id
@@ -85,6 +79,23 @@ the day's changes together.
   by `areas.json`, the Overview and switching on arrival (CLAUDE.md). An app opened over a
   mile (`AREA_NEAR_M`) from every area starts on the Overview; one opened near another
   area goes to that one's map. Switching on arrival needs a fix within 50 m.
+- **The Middlesex Fells (2026-11-16)** is built from OpenStreetMap, like Saratoga: OSM's
+  lines are on the tiles, and its route relations give the marked trails' colors on exactly
+  their ways (Skyline and Rock Circuit white, Reservoir and the Rock Circuit Connector
+  orange, Cross Fells blue, the Mountain Bike Loop green, Virginia Wood and Crystal Spring
+  red, the Historic Trail yellow, Long Pond Nature Trail yellow by DCR's legend). The
+  intersections are the Fells' own numbers (grid square and number, C5-17, on posts and on
+  DCR's map), from OSM's junction points (259 of them). Only the trails on DCR's map: OSM
+  also has the user-created paths DCR is closing, so a path is kept only where it follows
+  DCR's statewide trail lines (GPS 2011-2012, all marked legal; no colors or numbers), or
+  is a marked trail; and none mostly on water-supply land with no public access
+  (MassGIS: Winchester's around its reservoirs, purple on DCR's map, "Restricted; No
+  Public Access; Fines Apply", and MWRA's at the Fells Reservoir). DCR's points layer adds
+  parking OSM lacks, and has the Fells' bridges and boardwalks for later. Zones: the West
+  and East Fells, either side of I-93, as DCR divides it (kept 2026-11-16: the numbers'
+  letters are the map grid's columns, strips across the park, not areas). DCR's legend has
+  four marked trails OSM lacks or has only a piece of: Wright's Tower, Mustang Loop,
+  Cascade, Healthy Heart.
 - **Root Canal** is too steep: routes avoid it unless you add it yourself (`route_cost`).
 
 ## The land and its conservation restrictions

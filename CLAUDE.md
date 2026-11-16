@@ -13,9 +13,10 @@ https://tendiamonds.github.io/Quinobequin/
 |---|---|---|
 | Upper Charles Forest (Holliston, Hopkinton, Milford MA): the main one, ours to sign | `build_map.py` | `map.html`, `index.html` (About), `zones.html`, `owners.html`, `reports.html` |
 | Blue Hills Reservation | `build_bluehills.py` (DCR's data) | `bluehills/` |
+| Middlesex Fells Reservation | `build_fells.py` (OpenStreetMap; `fells_fetch.py` downloads) | `fells/` |
 | Saratoga Springs | `build_saratoga.py` (OpenStreetMap) | `saratoga/` |
 
-All three use **`trailmap.py`**: the shared app. Its `MAP_TEMPLATE` is the whole map page
+All of them use **`trailmap.py`**: the shared app. Its `MAP_TEMPLATE` is the whole map page
 (HTML, CSS and JS in one raw string), and its docstring documents every `region` key. Field
 reports are **`reports.py`** (saved on the phone, emailed in a batch; `read_reports.py` reads
 a pasted email back). The generated `.html` files are committed: they *are* the site.
@@ -45,11 +46,13 @@ computer: `"/c/Program Files/Python312/python.exe"` from Git Bash.
 
     python build_map.py          # Upper Charles (renumbers, see below), ~1 min
     python build_bluehills.py
+    python build_fells.py
     python build_saratoga.py
     python build_editor.py       # trail_editor.html, after data changes
 
-A change to `trailmap.py` or `reports.py` means rebuilding **all three**. The first build on
-a new computer downloads the lidar into `elevation_cache/` (ignored; minutes).
+A change to `trailmap.py` or `reports.py` (or to `SITE_MAPS`) means rebuilding **all of
+them**. The first build on a new computer downloads the lidar into `elevation_cache/`
+(ignored; minutes).
 
 Look at it with `python -m http.server 8770` in this folder, then
 http://localhost:8770/map.html (add `?v=2` etc. to dodge a cached copy);

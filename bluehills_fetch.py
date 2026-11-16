@@ -58,14 +58,33 @@ def fetch(query):
     raise RuntimeError("OpenStreetMap servers didn't answer; try again later")
 
 
-def fetch_dcr(layer):
-    """Every feature of a DCR layer, all fields, in latitude and longitude, as GeoJSON"""
-    url = layer + "/query?" + urllib.parse.urlencode({"where": "1=1", "outFields": "*", "outSR": "4326", "f": "geojson"})
-    req = urllib.request.Request(url, headers={"User-Agent": "trail-map/1.0 (tendiamonds@gmail.com)"})
-    data = json.loads(urllib.request.urlopen(req, timeout=240).read().decode("utf-8"))
-    if data.get("properties", {}).get("exceededTransferLimit") or "features" not in data:
-        raise RuntimeError("%s: more features than one query returns (or an error); fetch it in pages" % layer)
-    return data
+def fetch_dcr(layer, envelope=None, page=1000, where="1=1"):
+    """Every feature of a DCR layer (or another ArcGIS one), all fields, in latitude and
+    longitude, as GeoJSON. envelope: (west, south, east, north), for just those in it (from
+    a statewide layer); where: which (an SQL condition). A query returns a page of them at
+    most (the statewide layers' limit is 1000), so they come in pages, in the order of the
+    layer's own ID field."""
+    def get(url):
+        req = urllib.request.Request(url, headers={"User-Agent": "trail-map/1.0 (tendiamonds@gmail.com)"})
+        return json.loads(urllib.request.urlopen(req, timeout=240).read().decode("utf-8"))
+    id_field = get(layer + "?f=json").get("objectIdField") or "OBJECTID"
+    q = {"where": where, "outFields": "*", "outSR": "4326", "f": "geojson", "orderByFields": id_field,
+         "resultRecordCount": page}
+    if envelope:
+        q.update({"geometry": ",".join(str(v) for v in envelope), "geometryType": "esriGeometryEnvelope",
+                  "inSR": "4326", "spatialRel": "esriSpatialRelIntersects"})
+    out = None
+    while True:
+        q["resultOffset"] = len(out["features"]) if out else 0
+        data = get(layer + "/query?" + urllib.parse.urlencode(q))
+        if "features" not in data:
+            raise RuntimeError("%s: %s" % (layer, data.get("error") or "no features"))
+        if out is None:
+            out = data
+        else:
+            out["features"] += data["features"]
+        if not data.get("properties", {}).get("exceededTransferLimit") and not data.get("exceededTransferLimit"):
+            return out
 
 
 def main(fresh):

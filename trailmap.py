@@ -232,6 +232,7 @@ def snap_blazes(ints, trails, trail_int_map, signs_only=True):
 # color, full name). The Maps menu lists them, and the Overview.
 SITE_MAPS = [("uc", "Upper Charles", "map.html", "#7a3122", "Upper Charles Forest"),
              ("bh", "Blue Hills", "bluehills/map.html", "#1f4e79", "Blue Hills Reservation"),
+             ("fells", "Middlesex Fells", "fells/map.html", "#2e7d32", "Middlesex Fells Reservation"),
              ("sar", "Saratoga Woods", "saratoga/map.html", "#006A52", "Saratoga Woods")]
 
 
