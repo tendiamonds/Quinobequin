@@ -239,6 +239,7 @@
                  font-size: 15px; font-weight: 600; color: #263238; cursor: pointer; }
   .report-kind:active { background: #e3f2fd; }
   .report-kind.waiting { background: #e3f2fd; border-color: #1e88e5; color: #0d47a1; }
+  .report-kind.bridge-end { display: block; width: 100%; padding: 22px 6px; font-size: 1.25em; font-weight: bold; margin: 0 0 10px; }
   .walk-img { display: block; width: 100%; max-height: 55vh; object-fit: contain; margin: 4px 0 8px; border-radius: 6px; }
   .my-reports { margin: 6px 0 10px; max-height: 45vh; overflow-y: auto; }
   .my-report { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid #eceff1; font-size: 13px; }
@@ -2261,15 +2262,6 @@ function nextLoop() {
   startTrip(loopTrip(loopAlts[loopAlt].order, loopAlts[loopAlt].len), "Couldn&rsquo;t work out that loop.");
 }
 
-// The next turn on the lock screen (tried in 2026-10, taken out) registered a service worker,
-// sw.js. It's gone from the site, so take it off any phone that still has it. Hardly anyone
-// turned it on: delete this after 2026-11-16.
-if ("serviceWorker" in navigator && navigator.serviceWorker.getRegistrations) {
-  navigator.serviceWorker.getRegistrations().then(function(regs) {
-    regs.forEach(function(reg) { reg.unregister(); });
-  }).catch(function() {});
-}
-
 // --- Waypoints
 
 // Distance by trail, in meters, between two places: a label, null for "where you are" (as
@@ -3343,12 +3335,44 @@ function saveObstruction(key) {
   reportSaved(r, key === "other" ? "What's in the way?" : "Add a note? (optional)");
 }
 
-// A bridge's start needs where you are: it's the whole report until its end is marked
+// A bridge's start needs where you are: it's the whole report until its end is marked.
+// Once it's saved, the panel waits with Bridge End, so you walk across and tap it.
 function startBridge() {
   if (!userLatLng) { showReportSheet(); return; }
   saveReport({kind: "bridge", text: "", end: null});
+  showBridgeSheet();
+}
+
+// The bridge you've started: Bridge End, how far you've come from its start (kept up to
+// date as you walk, by updateBridgeSheet), and a way out. Later leaves it waiting: the
+// Report sheet has Bridge End until BRIDGE_WAIT_MS is up.
+function showBridgeSheet() {
+  var b = openBridge();
+  if (!b) { showReportSheet(); return; }
+  document.getElementById("infoContent").innerHTML = '<div class="report" id="bridgeInfo">' +
+    '<div class="report-head"><strong>&#x2713; Bridge start saved</strong> ' +
+    esc(new Date(b.when).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})) + '</div>' +
+    '<div class="report-fine" style="margin:4px 0 8px">Walk across, then tap Bridge End. ' +
+    '<span id="bridgeSoFar"></span></div>' +
+    '<button class="report-kind waiting bridge-end" onclick="endBridge()">Bridge End</button>' +
+    '<button class="route-btn" style="background:#888" onclick="closeReport()">Later</button> ' +
+    '<button class="route-btn" style="background:#888" onclick="cancelBridge()">Cancel this bridge</button></div>';
+  updateBridgeSheet();
+}
+
+function updateBridgeSheet() {
+  var el = document.getElementById("bridgeSoFar"), b = el && openBridge();
+  if (!b || !b.at || !userLatLng) return;
+  var m = userLatLng.distanceTo(L.latLng(b.at.lat, b.at.lon));
+  el.textContent = "You're " + formatDist(m) + " from its start.";
+}
+
+function cancelBridge() {
+  var b = openBridge();
+  if (b) dropReport(b.id);
+  updateReportCount();
   closeReport();
-  showBanner('&#x2713; Bridge start saved. At its far end, tap Report, then Bridge End.');
+  showBanner('Bridge start dropped.');
 }
 
 function endBridge() {
@@ -5053,6 +5077,7 @@ function onLocation(pos) {
   } else {
     refreshLocateInfo();
   }
+  updateBridgeSheet();
   checkBackAtStart();
   if (following) map.panTo(userLatLng);
 }

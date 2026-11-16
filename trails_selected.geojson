@@ -4565,6 +4565,13 @@
         "source": "trailforks",
         "osm_ways": [
           134004472
+        ],
+        "blazes": [
+          [
+            "yellow",
+            41,
+            40
+          ]
         ]
       },
       "geometry": {
@@ -7109,6 +7116,13 @@
         "osm_ways": [
           131412169,
           134584528
+        ],
+        "blazes": [
+          [
+            "yellow",
+            91,
+            92
+          ]
         ]
       },
       "geometry": {
@@ -21444,6 +21458,13 @@
         "osm_ways": [
           305410686,
           1380913340
+        ],
+        "blazes": [
+          [
+            "yellow",
+            44,
+            40
+          ]
         ]
       },
       "geometry": {

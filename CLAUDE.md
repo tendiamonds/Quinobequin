@@ -20,6 +20,12 @@ All three use **`trailmap.py`**: the shared app. Its `MAP_TEMPLATE` is the whole
 reports are **`reports.py`** (saved on the phone, emailed in a batch; `read_reports.py` reads
 a pasted email back). The generated `.html` files are committed: they *are* the site.
 
+Whose it is: the Upper Charles map is a collaboration of the Holliston Town Forest
+Committee (Jason Breslau chairs it and builds the app), Holliston Conservation, Hopkinton
+Trails, Milford Conservation, NEMBA and others. It's meant to move to the Town of
+Holliston's official site eventually; it isn't a personal project, and when a service
+gates access by who's asking (an API, data), the committee and its partners are asking.
+
 Upper Charles is being signed: we're designing the signs and their numbering. "Vietnam" is
 the riders' old name for it; the site keeps one line saying so.
 

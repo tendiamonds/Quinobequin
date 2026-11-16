@@ -6,53 +6,61 @@ date as things change; dates are when something was learned or decided.
 
 ## Open items
 
-1. **Due 2026-11-16: delete the service-worker cleanup** in `trailmap.py` (the
-   `getRegistrations()...unregister()` block marked "delete this after 2026-11-16"). It
-   removes the `sw.js` that a lock-screen next-turn notification left on phones (tried
-   2026-10-30, taken out 2026-11-02: it didn't work in the field). Two weeks is plenty.
-2. **Town seals** on the "Welcome to Milford!" banner (2026-11-04): white seals in `seals/`,
+1. **Town seals** on the "Welcome to Milford!" banner (2026-11-04): white seals in `seals/`,
    from the shirt art. We're asking the towns for permission before the site is made more
    public; don't publicize it further until they've said yes. Color seals would just
    replace the three files (only Milford's color one is on hand, inside its website logo).
-3. **Around D2** the map has a bigger problem than the bypass that was reported. GPX
+2. **Around D2** the map has a bigger problem than the bypass that was reported. GPX
    recordings covering everything around D2 are coming: bring them in with `import_gpx.py`,
    compare against OSM, then redraw.
-4. **A bypass around Challenger** exists; we asked the trail stewards whether to add it.
+3. **A bypass around Challenger** exists; we asked the trail stewards whether to add it.
    If it's added, rerun `add_junctions.py`.
-5. **Trailforks data:** the Trailforks region admin (a NEMBA contact we want on board with
+4. **Trailforks data:** the Trailforks region admin (a NEMBA contact we want on board with
    the signs) offered better trail data as GPX. Zone E (NEMBA land) has changed most. When
    it comes: `import_gpx.py`, check the intersections in E, rebuild (the numbering follows).
-6. **Owner labels overstate the Adams CR.** About 156 acres are labeled "Adams Town Forest
+5. **Owner labels overstate the Adams CR.** About 156 acres are labeled "Adams Town Forest
    (Trustees CR)", but the CR covers only the 85.6-acre additions (see below); the rest is
    likely the original Town Forest. Fix by matching our parcels to the CR's sketch map
    (page 18 of the recorded CR), labeling owners "Town of Holliston" with the CR as a
    separate attribute.
-7. **Tests.** Checks so far are hand-run Playwright evaluations; automated regression tests
+6. **Tests.** Checks so far are hand-run Playwright evaluations; automated regression tests
    (routing, loops, breadcrumbs, reports) would help.
-8. **Ideas for another day:** "Save track" as GPX (phones stop GPS with the screen off, so
+7. **Ideas for another day:** "Save track" as GPX (phones stop GPS with the screen off, so
    tracks have gaps; the map fills them along trails, but it can't replace Strava);
    a direction-up map (Leaflet can't rotate: a plugin like leaflet-rotate, or rotating
    the container, which turns labels sideways).
-9. Expect the conservation commission to ask to rename **Giggity**.
-10. **Next batch: one app for all the maps** (agreed 2026-11-14). A shared list of the
-    areas (name, link, outline, start points) written by every build; an **Overview** map
-    for when you're in none of them, giving distances to the nearest areas' start points
-    (each area within about 3x the nearest); switching on its own when you arrive in an
-    area, but staying where you put it once you switch by hand; the Maps menu titled with
-    the map you're on; one home-screen app. Upper Charles stays at `map.html` (QR codes).
-11. **A new area: Middlesex Fells.** DCR's statewide trails layer covers it
+8. Expect the conservation commission to ask to rename **Giggity**.
+9. **Next batch: one app for all the maps** (agreed 2026-11-14). A shared list of the
+   areas (name, link, outline, start points) written by every build; an **Overview** map
+   for when you're in none of them, giving distances to the nearest areas' start points
+   (each area within about 3x the nearest); switching on its own when you arrive in an
+   area, but staying where you put it once you switch by hand; the Maps menu titled with
+   the map you're on; one home-screen app. Upper Charles stays at `map.html` (QR codes).
+10. **A new area: Middlesex Fells.** DCR's statewide trails layer covers it
     (`services1.arcgis.com/7iJyYTjCtKsZS1LR/arcgis/rest/services/DCR_Roads_and_Trails/FeatureServer/0`;
     over 1000 pieces, GPS dated 2008-2010, half unnamed, no blaze colors, no numbered
     intersections), and its points layer (`DCR_Roads_and_Trail_Point_Features`: trailheads,
     parking, bridges, vistas). Still to check: OpenStreetMap's route relations there, for
     the trails' colors (Overpass was too busy).
-12. **Try on Android:** that the report email's To shows "Jason Breslau".
-13. **Bridges on the map** (the point of the bridge reports). Each bridge report has both
+11. **Try on Android:** that the report email's To shows "Jason Breslau".
+12. **Bridges on the map** (the point of the bridge reports). Each bridge report has both
     ends; snapped to its trail, that's a stretch of it, which can be stored on the trail
     the way blazes are and drawn with a bridge symbol (a short pair of lines with flared
     ends). `read_reports.py` could print them ready to add. Blue Hills and the Fells may
     have them already: DCR's points layer has bridges and boardwalks, and OSM marks
-    bridge ways.
+    bridge ways. Reported so far (2026-11-15): at C26, 33 ft, 42.186392,-71.495415 to
+    42.186412,-71.495300; College Rock Run C4–C7, 43 ft, 42.189325,-71.496319 to
+    42.189417,-71.496424.
+13. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
+    sync our obstruction reports with Trailforks'. Theirs are public (trail, status,
+    description, coordinates; the region's list is
+    `trailforks.com/region/vietnam-trail-network/reports/`), but the API needs an app id
+    and secret, given "mostly to non-profit trail associations" (apply at
+    `trailforks.com/about/api/`; they want the benefit to Trailforks and its community
+    explained). We may apply ourselves, as the Town Forest Committee and its partners, or
+    with BVNEMBA. Reading their open issues onto the map would be a build step (the secret
+    can't be in the page); posting ours to Trailforks needs each person's Trailforks login
+    (OAuth) and their POST methods are "under development". Their API page mentions RSS.
 
 ## How the field work goes
 
@@ -112,7 +120,7 @@ holders' logos (`sign_logos.csv`, `crs.py`). The sign lists below are labels fro
   uses is Voss Signs. DCR's Medfield signs are fine as a model. No DCR logo on shirts.
 - **The Trustees** like the shirt idea but asked for their logo off the shirts.
 - **NEMBA:** check before using its sign and logo on the E shirt.
-- **The towns:** check before using their seals on shirts, and on the map (item 2).
+- **The towns:** check before using their seals on shirts, and on the map (item 1).
 
 ## T-shirts
 
