@@ -30,20 +30,14 @@ date as things change; dates are when something was learned or decided.
    a direction-up map (Leaflet can't rotate: a plugin like leaflet-rotate, or rotating
    the container, which turns labels sideways).
 8. Expect the conservation commission to ask to rename **Giggity**.
-9. **Next batch: one app for all the maps** (agreed 2026-11-14). A shared list of the
-   areas (name, link, outline, start points) written by every build; an **Overview** map
-   for when you're in none of them, giving distances to the nearest areas' start points
-   (each area within about 3x the nearest); switching on its own when you arrive in an
-   area, but staying where you put it once you switch by hand; the Maps menu titled with
-   the map you're on; one home-screen app. Upper Charles stays at `map.html` (QR codes).
-10. **A new area: Middlesex Fells.** DCR's statewide trails layer covers it
-    (`services1.arcgis.com/7iJyYTjCtKsZS1LR/arcgis/rest/services/DCR_Roads_and_Trails/FeatureServer/0`;
-    over 1000 pieces, GPS dated 2008-2010, half unnamed, no blaze colors, no numbered
-    intersections), and its points layer (`DCR_Roads_and_Trail_Point_Features`: trailheads,
-    parking, bridges, vistas). Still to check: OpenStreetMap's route relations there, for
-    the trails' colors (Overpass was too busy).
-11. **Try on Android:** that the report email's To shows "Jason Breslau".
-12. **Bridges on the map** (the point of the bridge reports). Each bridge report has both
+9. **A new area: Middlesex Fells.** DCR's statewide trails layer covers it
+   (`services1.arcgis.com/7iJyYTjCtKsZS1LR/arcgis/rest/services/DCR_Roads_and_Trails/FeatureServer/0`;
+   over 1000 pieces, GPS dated 2008-2010, half unnamed, no blaze colors, no numbered
+   intersections), and its points layer (`DCR_Roads_and_Trail_Point_Features`: trailheads,
+   parking, bridges, vistas). Still to check: OpenStreetMap's route relations there, for
+   the trails' colors (Overpass was too busy).
+10. **Try on Android:** that the report email's To shows "Jason Breslau".
+11. **Bridges on the map** (the point of the bridge reports). Each bridge report has both
     ends; snapped to its trail, that's a stretch of it, which can be stored on the trail
     the way blazes are and drawn with a bridge symbol (a short pair of lines with flared
     ends). `read_reports.py` could print them ready to add. Blue Hills and the Fells may
@@ -51,7 +45,7 @@ date as things change; dates are when something was learned or decided.
     bridge ways. Reported so far (2026-11-15): at C26, 33 ft, 42.186392,-71.495415 to
     42.186412,-71.495300; College Rock Run C4–C7, 43 ft, 42.189325,-71.496319 to
     42.189417,-71.496424.
-13. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
+12. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
     sync our obstruction reports with Trailforks'. Theirs are public (trail, status,
     description, coordinates; the region's list is
     `trailforks.com/region/vietnam-trail-network/reports/`), but the API needs an app id
@@ -86,6 +80,11 @@ the day's changes together.
   and A, E32-E34 toward D, D8/D13/F16/F17 toward E) were checked on the ground and kept.
 - **Blue Hills** is built from DCR's own trail data (2026-10-30), replacing a version
   traced from the park's PDF map. `bluehills_osm_fixes.md` lists where OSM is wrong there.
+- **One site, many maps (2026-11-16):** each map stays its own page and its own
+  home-screen app (people install the one they use; the QR codes go to `map.html`), joined
+  by `areas.json`, the Overview and switching on arrival (CLAUDE.md). An app opened over a
+  mile (`AREA_NEAR_M`) from every area starts on the Overview; one opened near another
+  area goes to that one's map. Switching on arrival needs a fix within 50 m.
 - **Root Canal** is too steep: routes avoid it unless you add it yourself (`route_cost`).
 
 ## The land and its conservation restrictions

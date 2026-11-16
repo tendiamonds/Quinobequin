@@ -639,7 +639,6 @@ def main():
         "checks": [],
         # DCR marks each piece's blazes, so they already run piece to piece; not snapped
         "blazeStops": None,
-        "otherMaps": [{"name": "Upper Charles", "href": "../map.html"}],
         "zonesPage": False,
         "dem": os.path.join(PROJ, "elevation_cache", "bluehills.tif"),
         "blazes": BLAZES,
@@ -654,7 +653,7 @@ def main():
     with open(os.path.join(OUT, "index.html"), "w", encoding="utf-8") as f:
         f.write('<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=map.html">'
                 '<title>Blue Hills Reservation</title><a href="map.html">Blue Hills Reservation trail map</a>\n')
-    make_favicon.make_icons(OUT, label="BH", color="#1f4e79", name="Blue Hills Reservation", short_name="Blue Hills")
+    make_favicon.make_icons(OUT, label="BH", color="#1f4e79", name="Blue Hills Reservation", short_name="Blue Hills", root="../")
     build_reports_page(os.path.join(OUT, "reports.html"), title="Reports — Blue Hills Reservation", css=CHECKS_CSS,
                        nav=region["nav"], storage_prefix=region["storagePrefix"], email=region["report"]["email"],
                        name=region["report"]["name"], blazes=BLAZES, checks=[])

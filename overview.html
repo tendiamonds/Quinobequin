@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon.ico" sizes="48x48">
+<meta name="theme-color" content="#2c3e50">
+<title>Trail maps — Overview</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  html, body { overflow: hidden; overscroll-behavior: none; }
+  body { display: flex; flex-direction: column; }
+  select { font-size: 16px; }
+  a { color: #2980b9; text-decoration: none; }
+  nav.topnav { background: #2c3e50; padding: 10px 20px; display: flex; gap: 18px; align-items: center; }
+  @media (max-width: 420px) { nav.topnav { gap: 12px; padding: 10px 12px; } }
+  nav.topnav .title { color: #ecf0f1; font-size: 15px; font-weight: 600; }
+  #map { flex: 1; min-height: 0; }
+  #list { background: #fff; padding: 10px 14px 14px; box-shadow: 0 -2px 8px rgba(0,0,0,0.15); max-height: 45vh; overflow-y: auto; }
+  #list h2 { font-size: 15px; margin-bottom: 6px; color: #263238; }
+  .area { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid #eceff1; }
+  .area:last-child { border-bottom: none; }
+  .swatch { width: 32px; height: 32px; flex: none; }
+  .area-icon { width: 40px; height: 40px; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.45)); cursor: pointer; }
+  .area-count { width: 40px; height: 40px; border-radius: 50%; background: #2c3e50; color: #fff; border: 3px solid #fff;
+                font: 700 17px/34px sans-serif; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.45); cursor: pointer; }
+  .area .what { flex: 1; min-width: 0; }
+  .area .name { font-weight: 600; font-size: 15px; }
+  .area .fine { font-size: 12px; color: #607d8b; }
+  .btn { display: inline-block; border-radius: 6px; padding: 7px 10px; font-size: 13px; font-weight: 600; color: #fff; background: #1e88e5; }
+  .btn.alt { background: #607d8b; }
+  .note { font-size: 13px; color: #546e7a; margin: 4px 0 8px; }
+  .user-dot { width: 16px; height: 16px; border-radius: 50%; background: #1e88e5; border: 3px solid #fff; box-shadow: 0 0 4px rgba(0,0,0,0.4); }
+  .start-p { width: 15px; height: 15px; border-radius: 3px; background: #1565c0; color: #fff; font: 700 11px/15px sans-serif; text-align: center; }
+</style>
+</head>
+<body>
+<nav class="topnav"><span class="title">Trail maps</span><select aria-label="Maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;max-width:118px;flex:none;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 2px;text-overflow:ellipsis"><option value="">Overview</option><option value="map.html">Upper Charles</option><option value="bluehills/map.html">Blue Hills</option><option value="saratoga/map.html">Saratoga Woods</option></select></nav>
+<div id="map"></div>
+<div id="list"></div>
+<script>
+// Every map on the site (areas.py), and how far you are from each: as the crow flies to
+// its nearest start (parking), with directions there. Shown are the nearest, and any
+// others within NEAR_FACTOR times as far.
+var AREAS = [{"key": "uc", "name": "Upper Charles Forest", "short": "Upper Charles", "href": "map.html", "color": "#7a3122", "icon": "icon-192.png", "outline": [[42.16879, -71.51182], [42.16873, -71.51181], [42.16863, -71.5118], [42.16855, -71.51179], [42.16834, -71.51176], [42.16831, -71.51175], [42.16744, -71.51152], [42.16717, -71.51144], [42.16716, -71.51143], [42.16643, -71.51077], [42.1664, -71.51075], [42.16624, -71.5106], [42.16622, -71.51057], [42.16432, -71.50735], [42.16383, -71.50637], [42.15544, -71.48854], [42.15543, -71.48851], [42.15542, -71.48847], [42.15525, -71.48731], [42.15525, -71.48728], [42.15525, -71.48724], [42.15525, -71.48721], [42.15543, -71.48605], [42.15543, -71.48601], [42.15544, -71.48596], [42.15546, -71.48592], [42.15547, -71.48588], [42.15548, -71.48584], [42.15549, -71.4858], [42.1555, -71.48577], [42.15584, -71.48489], [42.15633, -71.48391], [42.15706, -71.48325], [42.16141, -71.48062], [42.16228, -71.48039], [42.17726, -71.48042], [42.17812, -71.48065], [42.18949, -71.48792], [42.19022, -71.48858], [42.1968, -71.49691], [42.19729, -71.49789], [42.1985, -71.50033], [42.19867, -71.50149], [42.1985, -71.50265], [42.19801, -71.50363], [42.19727, -71.50429], [42.19722, -71.50433], [42.19719, -71.50434], [42.18866, -71.50759], [42.18865, -71.50759], [42.17472, -71.51139], [42.17385, -71.51162]], "starts": [{"name": "College Rock Park parking", "lat": 42.195171, "lon": -71.499733}, {"name": "End of Dunster Road", "lat": 42.170552, "lon": -71.487716}, {"name": "Adams Street parking", "lat": 42.178235, "lon": -71.48448}, {"name": "Rail Trail Parking (Route 85)", "lat": 42.18783, "lon": -71.504741}]}, {"key": "bh", "name": "Blue Hills Reservation", "short": "Blue Hills", "href": "bluehills/map.html", "color": "#1f4e79", "icon": "bluehills/icon-192.png", "outline": [[42.21307, -71.14627], [42.20995, -71.14553], [42.20908, -71.14529], [42.20897, -71.14526], [42.20824, -71.1446], [42.1902, -71.11856], [42.18971, -71.11758], [42.18578, -71.10377], [42.18396, -71.09473], [42.18379, -71.09357], [42.18331, -71.08676], [42.18534, -71.07257], [42.18552, -71.07141], [42.18601, -71.07042], [42.18687, -71.06899], [42.20797, -71.03673], [42.20871, -71.03607], [42.23404, -71.02575], [42.23491, -71.02552], [42.2356, -71.02558], [42.23647, -71.02581], [42.24381, -71.02784], [42.24455, -71.0285], [42.24762, -71.03355], [42.24811, -71.03453], [42.24813, -71.03464], [42.2483, -71.0358], [42.23673, -71.12226], [42.23656, -71.12342], [42.23623, -71.12418], [42.23574, -71.12517], [42.22703, -71.14033], [42.22541, -71.14213], [42.22467, -71.14279], [42.22021, -71.14489], [42.21934, -71.14512], [42.21324, -71.14626]], "starts": [{"name": "Lot off Unquity Road", "lat": 42.220558, "lon": -71.091191}, {"name": "Lot off Green Street", "lat": 42.219724, "lon": -71.118184}, {"name": "Lot off West Street", "lat": 42.209426, "lon": -71.039691}, {"name": "Lot off Hillside Street", "lat": 42.214419, "lon": -71.094114}, {"name": "Lot off Randolph Avenue", "lat": 42.213019, "lon": -71.068568}, {"name": "Lot off Wampatuck Road", "lat": 42.236045, "lon": -71.034089}, {"name": "Lot off Chickatawbut Road", "lat": 42.226275, "lon": -71.061964}, {"name": "Lot off Reed Street", "lat": 42.188501, "lon": -71.071177}, {"name": "Lot off Randolph Avenue", "lat": 42.214611, "lon": -71.06878}, {"name": "Lot off Randolph Avenue", "lat": 42.211281, "lon": -71.068021}, {"name": "Lot off Chickatawbut Road", "lat": 42.223893, "lon": -71.069997}, {"name": "Lot off Blue Hill River Road", "lat": 42.207212, "lon": -71.090847}, {"name": "Lot off Ricciuti Drive", "lat": 42.24139, "lon": -71.033435}, {"name": "Lot off Willard Street", "lat": 42.230072, "lon": -71.033951}, {"name": "Lot off Skyline Trail", "lat": 42.233734, "lon": -71.02926}, {"name": "Lot off Ponkapoag Trail", "lat": 42.201394, "lon": -71.095458}, {"name": "Lot off Randolph Street", "lat": 42.187472, "lon": -71.093515}, {"name": "Lot off Royall Street", "lat": 42.208732, "lon": -71.124149}, {"name": "Canton Park and Ride", "lat": 42.211017, "lon": -71.121107}, {"name": "Lot off Royall Street", "lat": 42.208976, "lon": -71.128691}, {"name": "Lot off Hillside Street", "lat": 42.210356, "lon": -71.097637}, {"name": "Lot off Hillside Street", "lat": 42.208844, "lon": -71.106434}]}, {"key": "sar", "name": "Saratoga Woods", "short": "Saratoga Woods", "href": "saratoga/map.html", "color": "#006A52", "icon": "saratoga/icon-192.png", "outline": [[43.1258, -73.80569], [43.11826, -73.80459], [43.11431, -73.80386], [43.10883, -73.8028], [43.10796, -73.80257], [43.10723, -73.8019], [43.10646, -73.80106], [43.10324, -73.79693], [43.09733, -73.78705], [43.09684, -73.78605], [43.09667, -73.78487], [43.09722, -73.77806], [43.0974, -73.77688], [43.09789, -73.77589], [43.09862, -73.77522], [43.10277, -73.77298], [43.10353, -73.77273], [43.11684, -73.76891], [43.11771, -73.76867], [43.13961, -73.76561], [43.14048, -73.76584], [43.14561, -73.7694], [43.14635, -73.77006], [43.14684, -73.77106], [43.14687, -73.77113], [43.14688, -73.7712], [43.14705, -73.77237], [43.14725, -73.77374], [43.14725, -73.77378], [43.14729, -73.775], [43.14712, -73.77618], [43.1471, -73.77629], [43.14488, -73.78364], [43.14442, -73.78474], [43.14393, -73.78573], [43.14374, -73.78599], [43.13395, -73.79865], [43.1274, -73.80479], [43.12666, -73.80546]], "starts": [{"name": "Artisanal Brew Works", "lat": 43.118, "lon": -73.772149}, {"name": "Cane Lot", "lat": 43.102025, "lon": -73.787162}, {"name": "North Broadway lot", "lat": 43.099486, "lon": -73.778061}]}];
+var NEAR_FACTOR = 3;
+
+function esc(s) { return String(s).replace(/[&<>"']/g, function(c) { return "&#" + c.charCodeAt(0) + ";"; }); }
+
+function formatMiles(m) {
+  var mi = m / 1609.34;
+  return mi < 0.1 ? Math.round(m * 3.28084) + " ft" : mi < 10 ? mi.toFixed(1) + " mi" : Math.round(mi) + " mi";
+}
+
+var map = L.map("map", {zoomControl: true});
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+// Zoomed out, each area is its app icon (its parking would pile up in one spot), and
+// icons that would overlap (closer than ICON_GAP_PX) are one circle saying how many
+// maps are there: tapping it zooms in on them. From DETAIL_ZOOM in, each area's parking,
+// each with directions.
+var DETAIL_ZOOM = 12, ICON_GAP_PX = 44;
+var icons = L.layerGroup(), parking = L.layerGroup();
+var all = L.latLngBounds([]);
+AREAS.forEach(function(a) {
+  var poly = L.polygon(a.outline, {color: a.color, weight: 2, fillColor: a.color, fillOpacity: 0.15}).addTo(map);
+  poly.bindTooltip(esc(a.name), {sticky: true});
+  poly.on("click", function() { location.href = a.href; });
+  a.center = poly.getBounds().getCenter();
+  a.starts.forEach(function(s) {
+    L.marker([s.lat, s.lon], {icon: L.divIcon({className: "", iconSize: [15, 15], html: '<div class="start-p">P</div>'}), title: s.name})
+      .addTo(parking).bindPopup('<b>' + esc(a.name) + '</b><br>' + esc(s.name) +
+        '<br><a href="' + directions(s) + '" target="_blank" rel="noopener">Directions</a>');
+  });
+  a.poly = poly;
+  all.extend(poly.getBounds());
+});
+// The icons at this zoom: each area on its own, then the closest two (on the screen)
+// merged, again and again, until none are closer than ICON_GAP_PX. A group sits at its
+// members' middle, so merging can bring it near another, which then merges too.
+function drawIcons() {
+  icons.clearLayers();
+  var groups = AREAS.map(function(a) { return {pt: map.project(a.center), areas: [a]}; });
+  for (;;) {
+    var best = null;
+    for (var i = 0; i < groups.length; i++) {
+      for (var j = i + 1; j < groups.length; j++) {
+        var d = groups[i].pt.distanceTo(groups[j].pt);
+        if (d < ICON_GAP_PX && (!best || d < best.d)) best = {i: i, j: j, d: d};
+      }
+    }
+    if (!best) break;
+    var gi = groups[best.i], gj = groups.splice(best.j, 1)[0], n = gi.areas.length, m = gj.areas.length;
+    gi.pt = gi.pt.multiplyBy(n).add(gj.pt.multiplyBy(m)).divideBy(n + m);
+    gi.areas = gi.areas.concat(gj.areas);
+  }
+  groups.forEach(function(g) {
+    if (g.areas.length === 1) {
+      var a = g.areas[0];
+      L.marker(a.center, {
+        icon: L.divIcon({className: "", iconSize: [40, 40], iconAnchor: [20, 20], html: '<img class="area-icon" src="' + a.icon + '" alt="">'}),
+        title: a.name
+      }).on("click", function() { location.href = a.href; }).addTo(icons);
+    } else {
+      var b = L.latLngBounds(g.areas.map(function(a) { return a.center; }));
+      L.marker(map.unproject(g.pt), {
+        icon: L.divIcon({className: "", iconSize: [40, 40], iconAnchor: [20, 20], html: '<div class="area-count">' + g.areas.length + '</div>'}),
+        title: g.areas.map(function(a) { return a.name; }).join(", ")
+      }).on("click", function() {
+        g.areas.forEach(function(a) { b.extend(a.poly.getBounds()); });
+        map.fitBounds(b, {padding: [40, 40]});
+      }).addTo(icons);
+    }
+  });
+}
+
+function showDetail() {
+  var near = map.getZoom() >= DETAIL_ZOOM;
+  if (near) { map.removeLayer(icons); parking.addTo(map); } else { map.removeLayer(parking); drawIcons(); icons.addTo(map); }
+}
+map.on("zoomend", showDetail);
+map.fitBounds(all, {padding: [20, 20]});
+showDetail();
+
+function directions(s) {
+  return "https://www.google.com/maps/dir/?api=1&destination=" + s.lat + "," + s.lon;
+}
+
+function nearestStart(a, ll) {
+  var best = null;
+  a.starts.forEach(function(s) {
+    var d = ll.distanceTo(L.latLng(s.lat, s.lon));
+    if (!best || d < best.d) best = {s: s, d: d};
+  });
+  return best;
+}
+
+function areaRow(a, near) {
+  return '<div class="area"><a href="' + a.href + '"><img class="swatch" src="' + a.icon + '" alt=""></a><div class="what">' +
+    '<div class="name">' + esc(a.name) + '</div>' +
+    (near ? '<div class="fine">' + formatMiles(near.d) + ' away, to ' + esc(near.s.name) + '</div>' : '') + '</div>' +
+    (near ? '<a class="btn alt" href="' + directions(near.s) + '" target="_blank" rel="noopener">Directions</a> ' : '') +
+    '<a class="btn" href="' + a.href + '">Map</a></div>';
+}
+
+// Before your location is known: every area, and a word about it
+function showAll(note) {
+  document.getElementById("list").innerHTML = '<h2>The maps</h2>' + (note ? '<div class="note">' + note + '</div>' : '') +
+    AREAS.map(function(a) { return areaRow(a, null); }).join('');
+}
+
+var you = null, fitted = false;
+function onLocation(pos) {
+  var ll = L.latLng(pos.coords.latitude, pos.coords.longitude);
+  if (!you) {
+    you = L.marker(ll, {icon: L.divIcon({className: "", iconSize: [22, 22], iconAnchor: [11, 11], html: '<div class="user-dot"></div>'}),
+                        title: "You", keyboard: false}).addTo(map);
+  } else {
+    you.setLatLng(ll);
+  }
+  var rows = AREAS.map(function(a) { return {a: a, near: nearestStart(a, ll)}; })
+    .filter(function(r) { return r.near; }).sort(function(x, y) { return x.near.d - y.near.d; });
+  if (!rows.length) return;
+  var limit = Math.max(rows[0].near.d * NEAR_FACTOR, 1609);
+  var shown = rows.filter(function(r) { return r.near.d <= limit; });
+  document.getElementById("list").innerHTML = '<h2>Nearest trail maps</h2>' +
+    shown.map(function(r) { return areaRow(r.a, r.near); }).join('') +
+    (shown.length < rows.length ? '<div class="note">' + (rows.length - shown.length) + ' more farther away: they\'re all in the Maps menu.</div>' : '');
+  if (!fitted) {
+    // You and the nearest areas in view
+    fitted = true;
+    var b = L.latLngBounds([ll]);
+    shown.forEach(function(r) { b.extend(r.a.poly.getBounds()); });
+    map.fitBounds(b, {padding: [30, 30], maxZoom: 13});
+  }
+}
+
+if (navigator.geolocation) {
+  showAll("Finding where you are, for how far each one is…");
+  navigator.geolocation.watchPosition(onLocation, function() {
+    showAll("Without your location, here they all are.");
+  }, {enableHighAccuracy: false, maximumAge: 60000, timeout: 30000});
+} else {
+  showAll("");
+}
+</script>
+</body>
+</html>

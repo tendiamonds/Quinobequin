@@ -129,6 +129,7 @@
   #banner { display: none; position: fixed; top: 54px; left: 50%; transform: translateX(-50%); z-index: 1500;
     max-width: 92vw; background: #263238; color: #fff; padding: 8px 14px; border-radius: 18px; font-size: 14px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #banner.wrap { white-space: normal; width: max-content; text-align: center; border-radius: 12px; }   /* one with a link to keep in view */
   #banner .seal { width: 28px; height: 28px; vertical-align: middle; margin: -6px 8px -6px -6px; }
   #searchBadge {
     position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 2000;
@@ -311,7 +312,7 @@
 </style>
 </head>
 <body>
-<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Saratoga Woods</a><select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;width:62px;flex:none;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 2px"><option value="">Maps</option><option value="../map.html">Upper Charles</option><option value="../bluehills/map.html">Blue Hills</option></select></nav>
+<nav class="topnav"><a href="map.html" style="color:white;font-weight:700">Saratoga Woods</a><select aria-label="Maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;max-width:118px;flex:none;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;font:500 13px sans-serif;padding:3px 2px;text-overflow:ellipsis"><option value="">Saratoga Woods</option><option value="../map.html">Upper Charles</option><option value="../bluehills/map.html">Blue Hills</option><option value="../overview.html">Overview: all the maps</option></select></nav>
 <div id="map"></div>
 <div id="searchBadge"></div>
 <div id="banner" role="status"></div>
@@ -340,7 +341,7 @@
 
 <script>
 // The region this map is for: name, zones, starting view, bounds, and so on (trailmap.py)
-var REGION = {"name": "Saratoga Woods", "zones": {"N": {"name": "North Woods", "color": "#006a52"}, "D": {"name": "Daniels Road", "color": "#455a64"}, "G": {"name": "Graphite Range", "color": "#5d4037"}}, "view": {"center": [43.1219805, -73.7856484], "zoom": 14}, "bounds": [[43.0989286, -73.8026126], [43.1450324, -73.7686842]], "storagePrefix": "sar", "report": {"email": "tendiamonds@gmail.com", "name": "Jason Breslau", "signReports": false}, "otherMaps": [{"name": "Upper Charles", "href": "../map.html"}, {"name": "Blue Hills", "href": "../bluehills/map.html"}], "zonesPage": false, "placeLabels": [{"name": "1", "lat": 43.100735, "lon": -73.786925}, {"name": "10", "lat": 43.100004, "lon": -73.788773}, {"name": "11", "lat": 43.100782, "lon": -73.786234}, {"name": "12", "lat": 43.100203, "lon": -73.789202}, {"name": "14", "lat": 43.1007, "lon": -73.788591}, {"name": "2", "lat": 43.100566, "lon": -73.787414}, {"name": "3", "lat": 43.100485, "lon": -73.788224}, {"name": "4", "lat": 43.101835, "lon": -73.785145}, {"name": "5", "lat": 43.100122, "lon": -73.787727}, {"name": "6", "lat": 43.101268, "lon": -73.785538}, {"name": "7", "lat": 43.100181, "lon": -73.786555}, {"name": "8", "lat": 43.101091, "lon": -73.785844}, {"name": "9", "lat": 43.100509, "lon": -73.786019}, {"name": "A", "lat": 43.097228, "lon": -73.788562}, {"name": "B", "lat": 43.09769, "lon": -73.788277}, {"name": "F", "lat": 43.099057, "lon": -73.787903}, {"name": "G", "lat": 43.098216, "lon": -73.789129}, {"name": "H", "lat": 43.098498, "lon": -73.789085}, {"name": "I", "lat": 43.098633, "lon": -73.788307}, {"name": "J", "lat": 43.09914, "lon": -73.78854}, {"name": "K", "lat": 43.099453, "lon": -73.788005}, {"name": "L", "lat": 43.09966, "lon": -73.78743}], "summits": [], "towns": [], "blazes": {"red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}, "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"}, "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}, "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"}, "purple": {"name": "Purple-blazed trail", "marks": "purple blazes", "color": "#8e24aa", "style": "blazes"}, "brown": {"name": "Brown trail (SMBA map)", "marks": "shown brown on the SMBA map", "pick": "brown blazes", "color": "#a0522d", "style": "blazes"}, "black": {"name": "Black trail (SMBA map)", "marks": "shown black on the SMBA map", "pick": "black blazes", "color": "#212121", "style": "blazes"}}, "widths": {}, "terrain": [], "eleStep": 10, "checks": [], "credit": null};
+var REGION = {"name": "Saratoga Woods", "zones": {"N": {"name": "North Woods", "color": "#006a52"}, "D": {"name": "Daniels Road", "color": "#455a64"}, "G": {"name": "Graphite Range", "color": "#5d4037"}}, "view": {"center": [43.1219805, -73.7856484], "zoom": 14}, "bounds": [[43.0989286, -73.8026126], [43.1450324, -73.7686842]], "storagePrefix": "sar", "report": {"email": "tendiamonds@gmail.com", "name": "Jason Breslau", "signReports": false}, "zonesPage": false, "placeLabels": [{"name": "1", "lat": 43.100735, "lon": -73.786925}, {"name": "10", "lat": 43.100004, "lon": -73.788773}, {"name": "11", "lat": 43.100782, "lon": -73.786234}, {"name": "12", "lat": 43.100203, "lon": -73.789202}, {"name": "14", "lat": 43.1007, "lon": -73.788591}, {"name": "2", "lat": 43.100566, "lon": -73.787414}, {"name": "3", "lat": 43.100485, "lon": -73.788224}, {"name": "4", "lat": 43.101835, "lon": -73.785145}, {"name": "5", "lat": 43.100122, "lon": -73.787727}, {"name": "6", "lat": 43.101268, "lon": -73.785538}, {"name": "7", "lat": 43.100181, "lon": -73.786555}, {"name": "8", "lat": 43.101091, "lon": -73.785844}, {"name": "9", "lat": 43.100509, "lon": -73.786019}, {"name": "A", "lat": 43.097228, "lon": -73.788562}, {"name": "B", "lat": 43.09769, "lon": -73.788277}, {"name": "F", "lat": 43.099057, "lon": -73.787903}, {"name": "G", "lat": 43.098216, "lon": -73.789129}, {"name": "H", "lat": 43.098498, "lon": -73.789085}, {"name": "I", "lat": 43.098633, "lon": -73.788307}, {"name": "J", "lat": 43.09914, "lon": -73.78854}, {"name": "K", "lat": 43.099453, "lon": -73.788005}, {"name": "L", "lat": 43.09966, "lon": -73.78743}], "summits": [], "towns": [], "blazes": {"red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}, "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"}, "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}, "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"}, "purple": {"name": "Purple-blazed trail", "marks": "purple blazes", "color": "#8e24aa", "style": "blazes"}, "brown": {"name": "Brown trail (SMBA map)", "marks": "shown brown on the SMBA map", "pick": "brown blazes", "color": "#a0522d", "style": "blazes"}, "black": {"name": "Black trail (SMBA map)", "marks": "shown black on the SMBA map", "pick": "black blazes", "color": "#212121", "style": "blazes"}}, "widths": {}, "terrain": [], "eleStep": 10, "checks": [], "credit": null, "area": "sar", "siteRoot": "../", "siteMaps": [{"key": "uc", "short": "Upper Charles", "href": "map.html"}, {"key": "bh", "short": "Blue Hills", "href": "bluehills/map.html"}, {"key": "sar", "short": "Saratoga Woods", "href": "saratoga/map.html"}]};
 var ZONE_COLORS = {}, ZONE_NAMES = {};
 Object.keys(REGION.zones).forEach(function(z) {
   ZONE_COLORS[z] = REGION.zones[z].color;
@@ -3412,13 +3413,15 @@ function reportSaved(r, ask) {
   }
 }
 
-// A banner near the top for a few seconds: what was saved, or a town line crossed
-function showBanner(html) {
+// A banner near the top for a few seconds: what was saved, or a town line crossed. wrap:
+// on as many lines as it takes (one with a link, which mustn't be cut off), for longer.
+function showBanner(html, wrap) {
   var el = document.getElementById("banner");
   el.innerHTML = html;
+  el.className = wrap ? "wrap" : "";
   el.style.display = "block";
   clearTimeout(bannerTimer);
-  bannerTimer = setTimeout(function() { el.style.display = "none"; }, BANNER_MS);
+  bannerTimer = setTimeout(function() { el.style.display = "none"; }, wrap ? 2 * BANNER_MS : BANNER_MS);
 }
 
 // "Another color" or something in the way: the saved report, with a box to say which, or
@@ -5028,6 +5031,81 @@ function setFollowing(on) {
 
 map.on("dragstart", function() { setFollowing(false); });
 
+// --- Areas: the site's other maps (areas.json, written by areas.py), so the map can go to
+// the one you're in.
+//  - Opened from the home screen (an installed app's first page): if you're in or near no
+//    area (AREA_NEAR_M), the Overview; near another area and not this one, its map. Only
+//    from a fix soon after opening (AREA_LAUNCH_MS), and not once you've tapped locate.
+//  - Walking into another area's outline switches to its map. Only walking in does: a map
+//    you picked yourself stays put until you walk into a different area (areasLastIn
+//    remembers which outline you were last in, across the maps).
+var AREA_NEAR_M = 1609, AREA_LAUNCH_ACC_M = 500, AREA_LAUNCH_MS = 20000, AREA_SWITCH_ACC_M = 50;
+var AREA_LAST_KEY = "areasLastIn";
+var siteAreas = null, areaSeen = false;
+var areaLaunch = !location.search && !sessionStorage.getItem("areasOpened") &&
+  (navigator.standalone === true || !!(window.matchMedia && matchMedia("(display-mode: standalone)").matches));
+sessionStorage.setItem("areasOpened", "1");
+setTimeout(function() { areaLaunch = false; }, AREA_LAUNCH_MS);
+fetch(REGION.siteRoot + "areas.json").then(function(r) { return r.json(); }).then(function(list) {
+  siteAreas = list;
+  if (userLatLng) checkArea();
+}).catch(function() {});
+
+// Meters from an area's outline (0 inside it)
+function areaDist(a, ll) {
+  var r = a.outline, inside = false, best = Infinity, n = r.length;
+  var kx = 111320 * Math.cos(ll.lat * Math.PI / 180), ky = 110540;
+  for (var i = 0, j = n - 1; i < n; j = i++) {
+    var xi = (r[i][1] - ll.lng) * kx, yi = (r[i][0] - ll.lat) * ky, xj = (r[j][1] - ll.lng) * kx, yj = (r[j][0] - ll.lat) * ky;
+    if ((yi > 0) !== (yj > 0) && 0 < (xj - xi) * (0 - yi) / (yj - yi) + xi) inside = !inside;
+    var dx = xj - xi, dy = yj - yi, t = dx || dy ? Math.max(0, Math.min(1, -(xi * dx + yi * dy) / (dx * dx + dy * dy))) : 0;
+    best = Math.min(best, Math.hypot(xi + t * dx, yi + t * dy));
+  }
+  return inside ? 0 : best;
+}
+
+function goToArea(href, from) {
+  location.href = REGION.siteRoot + href + (from ? "?from=" + encodeURIComponent(from) : "");
+}
+
+function checkArea() {
+  if (!siteAreas) return;
+  var dists = siteAreas.map(function(a) { return {a: a, d: areaDist(a, userLatLng)}; });
+  var inside = dists.filter(function(x) { return x.d === 0; }).map(function(x) { return x.a.key; });
+  var lastIn = localStorage.getItem(AREA_LAST_KEY) || "";
+  // The outline you're in: this map's if you're in it (outlines can overlap), else another
+  var here = inside.indexOf(REGION.area) >= 0 ? REGION.area : inside[0] || "";
+  if (areaLaunch) {
+    if (userAccuracy > AREA_LAUNCH_ACC_M) return;
+    areaLaunch = false;
+    areaSeen = true;
+    localStorage.setItem(AREA_LAST_KEY, here);
+    var mine = dists.filter(function(x) { return x.a.key === REGION.area; })[0];
+    if (mine && mine.d <= AREA_NEAR_M) return;
+    var near = dists.filter(function(x) { return x.d <= AREA_NEAR_M; }).sort(function(x, y) { return x.d - y.d; })[0];
+    goToArea(near ? near.a.href : "overview.html");
+    return;
+  }
+  if (userAccuracy > AREA_SWITCH_ACC_M) return;
+  // The first good fix on a page only notes where you are: you opened this map
+  if (areaSeen && here && here !== lastIn && here !== REGION.area && !liveRouting()) {
+    localStorage.setItem(AREA_LAST_KEY, here);
+    goToArea(siteAreas.filter(function(a) { return a.key === here; })[0].href, REGION.area);
+    return;
+  }
+  areaSeen = true;
+  localStorage.setItem(AREA_LAST_KEY, here);
+}
+
+// Switched here by walking in: say so, with the way back (once the page is set up)
+setTimeout(function() {
+  var from = new URLSearchParams(location.search).get("from");
+  var m = from && REGION.siteMaps.filter(function(x) { return x.key === from; })[0];
+  if (from) history.replaceState(null, "", location.pathname + location.hash);   // not again on a reload
+  if (m) showBanner('You walked into ' + esc(REGION.name) + ', so here\'s its map. <a href="' + REGION.siteRoot + m.href +
+    '" style="color:#fff;text-decoration:underline">Back to ' + esc(m.short) + '</a>', true);
+}, 0);
+
 function onLocation(pos) {
   var first = !userLatLng;
   userLatLng = L.latLng(pos.coords.latitude, pos.coords.longitude);
@@ -5078,6 +5156,7 @@ function onLocation(pos) {
     refreshLocateInfo();
   }
   updateBridgeSheet();
+  checkArea();
   checkBackAtStart();
   if (following) map.panTo(userLatLng);
 }
@@ -5139,6 +5218,7 @@ function locateMe() {
     startWatch();
     startCompass();
     setFollowing(true);
+    areaLaunch = false;   // you asked for where you are on this map
     if (userLatLng && liveRouting()) {
       map.setView(userLatLng, Math.max(map.getZoom(), 17));   // keep the route panel
     } else if (userLatLng) {

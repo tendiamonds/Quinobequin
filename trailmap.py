@@ -14,7 +14,6 @@ build_map_page(ints, trails, region, out_dir) writes out_dir/map.html. region is
   checks         (optional) field checks at intersections, as for reports.py
   credit         (optional) HTML credit for the trail data, beside the map tiles' (bottom right)
   zonesPage      whether the site has a zones.html for zone tags to link to
-  otherMaps      [{"name": ..., "href": ...}] links to the other regions' maps
   summits        (optional) [{"name" or None, "lat", "lon"}] hilltops to mark with their
                  height: each moves to the true top within SUMMIT_FIND_M in the elevation grid
                  (needs dem), where its height is read; the highest is the region's highest point
@@ -32,6 +31,9 @@ build_map_page(ints, trails, region, out_dir) writes out_dir/map.html. region is
 
 The intersections and trails are GeoJSON; build_trail_int_map works out which
 intersections lie on which trails, which the app routes over.
+
+Which map this is comes from out_dir (its entry in SITE_MAPS, the site's list of maps);
+writing it also puts its area in areas.json and rewrites the Overview (areas.py).
 """
 
 import json
@@ -40,6 +42,7 @@ import os
 import re
 import urllib.parse
 
+import areas
 import elevation
 from reports import REPORTS_JS
 
@@ -225,21 +228,36 @@ def snap_blazes(ints, trails, trail_int_map, signs_only=True):
     return changed
 
 
-# The sites' maps, for each one's menu of the others: (key, name, path from the site's root)
-SITE_MAPS = [("uc", "Upper Charles", "map.html"), ("bh", "Blue Hills", "bluehills/map.html"),
-             ("sar", "Saratoga Woods", "saratoga/map.html")]
+# The site's maps (its areas, areas.py): (key, short name, path from the site's root, icon
+# color, full name). The Maps menu lists them, and the Overview.
+SITE_MAPS = [("uc", "Upper Charles", "map.html", "#7a3122", "Upper Charles Forest"),
+             ("bh", "Blue Hills", "bluehills/map.html", "#1f4e79", "Blue Hills Reservation"),
+             ("sar", "Saratoga Woods", "saratoga/map.html", "#006A52", "Saratoga Woods")]
 
 
 def maps_menu_html(here, root):
-    """A drop-down of the other maps, for the right end of a page's top bar. here: this
-    site's key in SITE_MAPS; root: the way from this page to the sites' root ("" or "../")."""
-    opts = "".join('<option value="%s%s">%s</option>' % (root, path, name) for key, name, path in SITE_MAPS if key != here)
-    # Narrow (it would be as wide as its longest name), so a phone's top bar stays one row;
-    # the phone's own picker shows the names in full
-    return ('<select aria-label="Other maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;'
-            'width:62px;flex:none;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;'
-            'font:500 13px sans-serif;padding:3px 2px">'
-            '<option value="">Maps</option>' + opts + '</select>')
+    """The Maps menu, at the right end of a page's top bar: titled with the map you're on
+    (here: its key in SITE_MAPS, or "overview"), listing the others and the Overview. root:
+    the way from this page to the site's root ("" or "../"). Picking one is your choice,
+    so the map you land on stays put (see "Areas" in the map)."""
+    title = "Overview" if here == "overview" else next(m[1] for m in SITE_MAPS if m[0] == here)
+    opts = "".join('<option value="%s%s">%s</option>' % (root, m[2], m[1]) for m in SITE_MAPS if m[0] != here)
+    if here != "overview":
+        opts += '<option value="%soverview.html">Overview: all the maps</option>' % root
+    # No wider than a phone's top bar has room for, beside the page links; the phone's
+    # own picker shows the names in full
+    return ('<select aria-label="Maps" onchange="if (this.value) location.href = this.value" style="margin-left:auto;'
+            'max-width:118px;flex:none;background:#2c3e50;color:#ecf0f1;border:1px solid #5d6d7e;border-radius:4px;'
+            'font:500 13px sans-serif;padding:3px 2px;text-overflow:ellipsis">'
+            '<option value="">%s</option>' % title + opts + '</select>')
+
+
+def site_area(out_dir):
+    """This map's key in SITE_MAPS, and the way from it to the site's root ("" or "../"),
+    from the folder its map.html is written in"""
+    rel = os.path.relpath(os.path.join(out_dir, "map.html"), os.path.dirname(os.path.abspath(__file__))).replace(os.sep, "/")
+    key = next(m[0] for m in SITE_MAPS if m[2] == rel)
+    return key, "../" * rel.count("/")
 
 
 SUMMIT_FIND_M = 40   # a summit given roughly is moved to the highest ground this close
@@ -334,7 +352,7 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
 
     int_trail_json = json.dumps(int_trail_map)
 
-    client = {k: region[k] for k in ("name", "zones", "view", "bounds", "storagePrefix", "report", "otherMaps", "zonesPage")}
+    client = {k: region[k] for k in ("name", "zones", "view", "bounds", "storagePrefix", "report", "zonesPage")}
     client["placeLabels"] = region.get("placeLabels", [])
     client["summits"] = find_summits(region.get("summits", []), region.get("dem"))
     client["towns"] = region.get("towns", [])
@@ -344,6 +362,9 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     client["eleStep"] = ele_step
     client["checks"] = region.get("checks", [])
     client["credit"] = region.get("credit")
+    client["area"], client["siteRoot"] = site_area(out_dir)
+    client["siteMaps"] = [{"key": m[0], "short": m[1], "href": m[2]} for m in SITE_MAPS]
+    areas.write_area(client["area"], ints, trails)
     html = MAP_TEMPLATE.replace("__REPORTS_JS__", REPORTS_JS)
     # Legend rows only for kinds of marker this region has
     for kind in ("post", "landmark", "road", "posted_sign", "summit"):
@@ -602,6 +623,7 @@ MAP_TEMPLATE = r"""<!DOCTYPE html>
   #banner { display: none; position: fixed; top: 54px; left: 50%; transform: translateX(-50%); z-index: 1500;
     max-width: 92vw; background: #263238; color: #fff; padding: 8px 14px; border-radius: 18px; font-size: 14px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.35); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #banner.wrap { white-space: normal; width: max-content; text-align: center; border-radius: 12px; }   /* one with a link to keep in view */
   #banner .seal { width: 28px; height: 28px; vertical-align: middle; margin: -6px 8px -6px -6px; }
   #searchBadge {
     position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 2000;
@@ -3754,13 +3776,15 @@ function reportSaved(r, ask) {
   }
 }
 
-// A banner near the top for a few seconds: what was saved, or a town line crossed
-function showBanner(html) {
+// A banner near the top for a few seconds: what was saved, or a town line crossed. wrap:
+// on as many lines as it takes (one with a link, which mustn't be cut off), for longer.
+function showBanner(html, wrap) {
   var el = document.getElementById("banner");
   el.innerHTML = html;
+  el.className = wrap ? "wrap" : "";
   el.style.display = "block";
   clearTimeout(bannerTimer);
-  bannerTimer = setTimeout(function() { el.style.display = "none"; }, BANNER_MS);
+  bannerTimer = setTimeout(function() { el.style.display = "none"; }, wrap ? 2 * BANNER_MS : BANNER_MS);
 }
 
 // "Another color" or something in the way: the saved report, with a box to say which, or
@@ -5370,6 +5394,81 @@ function setFollowing(on) {
 
 map.on("dragstart", function() { setFollowing(false); });
 
+// --- Areas: the site's other maps (areas.json, written by areas.py), so the map can go to
+// the one you're in.
+//  - Opened from the home screen (an installed app's first page): if you're in or near no
+//    area (AREA_NEAR_M), the Overview; near another area and not this one, its map. Only
+//    from a fix soon after opening (AREA_LAUNCH_MS), and not once you've tapped locate.
+//  - Walking into another area's outline switches to its map. Only walking in does: a map
+//    you picked yourself stays put until you walk into a different area (areasLastIn
+//    remembers which outline you were last in, across the maps).
+var AREA_NEAR_M = 1609, AREA_LAUNCH_ACC_M = 500, AREA_LAUNCH_MS = 20000, AREA_SWITCH_ACC_M = 50;
+var AREA_LAST_KEY = "areasLastIn";
+var siteAreas = null, areaSeen = false;
+var areaLaunch = !location.search && !sessionStorage.getItem("areasOpened") &&
+  (navigator.standalone === true || !!(window.matchMedia && matchMedia("(display-mode: standalone)").matches));
+sessionStorage.setItem("areasOpened", "1");
+setTimeout(function() { areaLaunch = false; }, AREA_LAUNCH_MS);
+fetch(REGION.siteRoot + "areas.json").then(function(r) { return r.json(); }).then(function(list) {
+  siteAreas = list;
+  if (userLatLng) checkArea();
+}).catch(function() {});
+
+// Meters from an area's outline (0 inside it)
+function areaDist(a, ll) {
+  var r = a.outline, inside = false, best = Infinity, n = r.length;
+  var kx = 111320 * Math.cos(ll.lat * Math.PI / 180), ky = 110540;
+  for (var i = 0, j = n - 1; i < n; j = i++) {
+    var xi = (r[i][1] - ll.lng) * kx, yi = (r[i][0] - ll.lat) * ky, xj = (r[j][1] - ll.lng) * kx, yj = (r[j][0] - ll.lat) * ky;
+    if ((yi > 0) !== (yj > 0) && 0 < (xj - xi) * (0 - yi) / (yj - yi) + xi) inside = !inside;
+    var dx = xj - xi, dy = yj - yi, t = dx || dy ? Math.max(0, Math.min(1, -(xi * dx + yi * dy) / (dx * dx + dy * dy))) : 0;
+    best = Math.min(best, Math.hypot(xi + t * dx, yi + t * dy));
+  }
+  return inside ? 0 : best;
+}
+
+function goToArea(href, from) {
+  location.href = REGION.siteRoot + href + (from ? "?from=" + encodeURIComponent(from) : "");
+}
+
+function checkArea() {
+  if (!siteAreas) return;
+  var dists = siteAreas.map(function(a) { return {a: a, d: areaDist(a, userLatLng)}; });
+  var inside = dists.filter(function(x) { return x.d === 0; }).map(function(x) { return x.a.key; });
+  var lastIn = localStorage.getItem(AREA_LAST_KEY) || "";
+  // The outline you're in: this map's if you're in it (outlines can overlap), else another
+  var here = inside.indexOf(REGION.area) >= 0 ? REGION.area : inside[0] || "";
+  if (areaLaunch) {
+    if (userAccuracy > AREA_LAUNCH_ACC_M) return;
+    areaLaunch = false;
+    areaSeen = true;
+    localStorage.setItem(AREA_LAST_KEY, here);
+    var mine = dists.filter(function(x) { return x.a.key === REGION.area; })[0];
+    if (mine && mine.d <= AREA_NEAR_M) return;
+    var near = dists.filter(function(x) { return x.d <= AREA_NEAR_M; }).sort(function(x, y) { return x.d - y.d; })[0];
+    goToArea(near ? near.a.href : "overview.html");
+    return;
+  }
+  if (userAccuracy > AREA_SWITCH_ACC_M) return;
+  // The first good fix on a page only notes where you are: you opened this map
+  if (areaSeen && here && here !== lastIn && here !== REGION.area && !liveRouting()) {
+    localStorage.setItem(AREA_LAST_KEY, here);
+    goToArea(siteAreas.filter(function(a) { return a.key === here; })[0].href, REGION.area);
+    return;
+  }
+  areaSeen = true;
+  localStorage.setItem(AREA_LAST_KEY, here);
+}
+
+// Switched here by walking in: say so, with the way back (once the page is set up)
+setTimeout(function() {
+  var from = new URLSearchParams(location.search).get("from");
+  var m = from && REGION.siteMaps.filter(function(x) { return x.key === from; })[0];
+  if (from) history.replaceState(null, "", location.pathname + location.hash);   // not again on a reload
+  if (m) showBanner('You walked into ' + esc(REGION.name) + ', so here\'s its map. <a href="' + REGION.siteRoot + m.href +
+    '" style="color:#fff;text-decoration:underline">Back to ' + esc(m.short) + '</a>', true);
+}, 0);
+
 function onLocation(pos) {
   var first = !userLatLng;
   userLatLng = L.latLng(pos.coords.latitude, pos.coords.longitude);
@@ -5420,6 +5519,7 @@ function onLocation(pos) {
     refreshLocateInfo();
   }
   updateBridgeSheet();
+  checkArea();
   checkBackAtStart();
   if (following) map.panTo(userLatLng);
 }
@@ -5481,6 +5581,7 @@ function locateMe() {
     startWatch();
     startCompass();
     setFollowing(true);
+    areaLaunch = false;   // you asked for where you are on this map
     if (userLatLng && liveRouting()) {
       map.setView(userLatLng, Math.max(map.getZoom(), 17));   // keep the route panel
     } else if (userLatLng) {

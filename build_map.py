@@ -89,7 +89,6 @@ def region():
         # The prototype signs up now use an abandoned numbering, so no "I'm at this sign"
         "report": {"email": "tendiamonds@gmail.com", "name": "Jason Breslau", "signReports": False},
         "checks": sign_checks(),
-        "otherMaps": [{"name": "Blue Hills", "href": "bluehills/map.html"}],
         "towns": town_lines(),
         # Hilltops beside the trails (from the lidar, 2026-11-04; trailmap finds each true
         # top and its height). Names are OpenStreetMap's, where it has one.

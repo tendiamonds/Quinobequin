@@ -384,7 +384,6 @@ def main():
         "bounds": [[min(lats), min(lons)], [max(lats), max(lons)]],
         "storagePrefix": "sar",
         "report": {"email": "tendiamonds@gmail.com", "name": "Jason Breslau", "signReports": False},
-        "otherMaps": [{"name": "Upper Charles", "href": "../map.html"}, {"name": "Blue Hills", "href": "../bluehills/map.html"}],
         "zonesPage": False,
         "dem": os.path.join(PROJ, "elevation_cache", "saratoga.tif"),
         "blazes": BLAZES,
@@ -399,7 +398,7 @@ def main():
         f.write('<!DOCTYPE html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=map.html">'
                 '<title>Saratoga Woods</title><a href="map.html">Saratoga Woods trail map</a>\n')
     # Skidmore's green and yellow
-    make_favicon.make_icons(OUT, label="S", color="#006A52", ink="#FFD100", name="Saratoga Woods", short_name="Saratoga")
+    make_favicon.make_icons(OUT, label="S", color="#006A52", ink="#FFD100", name="Saratoga Woods", short_name="Saratoga", root="../")
     build_reports_page(os.path.join(OUT, "reports.html"), title="Reports — Saratoga Woods", css=CHECKS_CSS,
                        nav=region["nav"], storage_prefix=region["storagePrefix"], email=region["report"]["email"],
                        name=region["report"]["name"], blazes=BLAZES, checks=[])

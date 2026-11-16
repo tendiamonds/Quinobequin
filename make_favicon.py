@@ -44,8 +44,11 @@ def draw_icon(size, shape, ink_width, label, color, ink="white"):
     return im.resize((size, size), Image.LANCZOS), ((r - l) / big, (b - t) / big)
 
 
-def make_icons(out_dir, label, color, name, short_name, ink="#fff"):
-    """ink: the letters' color (white unless a site's colors say otherwise)"""
+def make_icons(out_dir, label, color, name, short_name, ink="#fff", root=""):
+    """ink: the letters' color (white unless a site's colors say otherwise). root: the way
+    from out_dir to the sites' root ("" or "../"). Each map is its own app (its name, its
+    icon, opening to its map), but every app's scope is the whole site, so the Maps menu
+    goes from one map to another inside whichever app you're in."""
     svg = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
 <rect x="2" y="2" width="60" height="60" rx="14" fill="{color}"/>
 <text x="32" y="47" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="40" fill="{ink}" letter-spacing="-1">{label}</text>
@@ -55,7 +58,7 @@ def make_icons(out_dir, label, color, name, short_name, ink="#fff"):
         "name": name,
         "short_name": short_name,
         "start_url": "map.html",
-        "scope": "./",
+        "scope": root or "./",
         "display": "standalone",
         # Android colors the installed app's bottom bar from background_color but draws its
         # buttons to suit theme_color, so the two match (white buttons on white otherwise)

@@ -20,6 +20,14 @@ All three use **`trailmap.py`**: the shared app. Its `MAP_TEMPLATE` is the whole
 reports are **`reports.py`** (saved on the phone, emailed in a batch; `read_reports.py` reads
 a pasted email back). The generated `.html` files are committed: they *are* the site.
 
+The maps work as one: **`SITE_MAPS`** in trailmap.py lists them (a new area goes there),
+and each build adds its area (outline, parking) to **`areas.json`** and rewrites
+**`overview.html`** (`areas.py`). Every map's Maps menu is titled with it and lists the
+others and the Overview; walking into another area's outline switches to its map (a map
+you picked stays put until you walk into a different one); and an installed app, opened
+away from every area (over a mile), starts on the Overview. Each map is its own
+home-screen app (name, icon, start page), but every app's scope is the whole site.
+
 Whose it is: the Upper Charles map is a collaboration of the Holliston Town Forest
 Committee (Jason Breslau chairs it and builds the app), Holliston Conservation, Hopkinton
 Trails, Milford Conservation, NEMBA and others. It's meant to move to the Town of

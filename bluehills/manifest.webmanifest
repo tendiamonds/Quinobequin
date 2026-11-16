@@ -2,7 +2,7 @@
   "name": "Blue Hills Reservation",
   "short_name": "Blue Hills",
   "start_url": "map.html",
-  "scope": "./",
+  "scope": "../",
   "display": "standalone",
   "background_color": "#2c3e50",
   "theme_color": "#2c3e50",
