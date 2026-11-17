@@ -27,15 +27,30 @@ date as things change; dates are when something was learned or decided.
    a direction-up map (Leaflet can't rotate: a plugin like leaflet-rotate, or rotating
    the container, which turns labels sideways).
 7. Expect the conservation commission to ask to rename **Giggity**.
-8. **Try on Android:** that the report email's To shows "Jason Breslau".
-9. **Bridges on the map** (the point of the bridge reports). Each bridge report has both
+8. **Bridges on the map** (the point of the bridge reports). Each bridge report has both
    ends; snapped to its trail, that's a stretch of it, which can be stored on the trail
    the way blazes are and drawn with a bridge symbol (a short pair of lines with flared
    ends). `read_reports.py` could print them ready to add. Blue Hills and the Fells may
    have them already: DCR's points layer has bridges and boardwalks, and OSM marks
-   bridge ways. Reported so far (2026-11-15): at C26, 33 ft, 42.186392,-71.495415 to
+   bridge ways. Every bridge gets reported again on every walk (2026-11-17), so the reports
+   pile up on purpose: when this is built, keep them all raw (a file, with dates), group
+   them by trail and overlapping stretch, average the ends along the trail, drop outliers,
+   and let newer ones show a bridge that changed. Reported so far (2026-11-15): at C26, 33 ft, 42.186392,-71.495415 to
    42.186412,-71.495300; College Rock Run C4–C7, 43 ft, 42.189325,-71.496319 to
-   42.189417,-71.496424.
+   42.189417,-71.496424. 2026-11-17 (zone F): The Main Trail F2–F1, the long boardwalk,
+   walked both ways (42.171014,-71.488060 to 42.171077,-71.489099, and
+   42.171063,-71.489142 to 42.171025,-71.488077): the ends agree within 4 m and 2 m,
+   the lengths within 2 m; averaged, 42.171070,-71.489120 to 42.171019,-71.488068, 285 ft
+   (one walk is good to about 4 m an end; worth walking long ones twice); Swampside F12–F2, three: 26 ft
+   (42.168486,-71.490564 to 42.168411,-71.490569), 10 ft (42.168103,-71.490512 to
+   42.168079,-71.490516) and 39 ft (42.168049,-71.490524 to 42.167946,-71.490565), the
+   last two nearly end to end; Fairbanks Trail F7–F11, 108 ft (42.168310,-71.491705 to
+   42.168602,-71.491784); Fairbanks Trail F10–F5, 30 ft (42.169555,-71.492966 to
+   42.169638,-71.492961).
+9. **Blue in zone F is a puzzle** (2026-11-17). Marked so far: Tonto F3–A18 and The Main
+   Trail F3–F2 (with the red). Also seen, not marked: one blue blaze just past F7 heading
+   to F9 (Fairbanks Trail), then nothing until F10, where a "blue turns left" blaze.
+   Look for more blue around F7–F10 before marking any of it.
 10. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
     sync our obstruction reports with Trailforks'. Theirs are public (trail, status,
     description, coordinates; the region's list is
@@ -148,6 +163,13 @@ the day's changes together.
 - **QR codes only at the entrances (2026-11-16),** on the kiosks, not on the trail signs:
   it's an idea some people like, but it makes the signs busy, and people can be wary of QR
   codes everywhere.
+- **Marks (2026-11-17):** "Mark this spot (just for you)" in the Report sheet drops a flag
+  where you stand (to come back for something: a poop bag). Not a report: kept on the
+  phone for a day, never sent. Route here goes to the flag itself (a trip ending at a
+  point, like a round trip's start). Coming back within about 100 ft, a banner stays up
+  with Got it (removes it) and Later until you're 150 ft away; it starts watching only
+  once you've walked off. Back where you started lists any still left. Your spot only:
+  no marking a spot you tap.
 - **Root Canal** is too steep: routes avoid it unless you add it yourself (`route_cost`).
 
 ## The land and its conservation restrictions

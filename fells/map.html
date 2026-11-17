@@ -240,6 +240,13 @@
                  font-size: 15px; font-weight: 600; color: #263238; cursor: pointer; }
   .report-kind:active { background: #e3f2fd; }
   .report-kind.waiting { background: #e3f2fd; border-color: #1e88e5; color: #0d47a1; }
+  .report-kind.mark-kind { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 0 0 8px; }
+  .mark-icon svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+  .mark-chip { display: inline-flex; vertical-align: middle; }
+  #banner .banner-btn { margin-left: 10px; padding: 3px 10px; border: 1px solid #fff; border-radius: 12px; background: transparent;
+    color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+  #banner .banner-btn.go { background: #fff; color: #263238; }
+  #banner svg { vertical-align: middle; }
   .report-kind.bridge-end { display: block; width: 100%; padding: 22px 6px; font-size: 1.25em; font-weight: bold; margin: 0 0 10px; }
   .walk-img { display: block; width: 100%; max-height: 55vh; object-fit: contain; margin: 4px 0 8px; border-radius: 6px; }
   .my-reports { margin: 6px 0 10px; max-height: 45vh; overflow-y: auto; }
@@ -1412,9 +1419,10 @@ function routePanelHtml() {
   var toGoStr = formatDist(toGo);
   var dest = trip.to;
   // A round trip ends where it began: at that intersection, if it began at one
-  var homePill = trip.homeLabel ? intPill(trip.homeLabel) : END_CHIP;
+  var homePill = trip.homeLabel ? intPill(trip.homeLabel) : trip.mark ? '<span class="mark-chip">' + markFlagSvg(18) + '</span>' : END_CHIP;
   var destHtml = dest === null ? homePill : intPill(dest);
-  var arrivedHtml = dest === null
+  var arrivedHtml = trip.mark ? "You're at your mark" + (trip.mark.text ? ': ' + esc(trip.mark.text) : '')
+    : dest === null
     ? (trip.homeLabel ? "You're back at " + homePill : "You're back where you started")
     : "You've arrived at " + intPill(dest);
   // ...and the route's last pill is already that intersection, so no End chip after it
@@ -1480,6 +1488,7 @@ function routePanelHtml() {
   var title = trip.loop
     ? (dest !== null ? 'Route of ' + formatDist(trip.loop.len) + ' to ' + intName(dest)
        : 'Loop of ' + formatDist(trip.loop.len) + (trip.homeLabel ? ', back to ' + intName(trip.homeLabel) : ', back here'))
+    : trip.mark ? 'Route: Your location → ' + esc(trip.mark.text ? 'your mark: ' + trip.mark.text : 'your mark')
     : dest === null
     ? (names.length === 1 ? 'Round trip: out to ' + names[0] + ' and back' : 'Round trip via ' + names.join(', '))
     : 'Route: ' + (plan.live ? 'Your location' : intName(trip.from)) + ' → ' + intName(dest) + (names.length ? ' via ' + names.join(', ') : '');
@@ -2429,7 +2438,7 @@ function reverseLoop() {
 // Whether a reversed round trip would be any different: not for a plain out and back
 function canReverseLoop() {
   var labels = plan.steps.map(function(s) { return s.label; });
-  return plan.trip.to === null && plan.live && !plan.arrived && !plan.trip.stops.some(function(s) { return s.done; }) &&
+  return plan.trip.to === null && !plan.trip.mark && plan.live && !plan.arrived && !plan.trip.stops.some(function(s) { return s.done; }) &&
     labels.join(" ") !== labels.slice().reverse().join(" ");
 }
 
@@ -3264,6 +3273,7 @@ function showReportSheet(step) {
       (bridge ? '<button class="report-kind waiting" onclick="endBridge()">Bridge End</button>'
               : '<button class="report-kind" onclick="startBridge()">Bridge Start</button>') +
       '<button class="report-kind" onclick="showReportSheet(\'other\')">Other</button></div>' +
+      '<button class="report-kind mark-kind" onclick="dropMark()">' + markFlagSvg(18) + 'Mark this spot (just for you)</button>' +
       (bridge ? '<div class="report-fine" style="margin:-2px 0 8px">You marked a bridge\'s start at ' +
         esc(new Date(bridge.when).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})) +
         '. Tap Bridge End at its far end.</div>' : '') +
@@ -3415,13 +3425,23 @@ function reportSaved(r, ask) {
 
 // A banner near the top for a few seconds: what was saved, or a town line crossed. wrap:
 // on as many lines as it takes (one with a link, which mustn't be cut off), for longer.
-function showBanner(html, wrap) {
+// sticky: until hideBanner (a mark you're near: see checkMarks); a passing banner over it
+// gives way to it again at the next fix.
+var bannerSticky = false;
+function showBanner(html, wrap, sticky) {
   var el = document.getElementById("banner");
   el.innerHTML = html;
   el.className = wrap ? "wrap" : "";
   el.style.display = "block";
+  bannerSticky = !!sticky;
   clearTimeout(bannerTimer);
-  bannerTimer = setTimeout(function() { el.style.display = "none"; }, wrap ? 2 * BANNER_MS : BANNER_MS);
+  bannerTimer = sticky ? null : setTimeout(function() { el.style.display = "none"; bannerTimer = null; }, wrap ? 2 * BANNER_MS : BANNER_MS);
+}
+function hideBanner() {
+  clearTimeout(bannerTimer);
+  bannerTimer = null;
+  bannerSticky = false;
+  document.getElementById("banner").style.display = "none";
 }
 
 // "Another color" or something in the way: the saved report, with a box to say which, or
@@ -3487,6 +3507,156 @@ function updateReportCount() {
     reportCountEl.style.display = n ? "" : "none";
   }
 }
+
+// --- Marks: a pin you drop where you stand, just for you (to come back for something, or
+// remember a spot). Never a report: kept on this phone (not just this tab, which a phone
+// can throw away), never sent, gone when you remove it or after MARK_LIFE_MS. Coming
+// back within MARK_NEAR_M of one, a banner says so until you're MARK_LEAVE_M away or say
+// you got it; it only starts watching once you've walked away from it. Back where you
+// started, the panel lists any you still have.
+var MARKS_KEY = REGION.storagePrefix + "Marks";
+var MARK_LIFE_MS = 24 * 3600 * 1000;
+var MARK_NEAR_M = 30, MARK_LEAVE_M = 45;   // about 100 ft, and half again
+var MARK_ACC_M = 25;                       // fixes rougher than this don't count, either way
+var markLayer = L.layerGroup().addTo(map);
+var markLater = {};                        // marks you said Later to, until you leave them
+var markShown = null;                      // the mark the banner is about
+
+// (stroke: its outline, dark unless on something dark)
+function markFlagSvg(size, stroke) {
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="#ff6d00" stroke="' + (stroke || "#263238") + '" stroke-width="1.8" stroke-linejoin="round">' +
+    '<path d="M5 21V4h11l-2 4 2 4H5"/></svg>';
+}
+
+function loadMarks() {
+  var list = [];
+  try { list = JSON.parse(localStorage.getItem(MARKS_KEY)) || []; } catch (e) {}
+  return list.filter(function(m) { return Date.now() - m.when < MARK_LIFE_MS; });
+}
+function storeMarks(list) { try { localStorage.setItem(MARKS_KEY, JSON.stringify(list)); } catch (e) {} }
+function findMark(id) { return loadMarks().filter(function(m) { return m.id === id; })[0] || null; }
+function changeMark(id, fn) {
+  storeMarks(loadMarks().map(function(m) { if (m.id === id) fn(m); return m; }));
+}
+
+function markName(m) { return m.text ? 'Your mark: ' + m.text : 'Your mark'; }
+
+// Where a mark is, in words: on which trail and stretch, or at or near which sign
+function markWhere(m) {
+  var p = userPlace(L.latLng(m.lat, m.lon));
+  return p.type === "at" ? 'At ' + p.label
+    : p.type === "off" ? formatDist(p.dist) + ' from ' + p.label
+    : 'On ' + p.trail + ', ' + (p.left.label || "end") + '–' + (p.right.label || "end");
+}
+
+function drawMarks() {
+  markLayer.clearLayers();
+  loadMarks().forEach(function(m) {
+    L.marker([m.lat, m.lon], {
+      icon: L.divIcon({className: "mark-icon", iconSize: [28, 28], iconAnchor: [7, 26], html: markFlagSvg(28)}),
+      title: markName(m), zIndexOffset: 500
+    }).on("click", function(e) { L.DomEvent.stopPropagation(e); showMarkInfo(m.id); }).addTo(markLayer);
+  });
+}
+
+function dropMark() {
+  if (!userLatLng) {
+    document.getElementById("infoContent").innerHTML = '<div class="report"><div class="report-warn">A mark goes where you\'re standing, ' +
+      'so it needs your location: turn it on with the locate button.</div>' +
+      '<button class="route-btn" style="background:#888" onclick="closeReport()">Back</button></div>';
+    return;
+  }
+  var m = {id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), when: Date.now(),
+           lat: +userLatLng.lat.toFixed(6), lon: +userLatLng.lng.toFixed(6), text: "", armed: false};
+  storeMarks(loadMarks().concat([m]));
+  drawMarks();
+  markSheet(m.id, true);
+}
+
+// Naming a mark: just dropped (with Undo), or renaming
+function markSheet(id, fresh) {
+  var m = findMark(id);
+  if (!m) { closeReport(); return; }
+  reportAbout = null;
+  document.getElementById("infoContent").innerHTML = '<div class="report">' +
+    '<div class="report-head"><strong>' + (fresh ? '&#x2713; Marked this spot' : 'Your mark') + '</strong></div>' +
+    '<div class="report-where">' + esc(markWhere(m)) + '</div>' +
+    '<textarea id="markNote" rows="2" placeholder="What\'s here? (optional)">' + esc(m.text) + '</textarea>' +
+    '<button class="route-btn" onclick="nameMark(' + jsArg(id) + ')">Done</button> ' +
+    (fresh ? '<button class="route-btn" style="background:#888" onclick="removeMark(' + jsArg(id) + ')">Undo</button>' : '') +
+    '<div class="report-fine">Just for you: it stays on this phone for a day, and is never sent.</div></div>';
+}
+
+function nameMark(id) {
+  var t = document.getElementById("markNote").value.trim();
+  changeMark(id, function(m) { m.text = t; });
+  drawMarks();
+  closeReport();
+}
+
+// (from the banner, it leaves the panel as it is)
+function removeMark(id, fromBanner) {
+  storeMarks(loadMarks().filter(function(m) { return m.id !== id; }));
+  drawMarks();
+  if (markShown === id) { markShown = null; hideBanner(); }
+  if (!fromBanner) closeReport();
+}
+
+function showMarkInfo(id) {
+  var m = findMark(id);
+  if (!m) return;
+  clearSelection(true);
+  var away = userLatLng ? userLatLng.distanceTo(L.latLng(m.lat, m.lon)) : null;
+  document.getElementById("infoContent").innerHTML = '<div class="report">' +
+    '<div class="report-head"><strong>' + esc(markName(m)) + '</strong></div>' +
+    '<div class="report-where">' + esc(markWhere(m)) + '</div>' +
+    '<div class="report-fine" style="margin:0 0 6px">Marked at ' +
+      esc(new Date(m.when).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})) +
+      (away !== null ? '; ' + formatDist(away) + ' from you' : '') + '</div>' +
+    (userLatLng ? '<button class="route-btn" style="background:#1e88e5" onclick="routeToMark(' + jsArg(id) + ')">Route here</button> ' : '') +
+    '<button class="route-btn" style="background:#0d47a1" onclick="markSheet(' + jsArg(id) + ')">Rename</button> ' +
+    '<button class="route-btn" style="background:#888" onclick="removeMark(' + jsArg(id) + ')">Remove</button></div>';
+}
+
+// A route from you to a mark: a trip whose end is the mark's spot, the way a round trip
+// ends where it began
+function routeToMark(id) {
+  var m = findMark(id);
+  if (!m || !userLatLng) return;
+  var ll = L.latLng(m.lat, m.lon), at = nearestInt(ll);
+  var trip = newTrip(null, [], null);
+  trip.home = ll;
+  trip.homeAnchors = userAnchors(ll);
+  trip.homeLabel = at && at.dist <= AT_INT_M ? at.label : null;
+  trip.mark = {id: m.id, text: m.text};
+  startTrip(trip, 'No route found from your location to your mark.');
+}
+
+// With each fix: the banner for the nearest mark you're near, until you leave it
+function checkMarks(ll, acc) {
+  if (acc > MARK_ACC_M) return;
+  var list = loadMarks(), near = null, changed = false;
+  list.forEach(function(m) {
+    var d = ll.distanceTo(L.latLng(m.lat, m.lon));
+    if (!m.armed && d > MARK_LEAVE_M) { m.armed = true; changed = true; }
+    if (d > MARK_LEAVE_M) delete markLater[m.id];
+    var within = d <= (markShown === m.id ? MARK_LEAVE_M : MARK_NEAR_M);
+    if (m.armed && !markLater[m.id] && within && (!near || d < near.d)) near = {m: m, d: d};
+  });
+  if (changed) storeMarks(list);
+  if (near) {
+    markShown = near.m.id;
+    if (!bannerTimer) {   // (a passing banner first, then this again)
+      showBanner(markFlagSvg(20, "#fff") + ' ' + esc(markName(near.m)) + ', ' + formatDist(near.d) + ' away' +
+        '<button class="banner-btn go" onclick="removeMark(' + jsArg(near.m.id) + ', true)">Got it</button>' +
+        '<button class="banner-btn" onclick="markLater[' + jsArg(near.m.id) + ']=true;markShown=null;hideBanner()">Later</button>', true, true);
+    }
+  } else if (markShown) {
+    markShown = null;
+    if (bannerSticky) hideBanner();
+  }
+}
+drawMarks();
 
 // --- Field checks: things to look at on a walk, at particular intersections (REGION.checks).
 // Each gets a badge on its intersection; near one, the panels say so. An answer is a report.
@@ -4692,14 +4862,20 @@ function checkBackAtStart() {
   try { asked = sessionStorage.getItem(HOME_KEY); } catch (e) {}
   if (awayFromStart && userLatLng.distanceTo(start) <= HOME_NEAR_M && asked !== String(crumbs[0][2])) {
     try { sessionStorage.setItem(HOME_KEY, String(crumbs[0][2])); } catch (e) {}
-    var n = unsentReports().length;
-    if (n) {
+    var n = unsentReports().length, marks = loadMarks();
+    if (n || marks.length) {
       clearSelection(true);
       document.getElementById("infoContent").innerHTML = '<div class="report"><div class="report-head"><strong>Back where you started.</strong> ' +
-        'Send your ' + (n === 1 ? 'report' : n + ' reports') + '?</div>' +
-        '<div class="report-fine" style="margin:0 0 6px">' + esc(sendsToWords()) + '</div>' +
-        '<button class="route-btn" onclick="sendReports();updateReportCount();showWalkSummary()">Send</button> ' +
-        '<button class="route-btn" style="background:#888" onclick="showWalkSummary()">Not now</button></div>';
+        (n ? 'Send your ' + (n === 1 ? 'report' : n + ' reports') + '?' : '') + '</div>' +
+        marks.map(function(m) {
+          return '<div class="report-where">' + markFlagSvg(14) + ' You still have ' + esc(m.text ? 'a mark, ' + m.text + ',' : 'a mark') + ' ' + esc(markWhere(m).replace(/^[OA]/, function(c) { return c.toLowerCase(); })) +
+            ' <a class="crumb-clear" onclick="routeToMark(' + jsArg(m.id) + ')">Route there</a>' +
+            ' <a class="crumb-clear" onclick="removeMark(' + jsArg(m.id) + ', true);this.parentNode.remove()">Remove</a></div>';
+        }).join('') +
+        (n ? '<div class="report-fine" style="margin:0 0 6px">' + esc(sendsToWords()) + '</div>' +
+             '<button class="route-btn" onclick="sendReports();updateReportCount();showWalkSummary()">Send</button> ' +
+             '<button class="route-btn" style="background:#888" onclick="showWalkSummary()">Not now</button>'
+           : '<button class="route-btn" onclick="showWalkSummary()">Walk summary</button>') + '</div>';
     } else {
       showWalkSummary();
     }
@@ -5113,6 +5289,7 @@ function onLocation(pos) {
   checkFreshStart(userLatLng, userAccuracy);
   addCrumb(userLatLng, userAccuracy);
   checkTown(userLatLng, userAccuracy);
+  checkMarks(userLatLng, userAccuracy);
   updateMoveHeading(pos, userLatLng);
   if (pendingTrip) {
     var resumed = pendingTrip;
