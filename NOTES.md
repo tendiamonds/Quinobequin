@@ -15,31 +15,28 @@ date as things change; dates are when something was learned or decided.
    compare against OSM, then redraw.
 3. **A bypass around Challenger** exists; we asked the trail stewards whether to add it.
    If it's added, rerun `add_junctions.py`.
-4. **Trailforks data:** the Trailforks region admin (a NEMBA contact we want on board with
-   the signs) offered better trail data as GPX. Zone E (NEMBA land) has changed most. When
-   it comes: `import_gpx.py`, check the intersections in E, rebuild (the numbering follows).
-5. **Owner labels overstate the Adams CR.** About 156 acres are labeled "Adams Town Forest
+4. **Owner labels overstate the Adams CR.** About 156 acres are labeled "Adams Town Forest
    (Trustees CR)", but the CR covers only the 85.6-acre additions (see below); the rest is
    likely the original Town Forest. Fix by matching our parcels to the CR's sketch map
    (page 18 of the recorded CR), labeling owners "Town of Holliston" with the CR as a
    separate attribute.
-6. **Tests.** Checks so far are hand-run Playwright evaluations; automated regression tests
+5. **Tests.** Checks so far are hand-run Playwright evaluations; automated regression tests
    (routing, loops, breadcrumbs, reports) would help.
-7. **Ideas for another day:** "Save track" as GPX (phones stop GPS with the screen off, so
+6. **Ideas for another day:** "Save track" as GPX (phones stop GPS with the screen off, so
    tracks have gaps; the map fills them along trails, but it can't replace Strava);
    a direction-up map (Leaflet can't rotate: a plugin like leaflet-rotate, or rotating
    the container, which turns labels sideways).
-8. Expect the conservation commission to ask to rename **Giggity**.
-9. **Try on Android:** that the report email's To shows "Jason Breslau".
-10. **Bridges on the map** (the point of the bridge reports). Each bridge report has both
-    ends; snapped to its trail, that's a stretch of it, which can be stored on the trail
-    the way blazes are and drawn with a bridge symbol (a short pair of lines with flared
-    ends). `read_reports.py` could print them ready to add. Blue Hills and the Fells may
-    have them already: DCR's points layer has bridges and boardwalks, and OSM marks
-    bridge ways. Reported so far (2026-11-15): at C26, 33 ft, 42.186392,-71.495415 to
-    42.186412,-71.495300; College Rock Run C4–C7, 43 ft, 42.189325,-71.496319 to
-    42.189417,-71.496424.
-11. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
+7. Expect the conservation commission to ask to rename **Giggity**.
+8. **Try on Android:** that the report email's To shows "Jason Breslau".
+9. **Bridges on the map** (the point of the bridge reports). Each bridge report has both
+   ends; snapped to its trail, that's a stretch of it, which can be stored on the trail
+   the way blazes are and drawn with a bridge symbol (a short pair of lines with flared
+   ends). `read_reports.py` could print them ready to add. Blue Hills and the Fells may
+   have them already: DCR's points layer has bridges and boardwalks, and OSM marks
+   bridge ways. Reported so far (2026-11-15): at C26, 33 ft, 42.186392,-71.495415 to
+   42.186412,-71.495300; College Rock Run C4–C7, 43 ft, 42.189325,-71.496319 to
+   42.189417,-71.496424.
+10. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
     sync our obstruction reports with Trailforks'. Theirs are public (trail, status,
     description, coordinates; the region's list is
     `trailforks.com/region/vietnam-trail-network/reports/`), but the API needs an app id
@@ -49,6 +46,51 @@ date as things change; dates are when something was learned or decided.
     with BVNEMBA. Reading their open issues onto the map would be a build step (the secret
     can't be in the page); posting ours to Trailforks needs each person's Trailforks login
     (OAuth) and their POST methods are "under development". Their API page mentions RSS.
+    **2026-11-16:** a NEMBA chapter contact has a Trailforks API key and a trail work app
+    (`vietnamtrailwork.eaglesnest.app`): trails colored by their Trailforks status,
+    Trailforks' reports as pins and planned projects, crew projects, volunteer sign-ups. It
+    reads from Trailforks but can't write (can't mark an issue cleared). He suggested
+    combining resources. Ways to: his app publishing the open issues as a public file our
+    map reads (no key in our page); our obstruction reports going into his "suggest trail
+    work" (his Trailforks trail data matches ours: see below). NEMBA wants people reporting
+    on Trailforks, one app everywhere. Ours isn't for trail work, and isn't riders against
+    walkers: it's the local map for people who don't use Trailforks or AllTrails (new to the
+    woods, from town, or who'd rather have a map of this forest); anyone happy with those
+    should keep using them.
+    **Replied 2026-11-16** (waiting on him): asked whether our reports could go into his
+    "suggest trail work" and whether his app could publish its open Trailforks reports as a
+    small public file for our map; suggested unifying the shared trail data later. Told him
+    the map began as a way to work out which property and town each sign is on (to make
+    them right and get permissions), and that our reports are mainly the blaze and
+    map-mismatch survey, obstacles a bonus.
+    **His proposal (2026-11-16, a PDF spec; not in the repo):** his server takes our reports
+    (`POST https://vietnamtrailwork.eaglesnest.app/api/public/reports`, body `{v: 1, source:
+    "quinobequin", reports: [...]}`, up to 25 per post; replies `{accepted: [ids], skipped:
+    [{id, why}]}`; repeats by id ignored; only from `tendiamonds.github.io`) and publishes
+    open issues (`GET .../api/public/issues`: Trailforks reports and his crew's projects, plus
+    `yours`: each report we sent, by id, with its status: received, planned, in progress,
+    fixed, not taken up). He builds both endpoints first. Decided so far:
+    - Only obstruction reports (tree, washout, flooded, other), only from the Upper Charles
+      map. Not bridges: ours record bridges that exist, not where one should go (he reads
+      them as suggestions). Not notes, blazes, checks.
+    - Those obstruction reports go to him **instead of** the email (the crew handles them).
+    - Retries: a report is posted once his server answers for it; until then it's tried
+      again each time the Reports page opens.
+    - One he skips (outside his area) goes in the email, as now, so none are lost.
+    - The Reports page says in a line where obstruction reports go. Issues from his feed
+      show on the Upper Charles map only, in our own style (borrowing from his icons where
+      we have none); if his server is down, nothing extra shows.
+    - Testing from localhost would be awkward to set up with him; not needed (test from the
+      published site). The Town's site, when the map moves, has to be allowed to post.
+    - We're the keeper of the numbering and the names: `upper_charles.json` (build_map.py
+      `write_shared`): signs (permanent id, label, zone, location, entrance) and trails
+      (permanent id, our name, signs in order, blazes sign to sign, line). His app reads it
+      instead of copying map.html. Reports carry `ctx.trailId`; he keeps the match from our
+      trail ids to his Trailforks trails.
+    - His questions: the formats work. Sign reports stay ours until the signs are up (a
+      design question), then go to him (maintenance). Fixed issues show for about two
+      weeks.
+    Nothing to build on our side until his two endpoints are live.
 
 ## How the field work goes
 
@@ -96,6 +138,16 @@ the day's changes together.
   letters are the map grid's columns, strips across the park, not areas). DCR's legend has
   four marked trails OSM lacks or has only a piece of: Wright's Tower, Mustang Loop,
   Cascade, Healthy Heart.
+- **Our trails match Trailforks' (2026-11-16).** Compared with Trailforks' lines (from a
+  NEMBA chapter contact's app, synced 2026-10-27): 97% of theirs is within 10 m of ours,
+  and none of their trails has 100 m we lack, Zone E included (cleaned up earlier). The
+  differences are ours on purpose: we leave out the short feature and jump lines on top of
+  Rocky Woods Range (207, B-Line and their neighbors, between E8, E11, E12 and E16), and
+  keep Rib Breaker south of E22, Lost Trail by F27, the quarry access road and the rail
+  trail, which Trailforks doesn't have. No GPX import needed.
+- **QR codes only at the entrances (2026-11-16),** on the kiosks, not on the trail signs:
+  it's an idea some people like, but it makes the signs busy, and people can be wary of QR
+  codes everywhere.
 - **Root Canal** is too steep: routes avoid it unless you add it yourself (`route_cost`).
 
 ## The land and its conservation restrictions

@@ -9,6 +9,7 @@ All pages cross-link: intersection labels link to the map,
 owner names link to the owner page, zone badges link to the zone page.
 """
 
+import datetime
 import heapq
 import json
 import math
@@ -974,6 +975,51 @@ def blazes_to_meters(ints, trails):
         f["properties"]["blazes"] = out
 
 
+SHARED_JSON = os.path.join(PROJ, "upper_charles.json")
+
+
+def write_shared(ints, trails):
+    """upper_charles.json: the signs and trails as this build has them, for other sites
+    that show them (a NEMBA chapter's trail work app), so they always have our numbering
+    and names. Version v: fields are added freely, never renamed or removed without a new v.
+      signs   each sign: id (its data number: permanent, while labels can change until the
+              signs are up), label, zone, lat, lon, entrance
+      trails  each trail: id (permanent: our reports carry it), our name, the signs along
+              it in order, its blazes (key, from label, to label: "start"/"end" for a trail
+              end), and its line [[lon, lat], ...]
+    Leaves out junctions and everything else that's only for building (owners aren't in
+    this data)."""
+    signs = [f for f in ints["features"] if not f["properties"].get("no_sign")]
+    label_of = {f["properties"]["number"]: f["properties"]["label"] for f in ints["features"]}
+    signed = {f["properties"]["label"] for f in signs}
+    tim = build_trail_int_map(ints, trails)
+    blazes = region()["blazes"]
+    out_trails = []
+    for ti, f in enumerate(trails["features"]):
+        p, g = f["properties"], f["geometry"]
+        lines = g["coordinates"] if g["type"] == "MultiLineString" else [g["coordinates"]]
+        out_trails.append({
+            "id": p["id"], "name": p.get("pdf_name") or p.get("name") or "",
+            "signs": [lbl for lbl, _ in tim.get(ti, {"ints": []})["ints"] if lbl in signed],
+            "blazes": [{"key": r[0], "name": blazes[r[0]]["name"] if r[0] in blazes else r[0],
+                        "from": label_of.get(r[1], r[1]), "to": label_of.get(r[2], r[2])}
+                       for r in p.get("blazes", [])],
+            "line": [[round(c[0], 6), round(c[1], 6)] for line in lines for c in line]})
+    data = {
+        "v": 1, "area": "Upper Charles Forest", "map": SITE + "map.html",
+        "updated": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "zones": {z: ZONE_NAMES[z] for z in sorted(ZONE_NAMES)},
+        "signs": [{"id": f["properties"]["number"], "label": f["properties"]["label"], "zone": f["properties"]["zone"],
+                   "lat": round(f["geometry"]["coordinates"][1], 6), "lon": round(f["geometry"]["coordinates"][0], 6),
+                   "entrance": bool(f["properties"].get("entry"))} for f in signs],
+        "trails": out_trails,
+    }
+    with open(SHARED_JSON, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(data, fh, separators=(",", ":"))
+        fh.write("\n")
+    print("Wrote upper_charles.json (%d signs, %d trails)" % (len(data["signs"]), len(out_trails)))
+
+
 # ---------------------------------------------------------------------------
 
 def main():
@@ -991,6 +1037,7 @@ def main():
     build_landing(rows, [(text, here[n]["properties"]["label"], not here[n]["properties"].get("no_sign"))
                          for n, text in sorted(POSTED_SIGNS.items(), key=lambda kv: order(kv[1])) if n in here])
     write_qr(SITE + "map.html", os.path.join(PROJ, "qr.svg"))
+    write_shared(ints, trails)
     # Most lines are Trailforks GPS tracks, a point every dozen meters or so: drawn as
     # curves through those points, not zigzags (before anything measures along them)
     print("Trails drawn as curves (lines move at most %.1f m)" % curve_trails(trails))

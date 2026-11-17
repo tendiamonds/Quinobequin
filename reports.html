@@ -132,7 +132,7 @@ var REPORT_BLAZES = {"red": {"name": "Red-blazed trail", "marks": "red blazes", 
 // "check" or "sign"), blaze (a blaze key, "other" or "none"), obstruction (an
 // OBSTRUCTIONS key), check (its id), answer, text, at ({lat, lon, acc} or null), heading
 // (degrees or null), about ({what: "int" or "trail", ref, extra} or null), ctx (what the
-// map had there: {trail, stretch, expect: [blaze keys], near, nearM}), sent (when, or
+// map had there: {trail, trailId, stretch, expect: [blaze keys], near, nearM}), sent (when, or
 // null)}. A bridge's at and ctx are its start; end ({lat, lon, acc}, or null until you
 // get there) and lengthM its far end.
 function loadReports() {

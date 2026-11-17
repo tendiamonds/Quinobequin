@@ -3547,7 +3547,7 @@ function reportContext() {
   var place = userPlace(userLatLng);
   if (place.type === "at") return {near: place.label, nearM: 0};
   if (place.type === "off") return {near: place.label, nearM: Math.round(place.dist)};
-  return {trail: place.trail, stretch: (place.left.label || "end") + "–" + (place.right.label || "end"),
+  return {trail: place.trail, trailId: place.trailId, stretch: (place.left.label || "end") + "–" + (place.right.label || "end"),
           expect: (place.blazes || []).map(function(o) { return o.key; })};
 }
 
@@ -4555,7 +4555,7 @@ function userPlace(ll) {
   var blazes = blazesOn(snap.ti, snap.along - a.dist, snap.along + b.dist).map(function(o) { return {key: o.key}; });
   // Lay the strip out west to east so it matches the map
   var west = a.ll.lng <= b.ll.lng ? a : b;
-  return {type: "seg", trail: snap.name, off: snap.d, left: west, right: west === a ? b : a,
+  return {type: "seg", trail: snap.name, trailId: trailData.features[snap.ti].properties.id, off: snap.d, left: west, right: west === a ? b : a,
           tan: snap.tan, afterIsRight: west === a, blazes: blazes};
 }
 

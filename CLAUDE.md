@@ -84,6 +84,9 @@ there's no test suite yet (NOTES.md).
   `import_gpx.py` for GPX; then **`add_junctions.py`** (`--dry` first) wherever trails meet
   without an intersection; then build. Check for trails drawn on top of each other.
 - Region extras in `build_map.py region()`: summits, place labels, blazes, other maps.
+- **`upper_charles.json`** (built, `write_shared`): our signs and trails for other sites
+  (a NEMBA chapter's trail work app reads it). Its `v` is a promise: add fields freely,
+  never rename or remove one without a new `v`.
 
 ## Rules (decided; don't relitigate)
 
