@@ -97,7 +97,7 @@ var REPORTS_KEY = "sarReports", REPORT_EMAIL = "tendiamonds@gmail.com", REPORT_N
 var REPORT_BLAZES = {"red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}, "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"}, "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}, "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"}, "purple": {"name": "Purple-blazed trail", "marks": "purple blazes", "color": "#8e24aa", "style": "blazes"}, "brown": {"name": "Brown trail (SMBA map)", "marks": "shown brown on the SMBA map", "pick": "brown blazes", "color": "#a0522d", "style": "blazes"}, "black": {"name": "Black trail (SMBA map)", "marks": "shown black on the SMBA map", "pick": "black blazes", "color": "#212121", "style": "blazes"}}, REPORT_CHECKS = [];
 
 // --- Saved reports (reports.py), shared by the map and the Reports page through the
-// phone's storage. A report: {id, when, kind ("blaze", "obstruction", "bridge", "note",
+// phone's storage. A report: {id, when, kind ("blaze", "obstruction" (shown as Maintenance), "bridge", "note",
 // "check" or "sign"), blaze (a blaze key, "other" or "none"), obstruction (an
 // OBSTRUCTIONS key), check (its id), answer, text, at ({lat, lon, acc} or null), heading
 // (degrees or null), about ({what: "int" or "trail", ref, extra} or null), ctx (what the
@@ -151,7 +151,7 @@ function feetWords(m) { return Math.round(m * 3.28084) + " ft"; }
 function reportHeadline(r) {
   // Something else in the way: what was typed for it
   if (r.kind === "obstruction") {
-    return (r.obstruction === "other" ? "Obstruction" + (r.text ? ": " + r.text : "") : OBSTRUCTIONS[r.obstruction] || "Obstruction") +
+    return (r.obstruction === "other" ? "Maintenance" + (r.text ? ": " + r.text : "") : OBSTRUCTIONS[r.obstruction] || "Maintenance") +
       placeWords(r.ctx);
   }
   if (r.kind === "bridge") return "Bridge" + placeWords(r.ctx) + (r.end ? ", " + feetWords(r.lengthM) + " long" : " (its start only)");

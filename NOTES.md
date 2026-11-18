@@ -46,11 +46,16 @@ date as things change; dates are when something was learned or decided.
    42.168079,-71.490516) and 39 ft (42.168049,-71.490524 to 42.167946,-71.490565), the
    last two nearly end to end; Fairbanks Trail F7–F11, 108 ft (42.168310,-71.491705 to
    42.168602,-71.491784); Fairbanks Trail F10–F5, 30 ft (42.169555,-71.492966 to
-   42.169638,-71.492961).
+   42.169638,-71.492961). 2026-11-18 (zone A): New Trail A4–A3, 66 ft (42.179592,-71.486991
+   to 42.179640,-71.487224); New Trail A21–A16, 33 ft (42.180540,-71.492627 to
+   42.180523,-71.492741); Town Forest Trail A23–A19, 69 ft (42.175176,-71.493632 to
+   42.175101,-71.493392).
 9. **Blue in zone F is a puzzle** (2026-11-17). Marked so far: Tonto F3–A18 and The Main
    Trail F3–F2 (with the red). Also seen, not marked: one blue blaze just past F7 heading
    to F9 (Fairbanks Trail), then nothing until F10, where a "blue turns left" blaze.
    Look for more blue around F7–F10 before marking any of it.
+   Elsewhere: one white blaze on Deer Way A17–A19 (2026-11-18), alongside its blue, the
+   only white seen anywhere; not marked (Upper Charles has no white).
 10. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
     sync our obstruction reports with Trailforks'. Theirs are public (trail, status,
     description, coordinates; the region's list is
@@ -85,9 +90,13 @@ date as things change; dates are when something was learned or decided.
     open issues (`GET .../api/public/issues`: Trailforks reports and his crew's projects, plus
     `yours`: each report we sent, by id, with its status: received, planned, in progress,
     fixed, not taken up). He builds both endpoints first. Decided so far:
-    - Only obstruction reports (tree, washout, flooded, other), only from the Upper Charles
+    - Only obstruction reports (tree, washout, flooded, other; the app calls them
+      Maintenance since 2026-11-18, the kind is still "obstruction"), only from the Upper Charles
       map. Not bridges: ours record bridges that exist, not where one should go (he reads
-      them as suggestions). Not notes, blazes, checks.
+      them as suggestions). Not notes, blazes, checks. The rule (2026-11-18): the
+      **Maintenance** button is exactly what goes to him from Upper Charles, nothing more or
+      less. Anything new for the crew (a sign down, once signs are up) is added there as
+      another choice, not as a kind of its own.
     - Those obstruction reports go to him **instead of** the email (the crew handles them).
     - Retries: a report is posted once his server answers for it; until then it's tried
       again each time the Reports page opens.
@@ -103,7 +112,8 @@ date as things change; dates are when something was learned or decided.
       instead of copying map.html. Reports carry `ctx.trailId`; he keeps the match from our
       trail ids to his Trailforks trails.
     - His questions: the formats work. Sign reports stay ours until the signs are up (a
-      design question), then go to him (maintenance). Fixed issues show for about two
+      design question), then go to him (a "Sign down" or "Sign damaged" choice under
+      Maintenance). Fixed issues show for about two
       weeks.
     Nothing to build on our side until his two endpoints are live.
 

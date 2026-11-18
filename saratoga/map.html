@@ -3044,7 +3044,7 @@ var REPORT_TITLE = REGION.name;
 var REPORT_BLAZES = REGION.blazes || {}, REPORT_CHECKS = REGION.checks || [];
 
 // --- Saved reports (reports.py), shared by the map and the Reports page through the
-// phone's storage. A report: {id, when, kind ("blaze", "obstruction", "bridge", "note",
+// phone's storage. A report: {id, when, kind ("blaze", "obstruction" (shown as Maintenance), "bridge", "note",
 // "check" or "sign"), blaze (a blaze key, "other" or "none"), obstruction (an
 // OBSTRUCTIONS key), check (its id), answer, text, at ({lat, lon, acc} or null), heading
 // (degrees or null), about ({what: "int" or "trail", ref, extra} or null), ctx (what the
@@ -3098,7 +3098,7 @@ function feetWords(m) { return Math.round(m * 3.28084) + " ft"; }
 function reportHeadline(r) {
   // Something else in the way: what was typed for it
   if (r.kind === "obstruction") {
-    return (r.obstruction === "other" ? "Obstruction" + (r.text ? ": " + r.text : "") : OBSTRUCTIONS[r.obstruction] || "Obstruction") +
+    return (r.obstruction === "other" ? "Maintenance" + (r.text ? ": " + r.text : "") : OBSTRUCTIONS[r.obstruction] || "Maintenance") +
       placeWords(r.ctx);
   }
   if (r.kind === "bridge") return "Bridge" + placeWords(r.ctx) + (r.end ? ", " + feetWords(r.lengthM) + " long" : " (its start only)");
@@ -3240,7 +3240,7 @@ function openBridge() {
   return list.length ? list[list.length - 1] : null;
 }
 
-// step: null for the kinds, or "blaze", "obstruction" or "other"
+// step: null for the kinds, or "blaze", "obstruction" (shown as Maintenance) or "other"
 function showReportSheet(step) {
   var a = reportAbout, p = a && a.what === "int" ? intFeatures[a.ref].properties : null;
   var html = '<div class="report"><div class="report-head"><strong>Report</strong>' + (a ? ' about ' + esc(aboutName(a)) : '') + '</div>' +
@@ -3254,7 +3254,7 @@ function showReportSheet(step) {
       '<button class="blaze-pick" onclick="saveBlaze(\'other\')">Another color</button>' +
       '<button class="blaze-pick" onclick="saveBlaze(\'none\')">No blaze here</button></div>' + back;
   } else if (step === "obstruction") {
-    html += '<div class="report-sub">What\'s in the way</div><div class="blaze-picks">' +
+    html += '<div class="report-sub">What needs fixing</div><div class="blaze-picks">' +
       Object.keys(OBSTRUCTIONS).map(function(k) {
         return '<button class="blaze-pick" onclick="saveObstruction(' + jsArg(k) + ')">' + esc(OBSTRUCTIONS[k]) + '</button>';
       }).join('') + '</div>' + back;
@@ -3270,7 +3270,7 @@ function showReportSheet(step) {
     var bridge = openBridge();
     html += '<div class="report-kinds">' +
       '<button class="report-kind" onclick="showReportSheet(\'blaze\')">Blaze</button>' +
-      '<button class="report-kind" onclick="showReportSheet(\'obstruction\')">Obstruction</button>' +
+      '<button class="report-kind" onclick="showReportSheet(\'obstruction\')">Maintenance</button>' +
       (bridge ? '<button class="report-kind waiting" onclick="endBridge()">Bridge End</button>'
               : '<button class="report-kind" onclick="startBridge()">Bridge Start</button>') +
       '<button class="report-kind" onclick="showReportSheet(\'other\')">Other</button></div>' +

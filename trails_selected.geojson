@@ -1930,13 +1930,6 @@
         "name": "Bumblebee",
         "pdf_name": "Bumblebee",
         "source": "trailforks",
-        "blazes": [
-          [
-            "blue",
-            "start",
-            172
-          ]
-        ],
         "widths": [
           [
             "narrow",
@@ -13487,7 +13480,7 @@
           [
             "blue",
             55,
-            172
+            173
           ]
         ],
         "widths": [

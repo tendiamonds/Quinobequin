@@ -97,7 +97,7 @@ var REPORTS_KEY = "bhReports", REPORT_EMAIL = "tendiamonds@gmail.com", REPORT_NA
 var REPORT_BLAZES = {"skyline": {"name": "Skyline Trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes", "terrain": 3}, "yellow_dots": {"name": "Yellow Dot Loop", "marks": "yellow dots", "color": "#fdd835", "style": "dots", "terrain": 0}, "green_dots": {"name": "Green Dot Loop", "marks": "green dots", "color": "#43a047", "style": "dots", "terrain": 1}, "red_dots": {"name": "Red Dot Loop", "marks": "red dots", "color": "#e53935", "style": "dots", "terrain": 2}, "white_arrows": {"name": "Forest Path Loop", "marks": "white triangles", "color": "#ffffff", "style": "arrows", "one_way": true, "terrain": 1}, "yellow_arrows": {"name": "Breakneck Ledge Loop", "marks": "yellow triangles", "color": "#fdd835", "style": "arrows", "one_way": true, "terrain": 2}}, REPORT_CHECKS = [];
 
 // --- Saved reports (reports.py), shared by the map and the Reports page through the
-// phone's storage. A report: {id, when, kind ("blaze", "obstruction", "bridge", "note",
+// phone's storage. A report: {id, when, kind ("blaze", "obstruction" (shown as Maintenance), "bridge", "note",
 // "check" or "sign"), blaze (a blaze key, "other" or "none"), obstruction (an
 // OBSTRUCTIONS key), check (its id), answer, text, at ({lat, lon, acc} or null), heading
 // (degrees or null), about ({what: "int" or "trail", ref, extra} or null), ctx (what the
@@ -151,7 +151,7 @@ function feetWords(m) { return Math.round(m * 3.28084) + " ft"; }
 function reportHeadline(r) {
   // Something else in the way: what was typed for it
   if (r.kind === "obstruction") {
-    return (r.obstruction === "other" ? "Obstruction" + (r.text ? ": " + r.text : "") : OBSTRUCTIONS[r.obstruction] || "Obstruction") +
+    return (r.obstruction === "other" ? "Maintenance" + (r.text ? ": " + r.text : "") : OBSTRUCTIONS[r.obstruction] || "Maintenance") +
       placeWords(r.ctx);
   }
   if (r.kind === "bridge") return "Bridge" + placeWords(r.ctx) + (r.end ? ", " + feetWords(r.lengthM) + " long" : " (its start only)");

@@ -66,9 +66,9 @@ def main(paths):
 
     rs = [r for r in reports if r["kind"] == "obstruction"]
     if rs:
-        print("\nIn the way (%d):" % len(rs))
+        print("\nMaintenance (%d):" % len(rs))
         for r in rs:
-            what = OBSTRUCTIONS.get(r["obstruction"]) or "Obstruction" + (": " + r["text"] if r.get("text") else "")
+            what = OBSTRUCTIONS.get(r["obstruction"]) or "Maintenance" + (": " + r["text"] if r.get("text") else "")
             note = r.get("text") if r["obstruction"] in OBSTRUCTIONS else ""
             print("  %s  %s  %s  at %s%s" % (r["when"][:16].replace("T", " "), what, place(r), where(r),
                   ("\n      " + note) if note else ""))

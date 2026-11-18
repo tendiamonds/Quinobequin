@@ -3604,7 +3604,7 @@ function openBridge() {
   return list.length ? list[list.length - 1] : null;
 }
 
-// step: null for the kinds, or "blaze", "obstruction" or "other"
+// step: null for the kinds, or "blaze", "obstruction" (shown as Maintenance) or "other"
 function showReportSheet(step) {
   var a = reportAbout, p = a && a.what === "int" ? intFeatures[a.ref].properties : null;
   var html = '<div class="report"><div class="report-head"><strong>Report</strong>' + (a ? ' about ' + esc(aboutName(a)) : '') + '</div>' +
@@ -3618,7 +3618,7 @@ function showReportSheet(step) {
       '<button class="blaze-pick" onclick="saveBlaze(\'other\')">Another color</button>' +
       '<button class="blaze-pick" onclick="saveBlaze(\'none\')">No blaze here</button></div>' + back;
   } else if (step === "obstruction") {
-    html += '<div class="report-sub">What\'s in the way</div><div class="blaze-picks">' +
+    html += '<div class="report-sub">What needs fixing</div><div class="blaze-picks">' +
       Object.keys(OBSTRUCTIONS).map(function(k) {
         return '<button class="blaze-pick" onclick="saveObstruction(' + jsArg(k) + ')">' + esc(OBSTRUCTIONS[k]) + '</button>';
       }).join('') + '</div>' + back;
@@ -3634,7 +3634,7 @@ function showReportSheet(step) {
     var bridge = openBridge();
     html += '<div class="report-kinds">' +
       '<button class="report-kind" onclick="showReportSheet(\'blaze\')">Blaze</button>' +
-      '<button class="report-kind" onclick="showReportSheet(\'obstruction\')">Obstruction</button>' +
+      '<button class="report-kind" onclick="showReportSheet(\'obstruction\')">Maintenance</button>' +
       (bridge ? '<button class="report-kind waiting" onclick="endBridge()">Bridge End</button>'
               : '<button class="report-kind" onclick="startBridge()">Bridge Start</button>') +
       '<button class="report-kind" onclick="showReportSheet(\'other\')">Other</button></div>' +

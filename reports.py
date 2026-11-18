@@ -33,7 +33,7 @@ import os
 
 REPORTS_JS = r"""
 // --- Saved reports (reports.py), shared by the map and the Reports page through the
-// phone's storage. A report: {id, when, kind ("blaze", "obstruction", "bridge", "note",
+// phone's storage. A report: {id, when, kind ("blaze", "obstruction" (shown as Maintenance), "bridge", "note",
 // "check" or "sign"), blaze (a blaze key, "other" or "none"), obstruction (an
 // OBSTRUCTIONS key), check (its id), answer, text, at ({lat, lon, acc} or null), heading
 // (degrees or null), about ({what: "int" or "trail", ref, extra} or null), ctx (what the
@@ -87,7 +87,7 @@ function feetWords(m) { return Math.round(m * 3.28084) + " ft"; }
 function reportHeadline(r) {
   // Something else in the way: what was typed for it
   if (r.kind === "obstruction") {
-    return (r.obstruction === "other" ? "Obstruction" + (r.text ? ": " + r.text : "") : OBSTRUCTIONS[r.obstruction] || "Obstruction") +
+    return (r.obstruction === "other" ? "Maintenance" + (r.text ? ": " + r.text : "") : OBSTRUCTIONS[r.obstruction] || "Maintenance") +
       placeWords(r.ctx);
   }
   if (r.kind === "bridge") return "Bridge" + placeWords(r.ctx) + (r.end ? ", " + feetWords(r.lengthM) + " long" : " (its start only)");
