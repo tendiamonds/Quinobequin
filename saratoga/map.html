@@ -243,6 +243,7 @@
   .report-kind.mark-kind { display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; margin: 0 0 8px; }
   .mark-icon svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
   .mark-chip { display: inline-flex; vertical-align: middle; }
+  .mark-keep { display: block; font-size: 14px; margin: 2px 0 8px; }
   #banner .banner-btn { margin-left: 10px; padding: 3px 10px; border: 1px solid #fff; border-radius: 12px; background: transparent;
     color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
   #banner .banner-btn.go { background: #fff; color: #263238; }
@@ -3510,10 +3511,11 @@ function updateReportCount() {
 
 // --- Marks: a pin you drop where you stand, just for you (to come back for something, or
 // remember a spot). Never a report: kept on this phone (not just this tab, which a phone
-// can throw away), never sent, gone when you remove it or after MARK_LIFE_MS. Coming
+// can throw away), never sent, gone when you remove it or after MARK_LIFE_MS, unless you
+// keep it (a spot to find again another day: then it stays until you remove it). Coming
 // back within MARK_NEAR_M of one, a banner says so until you're MARK_LEAVE_M away or say
 // you got it; it only starts watching once you've walked away from it. Back where you
-// started, the panel lists any you still have.
+// started, the panel lists the ones you haven't kept: go back for it, keep it, or clear it.
 var MARKS_KEY = REGION.storagePrefix + "Marks";
 var MARK_LIFE_MS = 24 * 3600 * 1000;
 var MARK_NEAR_M = 30, MARK_LEAVE_M = 45;   // about 100 ft, and half again
@@ -3531,7 +3533,7 @@ function markFlagSvg(size, stroke) {
 function loadMarks() {
   var list = [];
   try { list = JSON.parse(localStorage.getItem(MARKS_KEY)) || []; } catch (e) {}
-  return list.filter(function(m) { return Date.now() - m.when < MARK_LIFE_MS; });
+  return list.filter(function(m) { return m.kept || Date.now() - m.when < MARK_LIFE_MS; });
 }
 function storeMarks(list) { try { localStorage.setItem(MARKS_KEY, JSON.stringify(list)); } catch (e) {} }
 function findMark(id) { return loadMarks().filter(function(m) { return m.id === id; })[0] || null; }
@@ -3582,16 +3584,24 @@ function markSheet(id, fresh) {
     '<div class="report-head"><strong>' + (fresh ? '&#x2713; Marked this spot' : 'Your mark') + '</strong></div>' +
     '<div class="report-where">' + esc(markWhere(m)) + '</div>' +
     '<textarea id="markNote" rows="2" placeholder="What\'s here? (optional)">' + esc(m.text) + '</textarea>' +
+    '<label class="mark-keep"><input type="checkbox" id="markKeep"' + (m.kept ? ' checked' : '') + '> Keep it, to find again another day</label>' +
     '<button class="route-btn" onclick="nameMark(' + jsArg(id) + ')">Done</button> ' +
     (fresh ? '<button class="route-btn" style="background:#888" onclick="removeMark(' + jsArg(id) + ')">Undo</button>' : '') +
-    '<div class="report-fine">Just for you: it stays on this phone for a day, and is never sent.</div></div>';
+    '<div class="report-fine">Just for you: it stays on this phone (for a day, unless you keep it), and is never sent.</div></div>';
 }
 
 function nameMark(id) {
-  var t = document.getElementById("markNote").value.trim();
-  changeMark(id, function(m) { m.text = t; });
+  var t = document.getElementById("markNote").value.trim(), keep = document.getElementById("markKeep").checked;
+  changeMark(id, function(m) { m.text = t; m.kept = keep; });
   drawMarks();
   closeReport();
+}
+
+// Keeping a mark, from the list back where you started: its row says so
+function keepMark(id, row) {
+  changeMark(id, function(m) { m.kept = true; });
+  var m = findMark(id);
+  row.innerHTML = markFlagSvg(14) + ' Kept ' + esc(m && m.text ? 'your mark, ' + m.text : 'your mark') + ': it stays until you remove it.';
 }
 
 // (from the banner, it leaves the panel as it is)
@@ -3602,6 +3612,13 @@ function removeMark(id, fromBanner) {
   if (!fromBanner) closeReport();
 }
 
+// "at 2:15 PM" today, "Nov 3" before (a kept mark), with the year if not this one
+function markWhen(m) {
+  var d = new Date(m.when), now = new Date();
+  return d.toDateString() === now.toDateString() ? 'at ' + d.toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})
+    : d.toLocaleDateString([], d.getFullYear() === now.getFullYear() ? {month: "short", day: "numeric"} : {month: "short", day: "numeric", year: "numeric"});
+}
+
 function showMarkInfo(id) {
   var m = findMark(id);
   if (!m) return;
@@ -3610,9 +3627,8 @@ function showMarkInfo(id) {
   document.getElementById("infoContent").innerHTML = '<div class="report">' +
     '<div class="report-head"><strong>' + esc(markName(m)) + '</strong></div>' +
     '<div class="report-where">' + esc(markWhere(m)) + '</div>' +
-    '<div class="report-fine" style="margin:0 0 6px">Marked at ' +
-      esc(new Date(m.when).toLocaleTimeString([], {hour: "numeric", minute: "2-digit"})) +
-      (away !== null ? '; ' + formatDist(away) + ' from you' : '') + '</div>' +
+    '<div class="report-fine" style="margin:0 0 6px">Marked ' + esc(markWhen(m)) +
+      (away !== null ? '; ' + formatDist(away) + ' from you' : '') + (m.kept ? '; kept' : '') + '</div>' +
     (userLatLng ? '<button class="route-btn" style="background:#1e88e5" onclick="routeToMark(' + jsArg(id) + ')">Route here</button> ' : '') +
     '<button class="route-btn" style="background:#0d47a1" onclick="markSheet(' + jsArg(id) + ')">Rename</button> ' +
     '<button class="route-btn" style="background:#888" onclick="removeMark(' + jsArg(id) + ')">Remove</button></div>';
@@ -3647,9 +3663,11 @@ function checkMarks(ll, acc) {
   if (near) {
     markShown = near.m.id;
     if (!bannerTimer) {   // (a passing banner first, then this again)
+      var later = 'markLater[' + jsArg(near.m.id) + ']=true;markShown=null;hideBanner()';
       showBanner(markFlagSvg(20, "#fff") + ' ' + esc(markName(near.m)) + ', ' + formatDist(near.d) + ' away' +
-        '<button class="banner-btn go" onclick="removeMark(' + jsArg(near.m.id) + ', true)">Got it</button>' +
-        '<button class="banner-btn" onclick="markLater[' + jsArg(near.m.id) + ']=true;markShown=null;hideBanner()">Later</button>', true, true);
+        (near.m.kept ? '<button class="banner-btn go" onclick="' + later + '">OK</button>'   // (a kept one stays)
+          : '<button class="banner-btn go" onclick="removeMark(' + jsArg(near.m.id) + ', true)">Got it</button>' +
+            '<button class="banner-btn" onclick="' + later + '">Later</button>'), true, true);
     }
   } else if (markShown) {
     markShown = null;
@@ -4862,15 +4880,16 @@ function checkBackAtStart() {
   try { asked = sessionStorage.getItem(HOME_KEY); } catch (e) {}
   if (awayFromStart && userLatLng.distanceTo(start) <= HOME_NEAR_M && asked !== String(crumbs[0][2])) {
     try { sessionStorage.setItem(HOME_KEY, String(crumbs[0][2])); } catch (e) {}
-    var n = unsentReports().length, marks = loadMarks();
+    var n = unsentReports().length, marks = loadMarks().filter(function(m) { return !m.kept; });
     if (n || marks.length) {
       clearSelection(true);
       document.getElementById("infoContent").innerHTML = '<div class="report"><div class="report-head"><strong>Back where you started.</strong> ' +
         (n ? 'Send your ' + (n === 1 ? 'report' : n + ' reports') + '?' : '') + '</div>' +
         marks.map(function(m) {
           return '<div class="report-where">' + markFlagSvg(14) + ' You still have ' + esc(m.text ? 'a mark, ' + m.text + ',' : 'a mark') + ' ' + esc(markWhere(m).replace(/^[OA]/, function(c) { return c.toLowerCase(); })) +
-            ' <a class="crumb-clear" onclick="routeToMark(' + jsArg(m.id) + ')">Route there</a>' +
-            ' <a class="crumb-clear" onclick="removeMark(' + jsArg(m.id) + ', true);this.parentNode.remove()">Remove</a></div>';
+            ' <a class="crumb-clear" onclick="routeToMark(' + jsArg(m.id) + ')">Go back for it</a>' +
+            ' <a class="crumb-clear" onclick="keepMark(' + jsArg(m.id) + ', this.parentNode)">Keep</a>' +
+            ' <a class="crumb-clear" onclick="removeMark(' + jsArg(m.id) + ', true);this.parentNode.remove()">Clear</a></div>';
         }).join('') +
         (n ? '<div class="report-fine" style="margin:0 0 6px">' + esc(sendsToWords()) + '</div>' +
              '<button class="route-btn" onclick="sendReports();updateReportCount();showWalkSummary()">Send</button> ' +

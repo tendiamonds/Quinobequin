@@ -169,7 +169,10 @@ the day's changes together.
   point, like a round trip's start). Coming back within about 100 ft, a banner stays up
   with Got it (removes it) and Later until you're 150 ft away; it starts watching only
   once you've walked off. Back where you started lists any still left. Your spot only:
-  no marking a spot you tap.
+  no marking a spot you tap. **Keeping** one (a bone, a rock formation, to find again):
+  a "Keep it" box when you name it, or Keep in the list back where you started (with Go
+  back for it and Clear). A kept mark never expires; its banner says just OK (it stays),
+  and the back-at-start list leaves it out.
 - **Root Canal** is too steep: routes avoid it unless you add it yourself (`route_cost`).
 
 ## The land and its conservation restrictions
