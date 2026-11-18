@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#2c3e50">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<title>Bridges to find</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow: hidden; }
+  body { display: flex; flex-direction: column; }
+  header { background: #2c3e50; color: #ecf0f1; padding: 10px 14px; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; }
+  header .count { font-weight: 400; color: #b0bec5; }
+  #map { height: 42vh; flex: none; }
+  #list { flex: 1; overflow-y: auto; background: #fff; }
+  .row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px; border-bottom: 1px solid #eceff1; }
+  .row input { width: 22px; height: 22px; flex: none; margin-top: 1px; }
+  .row .what { flex: 1; min-width: 0; font-size: 14px; color: #263238; cursor: pointer; }
+  .row .fine { font-size: 12px; color: #607d8b; margin-top: 2px; }
+  .row .away { flex: none; font-size: 13px; font-weight: 600; color: #1565c0; white-space: nowrap; }
+  .row.done .what { color: #90a4ae; text-decoration: line-through; }
+  .row.done .away { color: #b0bec5; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: 1px; }
+  h2 { font-size: 13px; color: #607d8b; padding: 10px 14px 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .note { font-size: 13px; color: #546e7a; padding: 10px 14px; }
+  .sign { font: 700 10px sans-serif; color: #263238; background: rgba(255,255,255,0.85); border-radius: 3px; padding: 0 2px; white-space: nowrap; }
+  .user-dot { width: 16px; height: 16px; border-radius: 50%; background: #1e88e5; border: 3px solid #fff; box-shadow: 0 0 4px rgba(0,0,0,0.4); }
+</style>
+</head>
+<body>
+<header><span>Bridges to find</span><span class="count" id="count"></span></header>
+<div id="map"></div>
+<div id="list"><div class="note">Loading…</div></div>
+<script>
+// Not linked from the site: a field list for finding the Upper Charles bridges. The
+// items are bridges_todo.md's unchecked ones (so it follows that file); the green lines
+// are the bridges reported so far (NOTES.md). Nearest first once your location is known.
+// Ticking one off is kept on this phone only (localStorage), until the list drops it.
+var DONE_KEY = "bridgesTodoDone";
+var COLORS = {bridge: "#e65100", boardwalk: "#8e24aa", ford: "#1e88e5"};
+var COORD = /(42\.\d+),\s*(-71\.\d+)/g;
+var SIGN_ZOOM = 16;
+var map = L.map("map", {zoomControl: false});
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom: 19,
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(map);
+var signLayer = L.layerGroup();
+var items = [], you = null, youMarker = null;
+
+function esc(s) { return String(s).replace(/[&<>"']/g, function(c) { return "&#" + c.charCodeAt(0) + ";"; }); }
+function feet(m) { var mi = m / 1609.34; return mi < 0.1 ? Math.round(m * 3.28084) + " ft" : mi.toFixed(1) + " mi"; }
+function loadDone() { try { return JSON.parse(localStorage.getItem(DONE_KEY)) || {}; } catch (e) { return {}; } }
+function saveDone(d) { try { localStorage.setItem(DONE_KEY, JSON.stringify(d)); } catch (e) {} }
+
+fetch("upper_charles.json?" + Date.now()).then(function(r) { return r.json(); }).then(function(u) {
+  u.trails.forEach(function(t) {
+    L.polyline(t.line.map(function(c) { return [c[1], c[0]]; }), {color: "#5d4037", weight: 2, opacity: 0.7, interactive: false}).addTo(map);
+  });
+  u.signs.forEach(function(s) {
+    L.marker([s.lat, s.lon], {icon: L.divIcon({className: "", html: '<span class="sign">' + esc(s.label) + '</span>', iconSize: null}),
+      interactive: false}).addTo(signLayer);
+  });
+  showSigns();
+});
+function showSigns() { if (map.getZoom() >= SIGN_ZOOM) signLayer.addTo(map); else map.removeLayer(signLayer); }
+map.on("zoomend", showSigns);
+
+fetch("NOTES.md?" + Date.now()).then(function(r) { return r.text(); }).then(function(notes) {
+  var a = notes.indexOf("**Bridges on the map**"), b = notes.indexOf("\n9. ", a);
+  var s = notes.slice(a, b).replace(/\s+/g, " ");
+  var re = /(42\.\d+),\s*(-71\.\d+) to (42\.\d+),\s*(-71\.\d+)/g, m;
+  while ((m = re.exec(s))) {
+    L.polyline([[+m[1], +m[2]], [+m[3], +m[4]]], {color: "#2e7d32", weight: 8, opacity: 0.85, interactive: false}).addTo(map);
+  }
+});
+
+// The unchecked items, each with its zone (its heading), kind, words and spots
+fetch("bridges_todo.md?" + Date.now()).then(function(r) { return r.text(); }).then(function(md) {
+  var zone = "";
+  md.split(/\n(?=- \[|## )/).forEach(function(b) {
+    if (/^## /.test(b)) { zone = b.split("\n")[0].slice(3); return; }
+    if (!/^- \[ \]/.test(b)) return;
+    var text = b.replace(/^- \[ \]\s*/, "").replace(/\s+/g, " ").trim();
+    var kind = /^Ford/.test(text) ? "ford" : /^Boardwalk/.test(text) ? "boardwalk" : "bridge";
+    var lls = [], m;
+    COORD.lastIndex = 0;
+    while ((m = COORD.exec(text))) lls.push(L.latLng(+m[1], +m[2]));
+    if (!lls.length) return;
+    var item = {id: lls[0].lat.toFixed(6) + "," + lls[0].lng.toFixed(6), zone: zone, kind: kind,
+                text: text.replace(/,?\s*(and )?42\.\d+,\s*-71\.\d+;?/g, "").trim(), lls: lls, markers: []};
+    lls.forEach(function(ll) {
+      item.markers.push(L.circleMarker(ll, {radius: 8, color: "#fff", weight: 2, fillColor: COLORS[kind], fillOpacity: 1})
+        .bindPopup(esc(item.text)).addTo(map));
+    });
+    items.push(item);
+  });
+  var bounds = L.latLngBounds([]);
+  items.forEach(function(it) { it.lls.forEach(function(ll) { bounds.extend(ll); }); });
+  if (bounds.isValid()) map.fitBounds(bounds, {padding: [20, 20]}); else map.setView([42.172, -71.495], 14);
+  drawList();
+});
+
+function awayFrom(it) {
+  return you ? Math.min.apply(null, it.lls.map(function(ll) { return you.distanceTo(ll); })) : null;
+}
+
+function drawList() {
+  var done = loadDone();
+  var open = items.filter(function(it) { return !done[it.id]; }), shut = items.filter(function(it) { return done[it.id]; });
+  if (you) open.sort(function(a, b) { return awayFrom(a) - awayFrom(b); });
+  items.forEach(function(it) {
+    it.markers.forEach(function(mk) { mk.setStyle({fillOpacity: done[it.id] ? 0.25 : 1, opacity: done[it.id] ? 0.4 : 1}); });
+  });
+  document.getElementById("count").textContent = open.length + " to go";
+  function row(it) {
+    var d = awayFrom(it);
+    return '<div class="row' + (done[it.id] ? ' done' : '') + '">' +
+      '<input type="checkbox"' + (done[it.id] ? ' checked' : '') + ' onchange="tick(\'' + it.id + '\', this.checked)">' +
+      '<div class="what" onclick="show(\'' + it.id + '\')"><span class="dot" style="background:' + COLORS[it.kind] + '"></span>' + esc(it.text) +
+        '<div class="fine">' + esc(it.zone) + '</div></div>' +
+      (d !== null ? '<div class="away">' + feet(d) + '</div>' : '') + '</div>';
+  }
+  document.getElementById("list").innerHTML =
+    (open.length ? open.map(row).join('') : '<div class="note">All found.</div>') +
+    (shut.length ? '<h2>Checked off</h2>' + shut.map(row).join('') : '') +
+    '<div class="note">Report each bridge from the trail map as usual; a ford with no bridge, just check it off. ' +
+      (you ? '' : 'With your location on, the nearest come first.') + '</div>';
+}
+
+function tick(id, on) {
+  var done = loadDone();
+  if (on) done[id] = Date.now(); else delete done[id];
+  saveDone(done);
+  drawList();
+}
+
+function show(id) {
+  var it = items.filter(function(x) { return x.id === id; })[0];
+  if (!it) return;
+  map.setView(it.lls[0], Math.max(map.getZoom(), 17));
+  it.markers[0].openPopup();
+}
+
+if (navigator.geolocation) {
+  var lastDrawn = null;
+  navigator.geolocation.watchPosition(function(pos) {
+    you = L.latLng(pos.coords.latitude, pos.coords.longitude);
+    if (!youMarker) {
+      youMarker = L.marker(you, {icon: L.divIcon({className: "", iconSize: [22, 22], iconAnchor: [11, 11], html: '<div class="user-dot"></div>'}),
+        interactive: false, zIndexOffset: 1000}).addTo(map);
+    } else {
+      youMarker.setLatLng(you);
+    }
+    // Redrawn as you walk, not with every fix
+    if (items.length && (!lastDrawn || lastDrawn.distanceTo(you) > 10)) { lastDrawn = you; drawList(); }
+  }, function() {}, {enableHighAccuracy: true, maximumAge: 10000, timeout: 30000});
+}
+</script>
+</body>
+</html>

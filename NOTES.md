@@ -35,7 +35,12 @@ date as things change; dates are when something was learned or decided.
    bridge ways. Every bridge gets reported again on every walk (2026-11-17), so the reports
    pile up on purpose: when this is built, keep them all raw (a file, with dates), group
    them by trail and overlapping stretch, average the ends along the trail, drop outliers,
-   and let newer ones show a bridge that changed. Reported so far (2026-11-15): at C26, 33 ft, 42.186392,-71.495415 to
+   and let newer ones show a bridge that changed. **`bridges_todo.md`**: the ones still
+   to find (OSM's bridges, boardwalks and fords on our trails, not yet reported), by zone;
+   check one off there (`[x]`) once reported or found to have none. **`bridges_todo.html`**
+   is its field page (linked from nowhere, noindex): its unchecked items, nearest first,
+   with a tick kept on the phone; it reads the .md and NOTES each time, so nothing to build.
+   Reported so far (2026-11-15): at C26, 33 ft, 42.186392,-71.495415 to
    42.186412,-71.495300; College Rock Run C4–C7, 43 ft, 42.189325,-71.496319 to
    42.189417,-71.496424. 2026-11-17 (zone F): The Main Trail F2–F1, the long boardwalk,
    walked both ways (42.171014,-71.488060 to 42.171077,-71.489099, and
