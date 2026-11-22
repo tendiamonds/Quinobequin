@@ -56,3 +56,6 @@ saratoga_data/osm_probe.json
 /trails_filtered.geojson
 /trails_matched.gpx
 /trails_trailforks.geojson
+
+# Committee updates (local drafts)
+committee_update_*.md

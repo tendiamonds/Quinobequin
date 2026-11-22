@@ -4259,6 +4259,24 @@
           42.1719649
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 476,
+        "degree": 3,
+        "zone": "F",
+        "no_sign": true,
+        "junction": true,
+        "code": "J105"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.491834,
+          42.1651928
+        ]
+      }
     }
   ]
 }

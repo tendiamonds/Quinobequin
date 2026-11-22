@@ -6825,6 +6825,11 @@
             "green",
             239,
             181
+          ],
+          [
+            "blue",
+            65,
+            67
           ]
         ],
         "widths": [
@@ -19721,6 +19726,11 @@
             "orange",
             180,
             67
+          ],
+          [
+            "blue",
+            180,
+            67
           ]
         ],
         "widths": [
@@ -21644,6 +21654,13 @@
         "osm_ways": [
           130100793,
           294729424
+        ],
+        "blazes": [
+          [
+            "red",
+            176,
+            213
+          ]
         ]
       },
       "geometry": {
@@ -24155,6 +24172,59 @@
           [
             -71.4900835,
             42.1720393
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "osm_184476430",
+        "name": "Skillet",
+        "source": "osm, added 2026-11-21 (field report: a little trail from F24 back to the Fairbanks Trail; named Skillet for the two frying pans on it, one on a rock and one in a tree)",
+        "osm_ways": [
+          184476430
+        ],
+        "pdf_name": "Skillet"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.491407,
+            42.164854
+          ],
+          [
+            -71.491457,
+            42.1649115
+          ],
+          [
+            -71.4914937,
+            42.1649574
+          ],
+          [
+            -71.4914872,
+            42.1649958
+          ],
+          [
+            -71.4914484,
+            42.1649982
+          ],
+          [
+            -71.4915106,
+            42.1651133
+          ],
+          [
+            -71.4915777,
+            42.1651431
+          ],
+          [
+            -71.4917109,
+            42.1652024
+          ],
+          [
+            -71.491834,
+            42.1651928
           ]
         ]
       }

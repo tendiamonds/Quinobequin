@@ -11,7 +11,7 @@ isn't there yet is left off, and listed. Use only marks their owners have OK'd.
 
   python tshirt_art.py
 
-It also writes shirts/: a page of the six on their shirt colors, to show people. It's
+It also writes shirts/: a page of the three shirts in their colors, to show people. It's
 published with the site but linked from nowhere (and kept out of search engines). And
 sign_samples/: the six as trail signs, with every logo their land calls for (DCR's too, on
 the Fairbanks CR), for the About page.
@@ -30,18 +30,21 @@ RATIO = 0.94                   # height to width, as the Medfield sign
 FONT = r"C:\Windows\Fonts\seguisb.ttf"     # Segoe UI Semibold: close to DCR's type
 FONT_BOLD = r"C:\Windows\Fonts\segoeuib.ttf"
 
-# label, town, zone, logos at the right (the seal at the left comes from the town). DCR and
-# The Trustees ask that their logos not be used on fundraising shirts (2026-10-23), so the
-# Fairbanks CR signs show just the town seal; the trail signs themselves carry both logos
-# (TRAIL_LOGOS).
-SIGNS = [
+# label, town, zone, logos at the right (the seal at the left comes from the town): one
+# sign per zone, the About page's sample trail signs (write_samples). DCR and The Trustees
+# ask that their logos not be used on fundraising shirts (2026-10-23); the trail signs
+# themselves carry them (TRAIL_LOGOS).
+SAMPLE_SIGNS = [
     ("A7", "Holliston", "Adams Town Forest", []),
     ("B3", "Milford", "Beaver Brook Woods", []),
     ("C2", "Hopkinton", "College Rock Park", []),
-    ("D5", "Holliston", "Rocky Woods", []),   # on the Fairbanks CR (its holders' logos: not on shirts)
+    ("D5", "Holliston", "Rocky Woods", []),   # on the Fairbanks CR
     ("E1", "Milford", "NEMBA Land", ["nemba"]),                # NEMBA's own land
-    ("F4", "Holliston", "Fairbanks", []),     # on the Fairbanks CR (its holders' logos: not on shirts)
+    ("F4", "Holliston", "Fairbanks", []),     # on the Fairbanks CR
 ]
+# The shirts: one per town (2026-11-18), none on CR land
+SHIRT_SIGNS = ("A7", "C2", "E1")
+SIGNS = [s for s in SAMPLE_SIGNS if s[0] in SHIRT_SIGNS]
 
 # The layout, as shares of the sign's width (W) and height (H), from the Medfield sign
 CORNER = 0.055                 # of W
@@ -139,7 +142,7 @@ def write_samples():
     """sign_samples/<label>.png: the six as trail signs (all their logos), web-sized, for the
     About page"""
     os.makedirs(SAMPLES, exist_ok=True)
-    for label, town, zone, logos in SIGNS:
+    for label, town, zone, logos in SAMPLE_SIGNS:
         full = os.path.join(SAMPLES, label + "_full.png")
         W, H, missing = draw(label, town, zone, TRAIL_LOGOS.get(label, logos), full)
         im = Image.open(full)
@@ -193,8 +196,8 @@ def write_page():
 <body>
 <main>
 <h1>Upper Charles Forest T-shirts</h1>
-<p class="lead">A draft: one shirt for each of the forest's six zones, in the zone's color, printed with one of its
-trail-intersection signs as it will look on the trail. Each card links to the full-size print file.</p>
+<p class="lead">A draft: one shirt for each of the forest's three towns, in the color of one of its zones, printed with one of
+that zone's trail-intersection signs as it will look on the trail. Each card links to the full-size print file.</p>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <!-- heather: fine light and dark flecks over the shirt's color, kept inside the shirt -->
   <filter id="heather" x="0" y="0" width="100%%" height="100%%">
@@ -228,15 +231,16 @@ def main():
         sheet.append(Image.open(p))
         print("Wrote %s (%d x %d px, %.0f x %.1f in at 300 dpi)%s" % (
             p, W, H, W / 300, H / 300, "; still without " + ", ".join(missing) if missing else ""))
-    # a sheet of all six, to look over
+    # a sheet of them all, to look over
     tw = 600
     th = round(tw * RATIO)
-    out = Image.new("RGB", (3 * tw + 4 * 20, 2 * th + 3 * 20), "white")
+    rows = (len(sheet) + 2) // 3
+    out = Image.new("RGB", (3 * tw + 4 * 20, rows * th + (rows + 1) * 20), "white")
     for i, im in enumerate(sheet):
         small = im.resize((tw, th), Image.LANCZOS)
         out.paste(small, (20 + (i % 3) * (tw + 20), 20 + (i // 3) * (th + 20)), small)
-    out.save(os.path.join(OUT, "all_six.png"))
-    print("Wrote %s" % os.path.join(OUT, "all_six.png"))
+    out.save(os.path.join(OUT, "all_shirts.png"))
+    print("Wrote %s" % os.path.join(OUT, "all_shirts.png"))
     write_page()
     write_samples()
 

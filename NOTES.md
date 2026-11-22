@@ -54,11 +54,20 @@ date as things change; dates are when something was learned or decided.
    42.169638,-71.492961). 2026-11-18 (zone A): New Trail A4–A3, 66 ft (42.179592,-71.486991
    to 42.179640,-71.487224); New Trail A21–A16, 33 ft (42.180540,-71.492627 to
    42.180523,-71.492741); Town Forest Trail A23–A19, 69 ft (42.175176,-71.493632 to
-   42.175101,-71.493392).
-9. **Blue in zone F is a puzzle** (2026-11-17). Marked so far: Tonto F3–A18 and The Main
-   Trail F3–F2 (with the red). Also seen, not marked: one blue blaze just past F7 heading
-   to F9 (Fairbanks Trail), then nothing until F10, where a "blue turns left" blaze.
-   Look for more blue around F7–F10 before marking any of it.
+   42.175101,-71.493392). 2026-11-21 (zone F): Swamp Bypass F20–F19, one bridge about
+   12-15 ft long by eye, walked twice: 3 ft (42.166712,-71.484347 to 42.166705,-71.484339)
+   and 7 ft (42.166717,-71.484382 to 42.166704,-71.484359), both short (on a bridge this
+   short the GPS, good to about 3 m, can't measure the length: trust the eye); it has a
+   broken slat (a Maintenance report); Fairbanks Trail F7–F11 again, 102 ft
+   (42.168332,-71.491742 to 42.168607,-71.491786); Toejam F7–F2, 3 ft (42.168973,-71.491265
+   to 42.168977,-71.491250), a stone crossing, "more like a bridge than a ford": decide how
+   to draw it when bridges go on the map; The Main Trail F2–F1 a third time, 269 ft
+   (42.171087,-71.489159 to 42.171069,-71.488167).
+9. **Blue in zone F** (2026-11-17; a route since 2026-11-21): Tonto F3–A18, The Main Trail
+   F3–F2 (with the red), Toejam F2–F7, and the Fairbanks Trail F7–F9–F10. Seen on Toejam,
+   and just past F7 toward F9 (twice); nothing seen between F9 and F10, marked anyway as
+   the route's way through to the "blue turns left" blaze at F10. Where it goes past F10
+   is still to find.
    Elsewhere: one white blaze on Deer Way A17–A19 (2026-11-18), alongside its blue, the
    only white seen anywhere; not marked (Upper Charles has no white).
 10. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
@@ -124,9 +133,9 @@ date as things change; dates are when something was learned or decided.
 
 ## How the field work goes
 
-We walk the trails with the map and file reports from it (a blaze, by color; something in
-the way; a bridge, marked at each end; or a note), then send them in a batch by email,
-to Jason Breslau by name. Back where you started, the map offers to send them, then shows
+We walk the trails with the map and file reports from it (a blaze, by color; maintenance,
+like a tree down; a bridge, marked at each end; or a note), then send them in a batch by
+email, to Jason Breslau by name. Back where you started, the map offers to send them, then shows
 a walk summary picture to save or share. `read_reports.py` lists a pasted email's
 reports against what the map has; we apply them to the data (blazes run sign to sign), rebuild, and push
 the day's changes together.
@@ -220,12 +229,15 @@ holders' logos (`sign_logos.csv`, `crs.py`). The sign lists below are labels fro
   400 sq in or smaller. The DCR logo goes only on signs on the Fairbanks CR, and then DCR
   approves the final design. DCR's sign shop doesn't make CR signs; the sign maker DCR
   uses is Voss Signs. DCR's Medfield signs are fine as a model. No DCR logo on shirts.
+- **Sign quotes:** Voss Signs (DCR's sign maker) and Alpine Signs (added 2026-11-18).
 - **The Trustees** like the shirt idea but asked for their logo off the shirts.
-- **NEMBA:** check before using its sign and logo on the E shirt.
+- **NEMBA:** check before using its land's sign and its logo on the E1 shirt.
 - **The towns:** check before using their seals on shirts, and on the map (item 1).
 
 ## T-shirts
 
-One shirt per zone in its color, each with one full-size sign, to raise money for the
-signs: **A7 B3 C2 D5 E1 F4**. The reasoning, the rules and what's left before printing are
-in `tshirt_signs.md`; the art is `tshirt_art.py`, previewed at `shirts/` (never linked).
+One shirt per town (2026-11-18; it was one per zone), in the color of one of its zones,
+each with one full-size sign, to raise money for the signs: **A7** (Holliston, red),
+**C2** (Hopkinton, green), **E1** (Milford, NEMBA's land, purple). The reasoning, the
+permissions and what's left before printing are in `tshirt_signs.md`; the art is
+`tshirt_art.py`, previewed at `shirts/` (never linked).
