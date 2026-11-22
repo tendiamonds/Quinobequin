@@ -8,7 +8,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F28"
+        "sign": "F27"
       },
       "geometry": {
         "type": "Point",
@@ -25,7 +25,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F25"
+        "sign": "F24"
       },
       "geometry": {
         "type": "Point",
@@ -76,7 +76,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F31"
+        "sign": "F30"
       },
       "geometry": {
         "type": "Point",
@@ -93,7 +93,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F29"
+        "sign": "F28"
       },
       "geometry": {
         "type": "Point",
@@ -348,7 +348,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F18"
+        "sign": "F17"
       },
       "geometry": {
         "type": "Point",
@@ -697,7 +697,7 @@
         "degree": 4,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F10"
+        "sign": "F9"
       },
       "geometry": {
         "type": "Point",
@@ -714,7 +714,9 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F9"
+        "no_sign": true,
+        "junction": true,
+        "code": "J106"
       },
       "geometry": {
         "type": "Point",
@@ -1164,7 +1166,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F24"
+        "sign": "F23"
       },
       "geometry": {
         "type": "Point",
@@ -1181,7 +1183,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F17"
+        "sign": "F16"
       },
       "geometry": {
         "type": "Point",
@@ -1198,7 +1200,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F16"
+        "sign": "F15"
       },
       "geometry": {
         "type": "Point",
@@ -1215,7 +1217,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F13"
+        "sign": "F12"
       },
       "geometry": {
         "type": "Point",
@@ -1232,7 +1234,7 @@
         "degree": 3,
         "cluster_size": 2,
         "zone": "F",
-        "sign": "F15"
+        "sign": "F14"
       },
       "geometry": {
         "type": "Point",
@@ -1249,7 +1251,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F23"
+        "sign": "F22"
       },
       "geometry": {
         "type": "Point",
@@ -1538,7 +1540,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F30"
+        "sign": "F29"
       },
       "geometry": {
         "type": "Point",
@@ -1555,7 +1557,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F22"
+        "sign": "F21"
       },
       "geometry": {
         "type": "Point",
@@ -1591,7 +1593,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F12"
+        "sign": "F11"
       },
       "geometry": {
         "type": "Point",
@@ -1882,7 +1884,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F20"
+        "sign": "F19"
       },
       "geometry": {
         "type": "Point",
@@ -1899,7 +1901,7 @@
         "degree": 3,
         "cluster_size": 1,
         "zone": "F",
-        "sign": "F21"
+        "sign": "F20"
       },
       "geometry": {
         "type": "Point",
@@ -1959,7 +1961,7 @@
         "zone": "F",
         "post": 5,
         "post_dir": "W",
-        "sign": "F11"
+        "sign": "F10"
       },
       "geometry": {
         "type": "Point",
@@ -2012,7 +2014,7 @@
         "cluster_size": 1,
         "pre_kept": true,
         "zone": "F",
-        "sign": "F26"
+        "sign": "F25"
       },
       "geometry": {
         "type": "Point",
@@ -2030,7 +2032,7 @@
         "cluster_size": 1,
         "pre_kept": true,
         "zone": "F",
-        "sign": "F27"
+        "sign": "F26"
       },
       "geometry": {
         "type": "Point",
@@ -2048,7 +2050,7 @@
         "cluster_size": 1,
         "pre_kept": true,
         "zone": "F",
-        "sign": "F14"
+        "sign": "F13"
       },
       "geometry": {
         "type": "Point",
@@ -4088,7 +4090,7 @@
         "number": 178,
         "degree": 3,
         "zone": "F",
-        "sign": "F19"
+        "sign": "F18"
       },
       "geometry": {
         "type": "Point",

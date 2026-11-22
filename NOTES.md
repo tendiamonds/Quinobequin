@@ -46,27 +46,27 @@ date as things change; dates are when something was learned or decided.
    walked both ways (42.171014,-71.488060 to 42.171077,-71.489099, and
    42.171063,-71.489142 to 42.171025,-71.488077): the ends agree within 4 m and 2 m,
    the lengths within 2 m; averaged, 42.171070,-71.489120 to 42.171019,-71.488068, 285 ft
-   (one walk is good to about 4 m an end; worth walking long ones twice); Swampside F12–F2, three: 26 ft
+   (one walk is good to about 4 m an end; worth walking long ones twice); Swampside F11–F2, three: 26 ft
    (42.168486,-71.490564 to 42.168411,-71.490569), 10 ft (42.168103,-71.490512 to
    42.168079,-71.490516) and 39 ft (42.168049,-71.490524 to 42.167946,-71.490565), the
-   last two nearly end to end; Fairbanks Trail F7–F11, 108 ft (42.168310,-71.491705 to
-   42.168602,-71.491784); Fairbanks Trail F10–F5, 30 ft (42.169555,-71.492966 to
+   last two nearly end to end; Fairbanks Trail F7–F10, 108 ft (42.168310,-71.491705 to
+   42.168602,-71.491784); Fairbanks Trail F9–F5, 30 ft (42.169555,-71.492966 to
    42.169638,-71.492961). 2026-11-18 (zone A): New Trail A4–A3, 66 ft (42.179592,-71.486991
    to 42.179640,-71.487224); New Trail A21–A16, 33 ft (42.180540,-71.492627 to
    42.180523,-71.492741); Town Forest Trail A23–A19, 69 ft (42.175176,-71.493632 to
-   42.175101,-71.493392). 2026-11-21 (zone F): Swamp Bypass F20–F19, one bridge about
+   42.175101,-71.493392). 2026-11-21 (zone F): Swamp Bypass F19–F18, one bridge about
    12-15 ft long by eye, walked twice: 3 ft (42.166712,-71.484347 to 42.166705,-71.484339)
    and 7 ft (42.166717,-71.484382 to 42.166704,-71.484359), both short (on a bridge this
    short the GPS, good to about 3 m, can't measure the length: trust the eye); it has a
-   broken slat (a Maintenance report); Fairbanks Trail F7–F11 again, 102 ft
+   broken slat (a Maintenance report); Fairbanks Trail F7–F10 again, 102 ft
    (42.168332,-71.491742 to 42.168607,-71.491786); Toejam F7–F2, 3 ft (42.168973,-71.491265
    to 42.168977,-71.491250), a stone crossing, "more like a bridge than a ford": decide how
    to draw it when bridges go on the map; The Main Trail F2–F1 a third time, 269 ft
    (42.171087,-71.489159 to 42.171069,-71.488167).
 9. **Blue in zone F** (2026-11-17; a route since 2026-11-21): Tonto F3–A18, The Main Trail
-   F3–F2 (with the red), Toejam F2–F7, and the Fairbanks Trail F7–F9–F10. Seen on Toejam,
-   and just past F7 toward F9 (twice); nothing seen between F9 and F10, marked anyway as
-   the route's way through to the "blue turns left" blaze at F10. Where it goes past F10
+   F3–F2 (with the red), Toejam F2–F7, and the Fairbanks Trail F7–F9. Seen on Toejam, and
+   just past F7 heading west (twice); nothing seen for the rest of the way, marked anyway as
+   the route's way through to the "blue turns left" blaze at F9. Where it goes past F9
    is still to find.
    Elsewhere: one white blaze on Deer Way A17–A19 (2026-11-18), alongside its blue, the
    only white seen anywhere; not marked (Upper Charles has no white).
@@ -182,7 +182,7 @@ the day's changes together.
   and none of their trails has 100 m we lack, Zone E included (cleaned up earlier). The
   differences are ours on purpose: we leave out the short feature and jump lines on top of
   Rocky Woods Range (207, B-Line and their neighbors, between E8, E11, E12 and E16), and
-  keep Rib Breaker south of E22, Lost Trail by F27, the quarry access road and the rail
+  keep Rib Breaker south of E22, Lost Trail by F26, the quarry access road and the rail
   trail, which Trailforks doesn't have. No GPX import needed.
 - **QR codes only at the entrances (2026-11-16),** on the kiosks, not on the trail signs:
   it's an idea some people like, but it makes the signs busy, and people can be wary of QR
@@ -198,6 +198,11 @@ the day's changes together.
   back for it and Clear). A kept mark never expires; its banner says just OK (it stays),
   and the back-at-start list leaves it out.
 - **Root Canal** is too steep: routes avoid it unless you add it yourself (`route_cost`).
+- **One fewer sign at the Fairbanks Trail cluster (2026-11-21):** three signs stood within
+  about 100 ft, 31 m apart; the middle one (data 66, then F9) is now an unsigned junction
+  (`J106`), so routing still joins its trails there. The zone F labels past it moved down
+  one (F10 is now F9, through F31 now F30); the notes were carried along, except the CR
+  section's dated lists.
 
 ## The land and its conservation restrictions
 
