@@ -166,6 +166,13 @@ the day's changes together.
   by `areas.json`, the Overview and switching on arrival (CLAUDE.md). An app opened over a
   mile (`AREA_NEAR_M`) from every area starts on the Overview; one opened near another
   area goes to that one's map. Switching on arrival needs a fix within 50 m.
+- **Switching by zoom (2026-11-23):** zoomed far out on a map (11), the Overview; zoomed in
+  on the Overview (14, trails readable) with the middle of the view in an area, its map.
+  The view carries over, so it reads as zooming on. The gap between 11 and 14 keeps it
+  from flipping back and forth; no switch while you're following a route; a page's own
+  fitting (a map's to a route, a zone or your walk; the Overview's to you or a group of
+  maps) doesn't count. A map handed a view keeps it
+  (no jump to you on the first fix, no launch redirect).
 - **The Middlesex Fells (2026-11-16)** is built from OpenStreetMap, like Saratoga: OSM's
   lines are on the tiles, and its route relations give the marked trails' colors on exactly
   their ways (Skyline and Rock Circuit white, Reservoir and the Rock Circuit Connector

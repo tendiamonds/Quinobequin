@@ -26,8 +26,11 @@ and each build adds its area (outline, parking) to **`areas.json`** and rewrites
 **`overview.html`** (`areas.py`). Every map's Maps menu is titled with it and lists the
 others and the Overview; walking into another area's outline switches to its map (a map
 you picked stays put until you walk into a different one); and an installed app, opened
-away from every area (over a mile), starts on the Overview. Each map is its own
-home-screen app (name, icon, start page), but every app's scope is the whole site.
+away from every area (over a mile), starts on the Overview. Zooming switches too: a map
+zoomed out to `OVERVIEW_ZOOM` (11) goes to the Overview, and the Overview zoomed in to
+`MAP_ZOOM` (14) over an area goes to its map, each on the same view (`?view=lat,lon,zoom`).
+Each map is its own home-screen app (name, icon, start page), but every app's scope is the
+whole site.
 
 Whose it is: the Upper Charles map is a collaboration of the Holliston Town Forest
 Committee (Jason Breslau chairs it and builds the app), Holliston Conservation, Hopkinton

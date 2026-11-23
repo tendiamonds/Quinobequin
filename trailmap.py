@@ -2314,7 +2314,7 @@ function renderRoute(result, userLeg, noFit, hist, info) {
   if (!noFit) {
     setFollowing(false);   // show the whole route; tap locate to follow again
     var allPts = [].concat.apply([], segs.map(function(seg) { return seg.pts; }));
-    map.fitBounds(L.latLngBounds(allPts).pad(0.1));
+    fitQuietly(L.latLngBounds(allPts).pad(0.1));
   }
   showRoutePanel();
 }
@@ -4226,17 +4226,36 @@ map.on("click", function(e) {
   }
 });
 
-// Deep-link support: map.html?int=A1 zooms to that intersection
+// Deep-link support: map.html?int=A1 zooms to that intersection. ?view=lat,lon,zoom (from
+// zooming in on the Overview) starts on that view, and keeps it (no jump to you)
 var params = new URLSearchParams(window.location.search);
 var targetInt = params.get("int");
+var handedView = (params.get("view") || "").split(",").map(Number);
+handedView = handedView.length === 3 && handedView.every(isFinite) ? handedView : null;
+if (handedView) history.replaceState(null, "", location.pathname + location.hash);   // not again on a reload
 if (targetInt && intMarkers[targetInt]) {
   var m = intMarkers[targetInt];
   var f = intFeatures[targetInt];
   map.setView(m.getLatLng(), 17);
   setTimeout(function() { showIntInfo(f, m); }, 300);
+} else if (handedView) {
+  map.setView([handedView[0], handedView[1]], handedView[2]);
 } else {
   map.fitBounds(REGION.bounds);
 }
+
+// Zoomed far out (OVERVIEW_ZOOM), the Overview takes over, on the same view (the Overview
+// hands back at its MAP_ZOOM, well in, so the two can't flip back and forth). Not while
+// you're following a route, and only when you zoom: the map's own fitting (to a route, a
+// zone, your walk: fitQuietly) doesn't count, for the moment it takes.
+var OVERVIEW_ZOOM = 11, FIT_MS = 1500, fitUntil = 0;
+function fitQuietly(b, opts) { fitUntil = Date.now() + FIT_MS; map.fitBounds(b, opts); }
+map.on("zoomend", function() {
+  if (map.getZoom() <= OVERVIEW_ZOOM && Date.now() >= fitUntil && !liveRouting()) {
+    var c = map.getCenter();
+    location.href = REGION.siteRoot + "overview.html?view=" + [c.lat.toFixed(5), c.lng.toFixed(5), map.getZoom()].join(",");
+  }
+});
 
 // Geolocation
 var userAccuracy = 0, userDot = null, userAccCircle = null, watchId = null;
@@ -5014,7 +5033,7 @@ function showLocateInfo() {
   else if (place.type === "seg") pts.push(place.left.ll, place.right.ll);
   else if (place.dist < 3000) pts.push(intMarkers[place.label].getLatLng());
   if (pts.length > 1) {
-    map.fitBounds(L.latLngBounds(pts).pad(0.3), {maxZoom: 17});
+    fitQuietly(L.latLngBounds(pts).pad(0.3), {maxZoom: 17});
   } else {
     map.setView(userLatLng, Math.max(map.getZoom(), 14));
   }
@@ -5610,7 +5629,7 @@ map.on("dragstart", function() { setFollowing(false); });
 var AREA_NEAR_M = 1609, AREA_LAUNCH_ACC_M = 500, AREA_LAUNCH_MS = 20000, AREA_SWITCH_ACC_M = 50;
 var AREA_LAST_KEY = "areasLastIn";
 var siteAreas = null, areaSeen = false;
-var areaLaunch = !location.search && !sessionStorage.getItem("areasOpened") &&
+var areaLaunch = !location.search && !handedView && !sessionStorage.getItem("areasOpened") &&
   (navigator.standalone === true || !!(window.matchMedia && matchMedia("(display-mode: standalone)").matches));
 sessionStorage.setItem("areasOpened", "1");
 setTimeout(function() { areaLaunch = false; }, AREA_LAUNCH_MS);
@@ -5716,7 +5735,7 @@ function onLocation(pos) {
     else if (document.getElementById("welcomeInfo")) showHome();
     // Jump to you only if you're out on the trails: the network's bounding box takes in
     // whole neighborhoods, and opening the map at home shouldn't zoom to your house
-    if (!targetInt && snapToTrail(userLatLng).d <= ON_TRAILS_M) map.setView(userLatLng, 16);
+    if (!targetInt && !handedView && snapToTrail(userLatLng).d <= ON_TRAILS_M) map.setView(userLatLng, 16);
   } else if (liveRouting()) {
     updateLiveRoute();
   } else if (walkedOnFromArrival()) {
@@ -5945,7 +5964,7 @@ document.addEventListener("keydown", function(e) {
       if (p.zone === key && !p.no_sign) zonePts.push(intMarkers[label].getLatLng());
     });
     if (zonePts.length > 0) {
-      map.fitBounds(L.latLngBounds(zonePts).pad(0.15));
+      fitQuietly(L.latLngBounds(zonePts).pad(0.15));
     }
   } else if (/^[0-9]$/.test(key) && searchBuf.length > 0) {
     searchBuf += key;

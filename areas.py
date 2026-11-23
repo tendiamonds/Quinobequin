@@ -212,7 +212,7 @@ function drawIcons() {
         title: g.areas.map(function(a) { return a.name; }).join(", ")
       }).on("click", function() {
         g.areas.forEach(function(a) { b.extend(a.poly.getBounds()); });
-        map.fitBounds(b, {padding: [40, 40]});
+        fitQuietly(b, {padding: [40, 40]});
       }).addTo(icons);
     }
   });
@@ -228,7 +228,7 @@ map.on("zoomend", showDetail);
 // changes (otherwise it's centered too low, behind the list)
 function setList(html) {
   document.getElementById("list").innerHTML = html;
-  map.invalidateSize({pan: false});
+  map.invalidateSize({pan: !!handedView});   // (a view handed over keeps its middle)
 }
 
 // The maps whose outlines are in view (or in bounds), by name
@@ -295,15 +295,44 @@ function onLocation(pos) {
     fitted = true;
     var b = L.latLngBounds([ll]);
     shown.forEach(function(r) { b.extend(r.a.poly.getBounds()); });
-    map.fitBounds(b, {padding: [30, 30], maxZoom: 13});
+    fitQuietly(b, {padding: [30, 30], maxZoom: 13});
   }
 }
 
-// The list first (it takes its room), then the map fitted to what's left
+// The list first (it takes its room), then the map fitted to what's left; or, handed a
+// view (?view=lat,lon,zoom: zooming out on a map), that view, kept
 listNote = navigator.geolocation ? "Finding where you are, for how far each one is…" : "";
 document.getElementById("list").innerHTML = inViewList(all);
-map.fitBounds(all, {padding: [20, 20]});
+var handedView = (new URLSearchParams(location.search).get("view") || "").split(",").map(Number);
+handedView = handedView.length === 3 && handedView.every(isFinite) ? handedView : null;
+if (handedView) {
+  history.replaceState(null, "", location.pathname + location.hash);   // not again on a reload
+  map.invalidateSize({pan: false});
+  map.setView([handedView[0], handedView[1]], handedView[2]);
+  fitted = true;
+} else {
+  map.fitBounds(all, {padding: [20, 20]});
+}
 showDetail();
+
+// Zoomed in to MAP_ZOOM (trails readable) with the middle of the view inside an area,
+// that area's map takes over, on the same view. Only when you zoom: the Overview's own
+// fitting (to you, or to a group of maps) doesn't count, for the moment it takes.
+var MAP_ZOOM = 14, FIT_MS = 1500, fitUntil = 0;
+function inOutline(r, ll) {
+  var inside = false;
+  for (var i = 0, j = r.length - 1; i < r.length; j = i++) {
+    if ((r[i][0] > ll.lat) !== (r[j][0] > ll.lat) &&
+        ll.lng < (r[j][1] - r[i][1]) * (ll.lat - r[i][0]) / (r[j][0] - r[i][0]) + r[i][1]) inside = !inside;
+  }
+  return inside;
+}
+function fitQuietly(b, opts) { fitUntil = Date.now() + FIT_MS; map.fitBounds(b, opts); }
+map.on("zoomend", function() {
+  if (Date.now() < fitUntil || map.getZoom() < MAP_ZOOM) return;
+  var c = map.getCenter(), a = AREAS.filter(function(x) { return inOutline(x.outline, c); })[0];
+  if (a) location.href = a.href + "?view=" + [c.lat.toFixed(5), c.lng.toFixed(5), map.getZoom()].join(",");
+});
 if (navigator.geolocation) {
   navigator.geolocation.watchPosition(onLocation, function() {
     if (!located) showInView("Without your location: the maps in view.");
