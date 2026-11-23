@@ -309,7 +309,8 @@ RENUMBER = True   # no signs are up yet: number afresh each build (turn off once
 def renumber(feats):
     """Where this build's numbers differ from the ones in the data, carry the change to
     everything keyed by number: the data's own "sign"s (intersections_zoned.geojson), the
-    sign list (sign_logos.csv), and the T-shirt notes (tshirt_signs.md, local)."""
+    sign list (sign_logos.csv, which also drops the rows of signs taken out), and the
+    T-shirt notes (tshirt_signs.md, local)."""
     moves = {f["properties"]["sign"]: f["properties"]["label"] for f in feats
              if f["properties"].get("sign") and f["properties"]["sign"] != f["properties"]["label"]}
     new = {f["properties"]["number"]: f["properties"]["label"] for f in feats}
@@ -329,7 +330,10 @@ def renumber(feats):
     pattern = re.compile(r"(?<!`)\b[A-F]\d+\b(?!`)")
     signs = os.path.join(PROJ, "sign_logos.csv")
     lines = open(signs, encoding="utf-8", newline="").read().splitlines(keepends=True)
-    out = [lines[0]] + [moves.get(l.split(",", 1)[0], l.split(",", 1)[0]) + "," + l.split(",", 1)[1] for l in lines[1:]]
+    # A sign taken out (made a junction) has no "sign" any more: its row goes
+    still = {f["properties"]["sign"] for f in feats if f["properties"].get("sign")}
+    out = [lines[0]] + [moves.get(l.split(",", 1)[0], l.split(",", 1)[0]) + "," + l.split(",", 1)[1] for l in lines[1:]
+                        if l.split(",", 1)[0] in still]
     with open(signs, "w", encoding="utf-8", newline="") as fh:
         fh.write("".join(out))
     shirts = os.path.join(PROJ, "tshirt_signs.md")

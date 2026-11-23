@@ -40,8 +40,8 @@ date as things change; dates are when something was learned or decided.
    check one off there (`[x]`) once reported or found to have none. **`bridges_todo.html`**
    is its field page (linked from nowhere, noindex): its unchecked items, nearest first,
    with a tick kept on the phone; it reads the .md and NOTES each time, so nothing to build.
-   Reported so far (2026-11-15): at C26, 33 ft, 42.186392,-71.495415 to
-   42.186412,-71.495300; College Rock Run C4–C7, 43 ft, 42.189325,-71.496319 to
+   Reported so far (2026-11-15): at C29, 33 ft, 42.186392,-71.495415 to
+   42.186412,-71.495300; College Rock Run C3–C6, 43 ft, 42.189325,-71.496319 to
    42.189417,-71.496424. 2026-11-17 (zone F): The Main Trail F2–F1, the long boardwalk,
    walked both ways (42.171014,-71.488060 to 42.171077,-71.489099, and
    42.171063,-71.489142 to 42.171025,-71.488077): the ends agree within 4 m and 2 m,
@@ -52,8 +52,8 @@ date as things change; dates are when something was learned or decided.
    last two nearly end to end; Fairbanks Trail F7–F10, 108 ft (42.168310,-71.491705 to
    42.168602,-71.491784); Fairbanks Trail F9–F5, 30 ft (42.169555,-71.492966 to
    42.169638,-71.492961). 2026-11-18 (zone A): New Trail A4–A3, 66 ft (42.179592,-71.486991
-   to 42.179640,-71.487224); New Trail A21–A16, 33 ft (42.180540,-71.492627 to
-   42.180523,-71.492741); Town Forest Trail A23–A19, 69 ft (42.175176,-71.493632 to
+   to 42.179640,-71.487224); New Trail A20–A15, 33 ft (42.180540,-71.492627 to
+   42.180523,-71.492741); Town Forest Trail A22–A18, 69 ft (42.175176,-71.493632 to
    42.175101,-71.493392). 2026-11-21 (zone F): Swamp Bypass F19–F18, one bridge about
    12-15 ft long by eye, walked twice: 3 ft (42.166712,-71.484347 to 42.166705,-71.484339)
    and 7 ft (42.166717,-71.484382 to 42.166704,-71.484359), both short (on a bridge this
@@ -62,14 +62,20 @@ date as things change; dates are when something was learned or decided.
    (42.168332,-71.491742 to 42.168607,-71.491786); Toejam F7–F2, 3 ft (42.168973,-71.491265
    to 42.168977,-71.491250), a stone crossing, "more like a bridge than a ford": decide how
    to draw it when bridges go on the map; The Main Trail F2–F1 a third time, 269 ft
-   (42.171087,-71.489159 to 42.171069,-71.488167).
-9. **Blue in zone F** (2026-11-17; a route since 2026-11-21): Tonto F3–A18, The Main Trail
+   (42.171087,-71.489159 to 42.171069,-71.488167). 2026-11-22: Knee Jerk F12–F14, 13 ft
+   (42.168281,-71.493129 to 42.168295,-71.493175); Knee Jerk F15–F12, two where OSM has two
+   fords, 10 ft (42.168461,-71.494084 to 42.168459,-71.494125) and 75 ft (42.168471,-71.494200
+   to 42.168440,-71.494475); Charles River Trail by D14, 16 ft (42.174024,-71.503872 to
+   42.174067,-71.503863), flooded and not passable (a Maintenance report).
+9. **Blue in zone F** (2026-11-17; a route since 2026-11-21): Tonto F3–A17, The Main Trail
    F3–F2 (with the red), Toejam F2–F7, and the Fairbanks Trail F7–F9. Seen on Toejam, and
    just past F7 heading west (twice); nothing seen for the rest of the way, marked anyway as
    the route's way through to the "blue turns left" blaze at F9. Where it goes past F9
    is still to find.
-   Elsewhere: one white blaze on Deer Way A17–A19 (2026-11-18), alongside its blue, the
-   only white seen anywhere; not marked (Upper Charles has no white).
+   Elsewhere: one white blaze on Deer Way A16–A18 (2026-11-18), alongside its blue, the
+   only white seen anywhere; not marked (Upper Charles has no white). Blue on 7-11
+   (2026-11-22, seen facing north from the middle, where a sign was until 2026-11-23):
+   marked on all of it, D15–D20, now that it's one stretch sign to sign.
 10. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
     sync our obstruction reports with Trailforks'. Theirs are public (trail, status,
     description, coordinates; the region's list is
@@ -181,8 +187,8 @@ the day's changes together.
   NEMBA chapter contact's app, synced 2026-10-27): 97% of theirs is within 10 m of ours,
   and none of their trails has 100 m we lack, Zone E included (cleaned up earlier). The
   differences are ours on purpose: we leave out the short feature and jump lines on top of
-  Rocky Woods Range (207, B-Line and their neighbors, between E8, E11, E12 and E16), and
-  keep Rib Breaker south of E22, Lost Trail by F26, the quarry access road and the rail
+  Rocky Woods Range (207, B-Line and their neighbors, around E6, E8 and E10), and
+  keep Rib Breaker south of E14, Lost Trail by F25, the quarry access road and the rail
   trail, which Trailforks doesn't have. No GPX import needed.
 - **QR codes only at the entrances (2026-11-16),** on the kiosks, not on the trail signs:
   it's an idea some people like, but it makes the signs busy, and people can be wary of QR
@@ -198,17 +204,44 @@ the day's changes together.
   back for it and Clear). A kept mark never expires; its banner says just OK (it stays),
   and the back-at-start list leaves it out.
 - **Root Canal** is too steep: routes avoid it unless you add it yourself (`route_cost`).
+- **Impassable trails (2026-11-22):** a trail marked `closed` (the Charles River Trail by
+  D14, flooded at its bridge) is drawn in rose dashes from close in (an ordinary trail from
+  farther out), its panel says why, and routes never use it (it can't be added to one, or
+  to a loop). Take the mark off once it's passable again.
+- **Following a route (2026-11-22):** the part you've walked isn't drawn (it was grey, over
+  the breadcrumbs and hiding them); the breadcrumbs show where you've been. Reverse (and
+  Reverse loop) only show until you've set off: partway round, Reverse read as "go back
+  the way you came".
+- **Thinning the clusters, second round (2026-11-23):** of the signs 200 ft or less
+  apart: out C4, C12, C18, D14, D19 (labels then; now `J129`-`J133`), and a sign added in
+  zone E where NEMBA Loop crosses itself, just south of the D14 that went (it was `J54`;
+  on Town of Milford land, so it may need the town's OK). 140 signs.
+- **Thinning the clusters (2026-11-23):** of the signs 150 ft or less apart by trail, one
+  or two went from each cluster but D3/D4 (kept): A11 (the temporary sign posted as A12
+  comes down), B8, B11, C13, C20, D11, D21, F24, F28, by their labels then; now junctions
+  `J120`-`J128`. 144 signs. Every zone but E renumbered (by distance along the trails, so
+  C and D shuffled); the notes were carried along, except the dated CR lists and zones
+  analysis.
+- **Fewer signs in zone E (2026-11-23):** 29 down to 17. NEMBA's land has its own trail
+  signs, so ours there only need to make it read as part of the whole: hubs, the ways in
+  (E2, the old E3, is one), and the D9/E1 pair kept on purpose, as the line between the
+  areas. Out: the signs on the power line land and the private parcels by Cedar Street,
+  where permission isn't likely, and the NEMBA ones in the tight strings. Each is an
+  unsigned junction now (`J108`-`J119`), so routes still use it. Zone E renumbered: E1
+  stays; old E3 is E2, E4 E3, E7 E4, E10 E5, E11 E6, E9 E7, E12 E8, E16 E9, E17 E10,
+  E20 E11, E15 E12, E21 E13, E22 E14, E19 E15, E25 E16, E28 E17.
 - **One fewer sign at the Fairbanks Trail cluster (2026-11-21):** three signs stood within
   about 100 ft, 31 m apart; the middle one (data 66, then F9) is now an unsigned junction
   (`J106`), so routing still joins its trails there. The zone F labels past it moved down
-  one (F10 is now F9, through F31 now F30); the notes were carried along, except the CR
-  section's dated lists.
+  one (then: F10 became F9, through F31 to F30); the notes were carried along, except the
+  CR section's dated lists.
 
 ## The land and its conservation restrictions
 
 A CR doesn't change who owns the land; its holders enforce it. Signs on CR land carry the
 holders' logos (`sign_logos.csv`, `crs.py`). The sign lists below are labels from
 2026-10-13; labels move with each build, and `sign_logos.csv` always has today's.
+
 
 - **Adams Street Town Forest Additions, Holliston CR #28.** Recorded 2013-09-25, Middlesex
   South Bk 62685 Pg 340. Owned by the Town of Holliston; The Trustees are the sole holder.

@@ -65,11 +65,13 @@ there's no test suite yet (NOTES.md).
 - **`trails_selected.geojson`**: the trails. Lines are OpenStreetMap's where `osm_ways` is
   set (`uc_osm_geometry.py` did that, one time). Properties: `name`, `blazes`
   `[[color, from number, to number], ...]` (sign to sign), `widths`, `route_cost` (routes
-  avoid a trail: Root Canal is 10, too steep; the driveway trail 1.5), `route_note`.
+  avoid a trail: Root Canal is 10, too steep; the driveway trail 1.5), `route_note`,
+  `closed` (impassable, and why: rose dashes from close in, never routed; take it off
+  when it's passable again).
 - **`intersections_zoned.geojson`**: signs and junctions. Each has a permanent data
   `number`; `zone` A-F. Unsigned ones are `no_sign`: junctions (`J#`, routing only),
   posts (`P#`), landmarks.
-- **Labels (A7, B13) are not stored: every build renumbers** (`RENUMBER = True` in
+- **Labels (A7, B11) are not stored: every build renumbers** (`RENUMBER = True` in
   build_map.py) each zone outward from its 1, so labels move when trails change. Each
   zone's 1 is fixed by data number (`ZONE_ONES`). Things keyed by label
   (`sign_logos.csv`, `tshirt_signs.md` outside backticks) are carried along by

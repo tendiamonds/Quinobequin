@@ -874,6 +874,13 @@
         "osm_ways": [
           130212859,
           134477954
+        ],
+        "blazes": [
+          [
+            "blue",
+            293,
+            6
+          ]
         ]
       },
       "geometry": {
@@ -3885,7 +3892,8 @@
           308667500,
           309664071,
           309664072
-        ]
+        ],
+        "closed": "Flooded at the bridge by D17, not passable (reported 2026-11-22)"
       },
       "geometry": {
         "type": "LineString",
@@ -24225,6 +24233,46 @@
           [
             -71.491834,
             42.1651928
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "osm_184474438",
+        "name": "",
+        "source": "osm, added 2026-11-22 (field report: a side trail from the Fairbanks Trail by F13 across to Number Five, near F14)",
+        "osm_ways": [
+          184474438
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.4915963,
+            42.1664303
+          ],
+          [
+            -71.491693,
+            42.1664433
+          ],
+          [
+            -71.4918352,
+            42.166491
+          ],
+          [
+            -71.4919452,
+            42.1665486
+          ],
+          [
+            -71.4919666,
+            42.1666232
+          ],
+          [
+            -71.4919984,
+            42.1666849
           ]
         ]
       }

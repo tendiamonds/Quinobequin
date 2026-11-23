@@ -81,6 +81,7 @@
   /* Zoomed out (showDetail): only the trails and the signs' dots */
   #map.zoomed-out .marker-label, #map.zoomed-out .blaze-line, #map.zoomed-out .road-link,
   #map.zoomed-out .leaflet-marker-icon:has(.post-badge, .lot-badge, .rock-svg, .entry-diamond, .check-badge) { display: none; }
+  #map.zoomed-out .closed-trail { stroke: #2c3e50; stroke-dasharray: none; }
   .marker-label {
     background: none !important; border: none !important; box-shadow: none !important;
     font-size: 10px; font-weight: bold; font-family: -apple-system, sans-serif;
@@ -364,17 +365,25 @@ var intTrailMap = {"1203": [["Base Path", "J1", 74], ["Chestnut Run Path", "1191
 // Build adjacency graph for routing. Each edge has its true length (dist) and what it
 // costs to route along (cost): a trail can carry route_cost, a multiplier that makes
 // routing favor the main way over a side trail of about the same length, or keep off a
-// trail (one too steep, say) unless you add it to the route; route_note says why.
-var trailRouteCost = {};
-trailData.features.forEach(function(f) {
+// trail (one too steep, say) unless you add it to the route; route_note says why. A
+// closed trail (impassable: closed says why) isn't routed along at all: its stretches,
+// by their ends and name (two trails can share a name, or the same two ends).
+var trailRouteCost = {}, closedStretch = {};
+trailData.features.forEach(function(f, ti) {
   var c = f.properties.route_cost;
   if (c) trailRouteCost[f.properties.pdf_name || f.properties.name || "Unnamed"] = c;
+  if (f.properties.closed) {
+    var ints = trailIntMap[ti].ints, name = f.properties.pdf_name || f.properties.name || "Unnamed";
+    for (var i = 1; i < ints.length; i++) {
+      closedStretch[[ints[i - 1][0], ints[i][0], name].join("|")] = closedStretch[[ints[i][0], ints[i - 1][0], name].join("|")] = true;
+    }
+  }
 });
 var routeGraph = {};
 Object.keys(intTrailMap).forEach(function(label) {
   if (!routeGraph[label]) routeGraph[label] = [];
   (intTrailMap[label] || []).forEach(function(c) {
-    if (c[1]) routeGraph[label].push({to: c[1], dist: c[2], cost: c[2] * (trailRouteCost[c[0]] || 1), trail: c[0]});
+    if (c[1] && !closedStretch[[label, c[1], c[0]].join("|")]) routeGraph[label].push({to: c[1], dist: c[2], cost: c[2] * (trailRouteCost[c[0]] || 1), trail: c[0]});
   });
 });
 
@@ -479,8 +488,11 @@ trailData.features.forEach(function(f) {
 
 var trailLayer = L.geoJSON(trailData, {
   style: function(f) {
-    // Road links (stretches of road between trails) are dashed, and only from close in
+    // Road links (stretches of road between trails) are dashed, and only from close in;
+    // an impassable trail is in short rose dashes, from close in (an ordinary trail from
+    // farther out)
     return f.properties.road ? {color: "#757575", weight: 3, opacity: 0.6, dashArray: "6,6", className: "road-link"}
+      : f.properties.closed ? {color: "#b4706e", weight: 3, opacity: 0.6, dashArray: "3,6", className: "closed-trail"}
       : {color: "#2c3e50", weight: 3, opacity: 0.6};
   },
   onEachFeature: function(feature, layer) {
@@ -1153,28 +1165,26 @@ function stepState(i) {
   return d < -AT_INT_M ? "passed" : d <= AT_INT_M ? "here" : "ahead";
 }
 
-// Draw the route: walked parts grey, the rest navy, each piece stopping short of the rings
+// Draw the route still ahead in navy, each piece stopping short of the rings. The part
+// walked isn't drawn: the breadcrumbs show where you've been (2026-11-22: a grey route
+// over them hid them)
 function drawRoute() {
   removeRouteLayers();
   var layers = [];
-  function add(pts, trimStart, trimEnd, past) {
+  function add(pts, trimStart, trimEnd) {
     var p = pts && trimLine(pts, trimStart ? ROUTE_TRIM_PX : 0, trimEnd ? ROUTE_TRIM_PX : 0);
     if (p) {
-      layers.push(L.polyline(p, {color: "#fff", weight: 10, opacity: past ? 0.7 : 0.9, lineCap: "round", lineJoin: "round", interactive: false}));
-      layers.push(L.polyline(p, {color: past ? "#9e9e9e" : "#0d47a1", weight: 6, opacity: 1, dashArray: "10,6", lineCap: "round", lineJoin: "round", interactive: false}));
+      layers.push(L.polyline(p, {color: "#fff", weight: 10, opacity: 0.9, lineCap: "round", lineJoin: "round", interactive: false}));
+      layers.push(L.polyline(p, {color: "#0d47a1", weight: 6, opacity: 1, dashArray: "10,6", lineCap: "round", lineJoin: "round", interactive: false}));
     }
   }
-  plan.hist.segs.forEach(function(s) { add(s.pts, s.trimStart, s.trimEnd, true); });
   var prog = plan.progress === null ? 0 : plan.progress;
   plan.segs.forEach(function(seg) {
     var end = seg.s0 + segLen(seg);
     if (prog <= seg.s0) {
-      add(seg.pts, seg.trimStart, seg.trimEnd, false);
-    } else if (prog >= end) {
-      add(seg.pts, seg.trimStart, seg.trimEnd, true);
-    } else {
-      add(segPiece(seg, seg.s0, prog), seg.trimStart, false, true);
-      add(segPiece(seg, prog, end), false, seg.trimEnd, false);
+      add(seg.pts, seg.trimStart, seg.trimEnd);
+    } else if (prog < end) {
+      add(segPiece(seg, prog, end), false, seg.trimEnd);
     }
   });
   routeLine = L.featureGroup(layers).addTo(map);
@@ -1522,7 +1532,7 @@ function routePanelHtml() {
   var planning = (plan.live ? '' : planFromHtml(trip.from, 'New route from ' + intName(trip.from))) +
     (dest !== null ? planFromHtml(dest, 'New route from ' + intName(dest)) : '');
   html += '<div style="margin-top:10px">' + (userLatLng ? '' : planning) +
-    (canReverseLoop() && !trip.loop ? ' <button class="route-btn" onclick="reverseLoopNow()">Reverse loop</button>' : '') +
+    (canReverseLoop() && !trip.loop && !setOff() ? ' <button class="route-btn" onclick="reverseLoopNow()">Reverse loop</button>' : '') +
     (!plan.arrived ? ' <button class="route-btn" onclick="makeLonger()">Make longer</button>' : '') +
     ' <button class="route-btn" style="background:#888" onclick="cancelRoute()">Clear</button></div>' +
     (userLatLng ? planning : '');
@@ -1733,7 +1743,7 @@ function buildTrip(trip, passed) {
 // userLeg (optional): {dist, trail, ti, along, cum} for the walk from the user's position to
 // the first intersection (ti/along: where the user snaps onto that trail, if on one).
 // A route with a userLeg is live: progress along it is tracked as the user moves.
-// noFit keeps the view. hist: {steps, segs} already walked before a reroute; with hist the
+// noFit keeps the view. hist: {steps} already walked before a reroute; with hist the
 // panel and any selection are left alone, and the caller redraws.
 // info: {trip, tail, stopAt} from compileTrip; a round trip ends with a walk from the tail
 // anchor back home.
@@ -1796,7 +1806,7 @@ function renderRoute(result, userLeg, noFit, hist, info) {
           graphDist: result.totalDist, progress: userLeg ? 0 : null, arrived: false,
           legTrail: userLeg ? (userLeg.trail || 'off trail') : null,
           legBlazes: userLeg && userLeg.ti !== undefined ? blazesOn(userLeg.ti, userLeg.along, userLeg.cum) : [],
-          hist: hist || {steps: [], segs: []}};
+          hist: hist || {steps: []}};
   saveTrip();
   if (hist) return;
   drawRoute();
@@ -2249,9 +2259,12 @@ function loopLinksHtml(icons) {
 }
 
 // A loop's Reverse: a live round trip turned around (reverseLoop), or else the stops
-// still ahead taken the other way round, to the same end
+// still ahead taken the other way round, to the same end. Only before you've set off
+// (2026-11-22: partway round, it read as "go back the way you came")
+var REVERSE_UNTIL_M = 50;
+function setOff() { return plan.live && plan.progress !== null && plan.progress > REVERSE_UNTIL_M; }
 function canReverseTrip() {
-  return !plan.arrived && (canReverseLoop() || pendingStops(plan.trip).length > 1);
+  return !plan.arrived && !setOff() && (canReverseLoop() || pendingStops(plan.trip).length > 1);
 }
 
 function reverseTrip() {
@@ -2350,19 +2363,12 @@ function replanTrip(walked) {
   }
 }
 
-// Steps and route pieces up to walked, added to what was already history. passedOnly
-// leaves out the step you're at, for a replan that starts from you and includes it again.
+// Steps up to walked, added to what was already history. passedOnly leaves out the step
+// you're at, for a replan that starts from you and includes it again.
 function historyTo(walked, passedOnly) {
-  var hist = {steps: plan.hist.steps.slice(), segs: plan.hist.segs.slice()};
+  var hist = {steps: plan.hist.steps.slice()};
   var upTo = passedOnly ? walked - AT_INT_M : walked + AT_INT_M;
-  if (plan.live) {
-    plan.steps.forEach(function(st) { if (st.at <= upTo) hist.steps.push(st); });
-    plan.segs.forEach(function(seg) {
-      var pts = segPiece(seg, seg.s0, walked);
-      if (pts) hist.segs.push({pts: pts, trimStart: seg.trimStart,
-                               trimEnd: walked >= seg.s0 + segLen(seg) && seg.trimEnd});
-    });
-  }
+  if (plan.live) plan.steps.forEach(function(st) { if (st.at <= upTo) hist.steps.push(st); });
   return hist;
 }
 
@@ -2924,6 +2930,7 @@ function showTrailInfo(feature, layer, ll, k) {
       ' <span class="int-dist">' + formatDist(Math.abs(seg.to - seg.from)) + '</span><div>' +
       (isPendingSegment(seg.a, seg.b, seg.trail)
         ? '<button class="route-btn" style="background:#0d47a1" onclick="removeSegment(' + segArgs + ')">Remove from route</button> '
+        : p.closed ? ''
         : '<button class="route-btn" style="background:#0d47a1" onclick="addSegment(' + addArgs + ')">Add to route</button> ') +
       backToRouteBtn() + '</div></div>';
   }
@@ -2988,6 +2995,7 @@ function showTrailInfo(feature, layer, ll, k) {
         profileSvg(prof) + '</td></tr>';
     }
   }
+  if (p.closed) html += '<tr><td>Impassable</td><td><strong style="color:#a0524f">' + esc(p.closed) + '</strong><div class="blaze-marks">Routes don&rsquo;t use it.</div></td></tr>';
   if (p.route_note) html += '<tr><td>Routing</td><td>' + esc(p.route_note) + '</td></tr>';
   if (p.surface) html += '<tr class="full-only"><td>Surface</td><td>' + esc(p.surface) + '</td></tr>';
   if (p.highway) html += '<tr class="full-only"><td>Type</td><td>' + esc(p.highway) + '</td></tr>';
@@ -3832,12 +3840,12 @@ function tapNearTrail(e) {
 }
 
 // A tap on a trail: its details, or while choosing a place for a loop to go through, the
-// stretch there
+// stretch there (not an impassable one)
 function tapTrail(feature, layer, ll) {
-  if (loopPicking) {
+  if (loopPicking && !feature.properties.closed) {
     var seg = segmentAt(feature, ll);
     if (seg) addLoopThrough({edge: {a: seg.a, b: seg.b, trail: seg.trail, chain: seg.chain}});
-  } else {
+  } else if (!loopPicking) {
     showTrailInfo(feature, layer, ll);
   }
 }

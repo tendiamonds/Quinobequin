@@ -59,3 +59,5 @@ saratoga_data/osm_probe.json
 
 # Committee updates (local drafts)
 committee_update_*.md
+/zone_e_review.html
+/sign_review.html
