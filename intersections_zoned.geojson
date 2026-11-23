@@ -4347,6 +4347,96 @@
           42.1666849
         ]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 478,
+        "degree": 3,
+        "zone": "B",
+        "no_sign": true,
+        "junction": true,
+        "code": "J134"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.504058,
+          42.177241
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 479,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J135"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5015834,
+          42.1684403
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 480,
+        "degree": 3,
+        "zone": "E",
+        "no_sign": true,
+        "junction": true,
+        "code": "J136"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5017739,
+          42.1685933
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 481,
+        "degree": 3,
+        "zone": "D",
+        "no_sign": true,
+        "junction": true,
+        "code": "J137"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5028273,
+          42.1715268
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 482,
+        "degree": 3,
+        "zone": "D",
+        "no_sign": true,
+        "junction": true,
+        "code": "J138"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.5036156,
+          42.1712807
+        ]
+      }
     }
   ]
 }

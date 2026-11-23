@@ -196,7 +196,13 @@ the day's changes together.
   differences are ours on purpose: we leave out the short feature and jump lines on top of
   Rocky Woods Range (207, B-Line and their neighbors, around E6, E8 and E10), and
   keep Rib Breaker south of E14, Lost Trail by F25, the quarry access road and the rail
-  trail, which Trailforks doesn't have. No GPX import needed.
+  trail, which Trailforks doesn't have. No GPX import needed. **Again 2026-11-23,** finer
+  (40 m with nothing within 20 m; a local review map, `trailforks_review.html`): added from
+  OSM the west side of Whaleback Rock (now the Charles River Trail), Link 7 (D21 to D20,
+  north of Three Sisters West) and an unnamed side line off the NEMBA Loop by E10. Left out:
+  Trailforks' Connector, a dead end off the White Trail over Beaver Brook toward private
+  land, and the archived Down and Up and Rubberstamp. Ours only: Found, Firewall and To
+  Firewall by F25, which Trailforks doesn't have.
 - **QR codes only at the entrances (2026-11-16),** on the kiosks, not on the trail signs:
   it's an idea some people like, but it makes the signs busy, and people can be wary of QR
   codes everywhere.
@@ -214,7 +220,11 @@ the day's changes together.
 - **Impassable trails (2026-11-22):** a trail marked `closed` (the Charles River Trail by
   D14, flooded at its bridge) is drawn in rose dashes from close in (an ordinary trail from
   farther out), its panel says why, and routes never use it (it can't be added to one, or
-  to a loop). Take the mark off once it's passable again.
+  to a loop). Take the mark off once it's passable again. Only the Charles River Trail's
+  south part (`tf_29`, J13 to J14) is marked; its north part (`tf_29_n`, J13 to B3) is open.
+- **Whaleback Rock is a jughandle (2026-11-23):** just the loop on the east side of the
+  rock, off the Charles River Trail. The trail up the west side (from OSM, new) and on north
+  to B3 is the Charles River Trail (`tf_29_n`).
 - **Following a route (2026-11-22):** the part you've walked isn't drawn (it was grey, over
   the breadcrumbs and hiding them); the breadcrumbs show where you've been. Reverse (and
   Reverse loop) only show until you've set off: partway round, Reverse read as "go back
