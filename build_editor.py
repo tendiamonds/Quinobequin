@@ -31,7 +31,10 @@ def main():
     with open(os.path.join(PROJ, "trails_available.geojson"), encoding="utf-8") as f:
         old_trails = json.load(f)
 
-    html = TEMPLATE.replace("__TRAIL_DATA__", json.dumps(trails))
+    from build_map import ZONE_COLORS, ZONE_NAMES   # the zones are defined there, once
+    html = TEMPLATE.replace("__ZONE_COLORS__", json.dumps(ZONE_COLORS))
+    html = html.replace("__ZONE_NAMES__", json.dumps(ZONE_NAMES))
+    html = html.replace("__TRAIL_DATA__", json.dumps(trails))
     html = html.replace("__INT_DATA__", json.dumps(ints))
     html = html.replace("__OLD_TRAIL_DATA__", json.dumps(old_trails))
 
@@ -180,14 +183,8 @@ TEMPLATE = r"""<!DOCTYPE html>
 <div class="legend-panel" id="legendPanel"></div>
 
 <script>
-var ZONE_COLORS = {
-  A: "#e74c3c", B: "#3498db", C: "#2ecc71",
-  D: "#f39c12", E: "#9b59b6", F: "#1abc9c"
-};
-var ZONE_NAMES = {
-  A: "Adams Town Forest", B: "Beaver Brook Woods", C: "College Rock Park",
-  D: "Rocky Woods", E: "NEMBA Land", F: "Fairbanks"
-};
+var ZONE_COLORS = __ZONE_COLORS__;
+var ZONE_NAMES = __ZONE_NAMES__;
 
 var trailData = __TRAIL_DATA__;
 var intData = __INT_DATA__;
@@ -626,7 +623,7 @@ function selectIntersection(feature, idx, marker) {
   // idx is a number for loaded points and a string ("new_0") for added ones
   var ia = JSON.stringify(idx).replace(/"/g, "&quot;");
   var zoneOptions = "";
-  "ABCDEF".split("").forEach(function(z) {
+  Object.keys(ZONE_NAMES).forEach(function(z) {
     var sel = z === zone ? " selected" : "";
     zoneOptions += '<option value="' + z + '"' + sel + '>' + z + ': ' + ZONE_NAMES[z] + '</option>';
   });
@@ -770,7 +767,7 @@ function placeNewIntersection(latlng) {
   }).addTo(map);
 
   var zoneOptions = "";
-  "ABCDEF".split("").forEach(function(z) {
+  Object.keys(ZONE_NAMES).forEach(function(z) {
     zoneOptions += '<option value="' + z + '">' + z + ': ' + ZONE_NAMES[z] + '</option>';
   });
 

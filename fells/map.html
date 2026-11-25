@@ -350,7 +350,7 @@
 
 <script>
 // The region this map is for: name, zones, starting view, bounds, and so on (trailmap.py)
-var REGION = {"name": "Middlesex Fells Reservation", "zones": {"W": {"name": "West Fells", "color": "#2e7d32"}, "E": {"name": "East Fells", "color": "#6a1b9a"}}, "view": {"center": [42.446976, -71.10254695], "zoom": 14}, "bounds": [[42.4255706, -71.1310537], [42.4683814, -71.0740402]], "storagePrefix": "fells", "report": {"email": "tendiamonds@gmail.com", "name": "Jason Breslau", "signReports": false}, "zonesPage": false, "placeLabels": [], "summits": [], "towns": [], "blazes": {"skyline": {"name": "Skyline Trail", "marks": "white blazes", "color": "#ffffff", "style": "blazes"}, "reservoir": {"name": "Reservoir Trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "long_pond": {"name": "Long Pond Nature Trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}, "mountain_bike": {"name": "Mountain Bike Loop", "marks": "green blazes", "color": "#43a047", "style": "blazes"}, "cross_fells": {"name": "Cross Fells Trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"}, "crystal_spring": {"name": "Crystal Spring Trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}, "historic": {"name": "Spot Pond Brook Historic Trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}, "rock_circuit": {"name": "Rock Circuit Trail", "marks": "white blazes", "color": "#ffffff", "style": "blazes"}, "rock_circuit_connector": {"name": "Rock Circuit Connector", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "virginia_wood": {"name": "Virginia Wood Trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}}, "widths": {}, "terrain": [], "eleStep": 10, "checks": [], "credit": null, "area": "fells", "siteRoot": "../", "siteMaps": [{"key": "uc", "short": "Upper Charles", "href": "map.html"}, {"key": "bh", "short": "Blue Hills", "href": "bluehills/map.html"}, {"key": "fells", "short": "Middlesex Fells", "href": "fells/map.html"}, {"key": "sar", "short": "Saratoga Woods", "href": "saratoga/map.html"}]};
+var REGION = {"name": "Middlesex Fells Reservation", "zones": {"W": {"name": "West Fells", "color": "#2e7d32"}, "E": {"name": "East Fells", "color": "#6a1b9a"}}, "view": {"center": [42.446976, -71.10254695], "zoom": 14}, "bounds": [[42.4255706, -71.1310537], [42.4683814, -71.0740402]], "storagePrefix": "fells", "report": {"email": "tendiamonds@gmail.com", "name": "Jason Breslau", "signReports": false}, "zonesPage": false, "openBounds": [[42.4255706, -71.1310537], [42.4683814, -71.0740402]], "placeLabels": [], "summits": [], "towns": [], "blazes": {"skyline": {"name": "Skyline Trail", "marks": "white blazes", "color": "#ffffff", "style": "blazes"}, "reservoir": {"name": "Reservoir Trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "long_pond": {"name": "Long Pond Nature Trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}, "mountain_bike": {"name": "Mountain Bike Loop", "marks": "green blazes", "color": "#43a047", "style": "blazes"}, "cross_fells": {"name": "Cross Fells Trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"}, "crystal_spring": {"name": "Crystal Spring Trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}, "historic": {"name": "Spot Pond Brook Historic Trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"}, "rock_circuit": {"name": "Rock Circuit Trail", "marks": "white blazes", "color": "#ffffff", "style": "blazes"}, "rock_circuit_connector": {"name": "Rock Circuit Connector", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"}, "virginia_wood": {"name": "Virginia Wood Trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"}}, "widths": {}, "terrain": [], "eleStep": 10, "checks": [], "credit": null, "area": "fells", "siteRoot": "../", "siteMaps": [{"key": "uc", "short": "Upper Charles", "href": "map.html"}, {"key": "bh", "short": "Blue Hills", "href": "bluehills/map.html"}, {"key": "fells", "short": "Middlesex Fells", "href": "fells/map.html"}, {"key": "sar", "short": "Saratoga Woods", "href": "saratoga/map.html"}]};
 var ZONE_COLORS = {}, ZONE_NAMES = {};
 Object.keys(REGION.zones).forEach(function(z) {
   ZONE_COLORS[z] = REGION.zones[z].color;
@@ -3876,7 +3876,7 @@ if (targetInt && intMarkers[targetInt]) {
 } else if (handedView) {
   map.setView([handedView[0], handedView[1]], handedView[2]);
 } else {
-  map.fitBounds(REGION.bounds);
+  map.fitBounds(REGION.openBounds);
 }
 
 // Zoomed far out (OVERVIEW_ZOOM), the Overview takes over, on the same view (the Overview
@@ -5273,9 +5273,13 @@ fetch(REGION.siteRoot + "areas.json").then(function(r) { return r.json(); }).the
   if (userLatLng) checkArea();
 }).catch(function() {});
 
-// Meters from an area's outline (0 inside it)
+// Meters from an area's outline (0 inside it): the nearest of its patches' rings
 function areaDist(a, ll) {
-  var r = a.outline, inside = false, best = Infinity, n = r.length;
+  return Math.min.apply(null, (a.outlines || [a.outline]).map(function(r) { return ringDist(r, ll); }));
+}
+
+function ringDist(r, ll) {
+  var inside = false, best = Infinity, n = r.length;
   var kx = 111320 * Math.cos(ll.lat * Math.PI / 180), ky = 110540;
   for (var i = 0, j = n - 1; i < n; j = i++) {
     var xi = (r[i][1] - ll.lng) * kx, yi = (r[i][0] - ll.lat) * ky, xj = (r[j][1] - ll.lng) * kx, yj = (r[j][0] - ll.lat) * ky;

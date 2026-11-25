@@ -7,6 +7,8 @@ build_map_page(ints, trails, region, out_dir) writes out_dir/map.html. region is
                  (A12, or 2070 for zone 2)
   view           {"center": [lat, lon], "zoom": z}, before the map fits bounds
   bounds         [[south, west], [north, east]] of the trail network
+  openBounds     (optional) what the map opens on, if not all of bounds (a network in
+                 patches, opening on its main one)
   storagePrefix  prefix for what the browser keeps (settings, breadcrumbs), so two
                  regions served from the same site don't mix them up
   report         {"email", "name", "signReports"}: who reports are sent to, and
@@ -354,6 +356,7 @@ def build_map_page(ints, trails, region, out_dir, trail_int_map=None):
     int_trail_json = json.dumps(int_trail_map)
 
     client = {k: region[k] for k in ("name", "zones", "view", "bounds", "storagePrefix", "report", "zonesPage")}
+    client["openBounds"] = region.get("openBounds", region["bounds"])
     client["placeLabels"] = region.get("placeLabels", [])
     client["summits"] = find_summits(region.get("summits", []), region.get("dem"))
     client["towns"] = region.get("towns", [])
@@ -4241,7 +4244,7 @@ if (targetInt && intMarkers[targetInt]) {
 } else if (handedView) {
   map.setView([handedView[0], handedView[1]], handedView[2]);
 } else {
-  map.fitBounds(REGION.bounds);
+  map.fitBounds(REGION.openBounds);
 }
 
 // Zoomed far out (OVERVIEW_ZOOM), the Overview takes over, on the same view (the Overview
@@ -5638,9 +5641,13 @@ fetch(REGION.siteRoot + "areas.json").then(function(r) { return r.json(); }).the
   if (userLatLng) checkArea();
 }).catch(function() {});
 
-// Meters from an area's outline (0 inside it)
+// Meters from an area's outline (0 inside it): the nearest of its patches' rings
 function areaDist(a, ll) {
-  var r = a.outline, inside = false, best = Infinity, n = r.length;
+  return Math.min.apply(null, (a.outlines || [a.outline]).map(function(r) { return ringDist(r, ll); }));
+}
+
+function ringDist(r, ll) {
+  var inside = false, best = Infinity, n = r.length;
   var kx = 111320 * Math.cos(ll.lat * Math.PI / 180), ky = 110540;
   for (var i = 0, j = n - 1; i < n; j = i++) {
     var xi = (r[i][1] - ll.lng) * kx, yi = (r[i][0] - ll.lat) * ky, xj = (r[j][1] - ll.lng) * kx, yj = (r[j][0] - ll.lat) * ky;

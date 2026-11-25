@@ -23,23 +23,28 @@ from trailmap import build_map_page, build_trail_int_map, curve_trails, dist_m, 
 
 PROJ = os.path.dirname(os.path.abspath(__file__))
 SITE = "https://tendiamonds.github.io/Quinobequin/"   # where the site is published
-TOWNS = {136: "Holliston", 139: "Hopkinton", 185: "Milford"}
+TOWNS = {136: "Holliston", 139: "Hopkinton", 177: "Medway", 185: "Milford"}
 
 EXIT_POINTS = {
     "A": (-71.4845932, 42.1782725),
     "B": (-71.5056, 42.1796),
     "C": (-71.498, 42.196),
-    "D": (-71.493, 42.171),
-    "E": (-71.500, 42.171),
+    "R": (-71.493, 42.171),
+    "N": (-71.500, 42.171),
     "F": (-71.485, 42.170),
+    # Holliston's other trails (2026-11-24, NOTES item 11), at their 1s
+    "H": (-71.450144, 42.215056),
+    "M": (-71.454826, 42.201881),
+    "W": (-71.441916, 42.182352),
 }
 F_G_GROUP = {36, 178, 213, 214, 176, 4, 129, 1, 245, 135, 9, 175, 10, 248, 130}
 # Each zone's 1, by data number: the entrance (or hub) everything else in the zone counts
 # out from, so renumbering never moves it (Jason, 2026-10-23)
-ZONE_ONES = {"A": 361, "B": 127, "C": 41, "D": 108, "E": 337, "F": 360}
+ZONE_ONES = {"A": 361, "B": 127, "C": 41, "R": 108, "N": 337, "F": 360,
+             "H": 589, "M": 498, "W": 562}   # H the Highland Town Forest lot, W the rail trail (Jason, 2026-11-25)
 
 # The temporary signs up in zone A, numbered from an earlier plan: what each reads, by
-# the data number of where it stands (three are at junctions the plan no longer signs), so
+# the data number of where it stands (some are at junctions the plan no longer signs), so
 # the map can show it beside today's number. Drop this when the real signs go up.
 POSTED_SIGNS = {173: "A1", 449: "A2", 172: "A2a", 121: "A3", 459: "A4", 206: "A5", 207: "A6", 208: "A7",
                 453: "A8", 122: "A9", 123: "A10", 55: "A11", 54: "A12", 53: "A13", 204: "A14", 46: "A15",
@@ -53,16 +58,21 @@ PUBLIC_ORDER = [
 
 ZONE_COLORS = {
     "A": "#e74c3c", "B": "#3498db", "C": "#2ecc71",
-    "D": "#f39c12", "E": "#9b59b6", "F": "#1abc9c",
+    "R": "#f39c12", "N": "#9b59b6", "F": "#1abc9c",
+    "H": "#c49a0c", "M": "#e84393", "W": "#8d6e63",
 }
 
 ZONE_NAMES = {
     "A": "Adams Town Forest",
     "B": "Beaver Brook Woods",
     "C": "College Rock Park",
-    "D": "Rocky Woods",
-    "E": "NEMBA Land",
+    "R": "Rocky Woods",
+    "N": "NEMBA Land",
     "F": "Fairbanks",
+    # Holliston's other trails (2026-11-24): proposed, not signed yet
+    "H": "Highland Town Forest",
+    "M": "Miller Hill",
+    "W": "Wenakeening Woods",
 }
 
 
@@ -84,7 +94,9 @@ def region():
         "name": "Upper Charles Forest",
         "zones": {z: {"name": ZONE_NAMES[z], "color": ZONE_COLORS[z]} for z in ZONE_COLORS},
         "view": {"center": [42.178, -71.498], "zoom": 14},
-        "bounds": [[42.156, -71.518], [42.201, -71.483]],
+        # All the zones; it opens on the Upper Charles Forest itself
+        "bounds": [[42.156, -71.518], [42.218, -71.426]],
+        "openBounds": [[42.156, -71.518], [42.201, -71.483]],
         "storagePrefix": "vtn",   # kept from when this was the Vietnam Trail Network map
         "dem": os.path.join(PROJ, "elevation_cache", "upper_charles.tif"),
         # The prototype signs up now use an abandoned numbering, so no "I'm at this sign"
@@ -222,6 +234,11 @@ def classify_owner(parcel_feat):
         if "NEW ENGLAND POWER" in upper:
             return "New England Power Co", town, False
 
+    if town == "Medway":
+        upper = raw_owner.upper()
+        if "MEDWAY" in upper and "TOWN" in upper:
+            return "Town of Medway", town, True
+
     return proper_case(raw_owner) if raw_owner else "Unknown", town, False
 
 
@@ -229,8 +246,10 @@ def classify_owner(parcel_feat):
 # Data loading & processing
 # ---------------------------------------------------------------------------
 
-def build_trail_graph(ints, trails):
-    """Build adjacency graph from trail segments snapped to intersections."""
+def build_trail_graph(ints, trails, routing=False):
+    """Build adjacency graph from trail segments snapped to intersections. With routing,
+    as the map's directions go: no closed trail, and each trail's route_cost multiplies
+    its length."""
     SNAP_DIST = 20
     int_pts = {}
     for feat in ints["features"]:
@@ -255,8 +274,9 @@ def build_trail_graph(ints, trails):
                 coords.extend(part)
         else:
             continue
-        if len(coords) < 2:
+        if len(coords) < 2 or (routing and trail["properties"].get("closed")):
             continue
+        cost = (trail["properties"].get("route_cost") or 1) if routing else 1
 
         cum = cumulative_distances(coords)
         hits = []
@@ -277,7 +297,7 @@ def build_trail_graph(ints, trails):
             cum2, fid2 = hits[i+1]
             if fid1 == fid2:
                 continue
-            seg_len = cum2 - cum1
+            seg_len = (cum2 - cum1) * cost
             if seg_len > 0:
                 graph[fid1].append((fid2, seg_len))
                 graph[fid2].append((fid1, seg_len))
@@ -324,10 +344,10 @@ def renumber(feats):
             f["properties"]["sign"] = new[num]
     with open(path, "w", encoding="utf-8") as fh:
         fh.write(json.dumps(data, indent=2) + "\n")
-    # All at once, so D8->D7 and D7->D6 don't run into each other
+    # All at once, so R8->R7 and R7->R6 don't run into each other
     swap = lambda m: moves.get(m.group(0), m.group(0))
     # (a number in backticks is just a number, like `A4` paper, and stays as it is)
-    pattern = re.compile(r"(?<!`)\b[A-F]\d+\b(?!`)")
+    pattern = re.compile(r"(?<!`)\b[%s]\d+\b(?!`)" % "".join(ZONE_NAMES))
     signs = os.path.join(PROJ, "sign_logos.csv")
     lines = open(signs, encoding="utf-8", newline="").read().splitlines(keepends=True)
     # A sign taken out (made a junction) has no "sign" any more: its row goes
@@ -359,9 +379,12 @@ def load_and_process():
     # labels are printed on signs, so never change: each sign's label is frozen in the data
     # ("sign"), and only a new intersection without one is numbered, after the highest
     # label in its zone. Signless intersections (a post with no sign like Post 4, or a
-    # landmark on a trail like Teetering Rock) aren't numbered at all.
+    # landmark on a trail like Teetering Rock) aren't numbered at all. Distances are the
+    # map's own routing (through every junction, by route_cost, never along a closed
+    # trail), so the way the map sends you from any sign to its zone's 1 only ever passes
+    # lower numbers.
     signed = {"features": [f for f in ints["features"] if not f["properties"].get("no_sign")]}
-    graph = build_trail_graph(signed, trails)
+    graph = build_trail_graph(ints, trails, routing=True)
 
     by_zone = {}
     feat_by_id = {}
@@ -383,7 +406,7 @@ def load_and_process():
             f["geometry"]["coordinates"][0], f["geometry"]["coordinates"][1], ex, ey))
         return [f for f, _ in reachable] + unreachable
 
-    for z in "ABCDEF":
+    for z in ZONE_NAMES:
         pts = by_zone.get(z, [])
         ex, ey = EXIT_POINTS[z]
 
@@ -672,12 +695,20 @@ NAV_PLACEHOLDER
           <td>Beaver Brook Woods</td><td>Milford, Holliston</td></tr>
       <tr><td><a href="zones.html#zone-C" class="tag tag-zone" style="background:#2ecc71">C</a></td>
           <td>College Rock Park</td><td>Hopkinton, Holliston, Milford</td></tr>
-      <tr><td><a href="zones.html#zone-D" class="tag tag-zone" style="background:#f39c12">D</a></td>
+      <tr><td><a href="zones.html#zone-R" class="tag tag-zone" style="background:#f39c12">R</a></td>
           <td>Rocky Woods</td><td>Holliston, Milford</td></tr>
-      <tr><td><a href="zones.html#zone-E" class="tag tag-zone" style="background:#9b59b6">E</a></td>
+      <tr><td><a href="zones.html#zone-N" class="tag tag-zone" style="background:#9b59b6">N</a></td>
           <td>NEMBA Land</td><td>Milford, Holliston</td></tr>
       <tr><td><a href="zones.html#zone-F" class="tag tag-zone" style="background:#1abc9c">F</a></td>
           <td>Fairbanks</td><td>Holliston, Milford</td></tr>
+      <tr><td colspan="3" style="padding-top:10px"><em>Proposed: Holliston&rsquo;s other trail
+          systems, not signed yet</em></td></tr>
+      <tr><td><a href="zones.html#zone-H" class="tag tag-zone" style="background:#c49a0c">H</a></td>
+          <td>Highland Town Forest (with Mellen Street, Poitras Memorial Land and the Daniels Property)</td><td>Holliston</td></tr>
+      <tr><td><a href="zones.html#zone-M" class="tag tag-zone" style="background:#e84393">M</a></td>
+          <td>Miller Hill</td><td>Holliston</td></tr>
+      <tr><td><a href="zones.html#zone-W" class="tag tag-zone" style="background:#8d6e63">W</a></td>
+          <td>Wenakeening Woods (with Idylbrook Conservation Land)</td><td>Holliston, Medway</td></tr>
     </tbody>
   </table>
 
@@ -706,8 +737,8 @@ NAV_PLACEHOLDER
     <img src="sign_samples/A7.png" alt="Sample sign A7: Holliston, Adams Town Forest" style="width:200px">
     <img src="sign_samples/B3.png" alt="Sample sign B3: Milford, Beaver Brook Woods" style="width:200px">
     <img src="sign_samples/C2.png" alt="Sample sign C2: Hopkinton, College Rock Park" style="width:200px">
-    <img src="sign_samples/D5.png" alt="Sample sign D5: Holliston, Rocky Woods, with The Trustees and DCR logos" style="width:200px">
-    <img src="sign_samples/E1.png" alt="Sample sign E1: Milford, NEMBA Land, with the NEMBA logo" style="width:200px">
+    <img src="sign_samples/R5.png" alt="Sample sign R5: Holliston, Rocky Woods, with The Trustees and DCR logos" style="width:200px">
+    <img src="sign_samples/N1.png" alt="Sample sign N1: Milford, NEMBA Land, with the NEMBA logo" style="width:200px">
     <img src="sign_samples/F4.png" alt="Sample sign F4: Holliston, Fairbanks, with The Trustees and DCR logos" style="width:200px">
   </div>
 
@@ -810,7 +841,7 @@ def build_zones_page(rows):
 <p class="subtitle">Intersections grouped by zone, with owners combined within each zone.</p>
 """]
 
-    for zone in "ABCDEF":
+    for zone in ZONE_NAMES:
         zone_rows = [r for r in rows if r["zone"] == zone]
         color = ZONE_COLORS[zone]
         zname = ZONE_NAMES.get(zone, "")

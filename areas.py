@@ -10,8 +10,11 @@ An area in areas.json:
   color              its icon's color, for its outline on the Overview
   icon               its app icon, from the site's root: the Overview marks the area with
                      it when zoomed out (DETAIL_ZOOM), where its parking would pile up
-  outline            [[lat, lon], ...]: around its trails, OUTLINE_MARGIN_M out. Inside it
-                     you're "in" the area (a map switches to it when you walk in)
+  outlines           [[[lat, lon], ...], ...]: around its trails, OUTLINE_MARGIN_M out, one
+                     for each patch of trails (PATCH_GAP_M apart or more), the biggest
+                     first. Inside one you're "in" the area (a map switches to it when you
+                     walk in)
+  outline            the first of them (as before there were patches, for a page from then)
   starts             [{"name", "lat", "lon"}]: where you'd start, its parking (or its
                      trailheads, if it has no parking marked): the Overview measures to these
 """
@@ -25,6 +28,7 @@ AREAS_JSON = os.path.join(PROJ, "areas.json")
 OVERVIEW_HTML = os.path.join(PROJ, "overview.html")
 
 OUTLINE_MARGIN_M = 250   # the outline runs this far outside the outermost trails
+PATCH_GAP_M = 1000       # trails this far from any other are a patch of their own
 
 
 def _hull(pts):
@@ -46,20 +50,51 @@ def _hull(pts):
     return lower[:-1] + upper[:-1]
 
 
-def outline(trails, margin_m=OUTLINE_MARGIN_M):
-    """[[lat, lon], ...] around all the trails, margin_m out: the hull of the trails, with
-    each corner widened into a circle and the hull taken again"""
-    coords = []
+def _patches(lines, gap):
+    """The lines ([(x, y), ...] in meters) in groups, by a grid of gap / 2 squares: lines
+    with points in the same or neighboring squares are together (so about gap apart, give
+    or take). Biggest group (most points) first."""
+    cell = gap / 2
+    owner = list(range(len(lines)))
+    def root(i):
+        while owner[i] != i:
+            owner[i] = owner[owner[i]]
+            i = owner[i]
+        return i
+    grid = {}
+    for i, line in enumerate(lines):
+        for x, y in line:
+            grid.setdefault((int(x // cell), int(y // cell)), set()).add(i)
+    for (cx, cy), here in grid.items():
+        near = set(here)
+        for key in ((cx + dx, cy + dy) for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+            near |= grid.get(key, set())
+        first = root(next(iter(near)))
+        for j in near:
+            owner[root(j)] = first
+    groups = {}
+    for i in range(len(lines)):
+        groups.setdefault(root(i), []).extend(lines[i])
+    return sorted(groups.values(), key=len, reverse=True)
+
+
+def outlines(trails, margin_m=OUTLINE_MARGIN_M, gap_m=PATCH_GAP_M):
+    """[[[lat, lon], ...], ...] around the trails, margin_m out, a ring for each patch of
+    them (gap_m apart): the hull of a patch, with each corner widened into a circle and the
+    hull taken again. The biggest patch first."""
+    lines = []
     for f in trails["features"]:
         g = f["geometry"]
-        for line in (g["coordinates"] if g["type"] == "MultiLineString" else [g["coordinates"]]):
-            coords.extend(line)
-    lat0 = sum(c[1] for c in coords) / len(coords)
+        lines.extend(g["coordinates"] if g["type"] == "MultiLineString" else [g["coordinates"]])
+    lat0 = sum(c[1] for line in lines for c in line) / sum(len(line) for line in lines)
     kx, ky = 111320 * math.cos(math.radians(lat0)), 110540   # meters per degree
-    hull = _hull([(c[0] * kx, c[1] * ky) for c in coords])
-    wide = [(x + margin_m * math.cos(a), y + margin_m * math.sin(a))
-            for x, y in hull for a in (i * math.pi / 8 for i in range(16))]
-    return [[round(y / ky, 5), round(x / kx, 5)] for x, y in _hull(wide)]
+    rings = []
+    for pts in _patches([[(c[0] * kx, c[1] * ky) for c in line] for line in lines], gap_m):
+        hull = _hull(pts)
+        wide = [(x + margin_m * math.cos(a), y + margin_m * math.sin(a))
+                for x, y in hull for a in (i * math.pi / 8 for i in range(16))]
+        rings.append([[round(y / ky, 5), round(x / kx, 5)] for x, y in _hull(wide)])
+    return rings
 
 
 def starts(ints):
@@ -81,8 +116,10 @@ def write_area(key, ints, trails):
         with open(AREAS_JSON, encoding="utf-8") as f:
             areas = [a for a in json.load(f) if a["key"] != key and a["key"] in site]
     folder = href.rsplit("/", 1)[0] + "/" if "/" in href else ""
+    rings = outlines(trails)
     areas.append({"key": key, "name": site[key][4], "short": name, "href": href, "color": color,
-                  "icon": folder + "icon-192.png", "outline": outline(trails), "starts": starts(ints)})
+                  "icon": folder + "icon-192.png", "outline": rings[0], "outlines": rings,
+                  "starts": starts(ints)})
     order = [m[0] for m in SITE_MAPS]
     areas.sort(key=lambda a: order.index(a["key"]))
     with open(AREAS_JSON, "w", encoding="utf-8", newline="\n") as f:
@@ -167,10 +204,12 @@ var DETAIL_ZOOM = 12, ICON_GAP_PX = 44;
 var icons = L.layerGroup(), parking = L.layerGroup();
 var all = L.latLngBounds([]);
 AREAS.forEach(function(a) {
-  var poly = L.polygon(a.outline, {color: a.color, weight: 2, fillColor: a.color, fillOpacity: 0.15}).addTo(map);
+  // Each patch of its trails a ring (one polygon for all); its icon sits on the biggest
+  a.rings = a.outlines || [a.outline];
+  var poly = L.polygon(a.rings.map(function(r) { return [r]; }), {color: a.color, weight: 2, fillColor: a.color, fillOpacity: 0.15}).addTo(map);
   poly.bindTooltip(esc(a.name), {sticky: true});
   poly.on("click", function() { location.href = a.href; });
-  a.center = poly.getBounds().getCenter();
+  a.center = L.latLngBounds(a.rings[0]).getCenter();
   a.starts.forEach(function(s) {
     L.marker([s.lat, s.lon], {icon: L.divIcon({className: "", iconSize: [15, 15], html: '<div class="start-p">P</div>'}), title: s.name})
       .addTo(parking).bindPopup('<b>' + esc(a.name) + '</b><br>' + esc(s.name) +
@@ -330,7 +369,7 @@ function inOutline(r, ll) {
 function fitQuietly(b, opts) { fitUntil = Date.now() + FIT_MS; map.fitBounds(b, opts); }
 map.on("zoomend", function() {
   if (Date.now() < fitUntil || map.getZoom() < MAP_ZOOM) return;
-  var c = map.getCenter(), a = AREAS.filter(function(x) { return inOutline(x.outline, c); })[0];
+  var c = map.getCenter(), a = AREAS.filter(function(x) { return x.rings.some(function(r) { return inOutline(r, c); }); })[0];
   if (a) location.href = a.href + "?view=" + [c.lat.toFixed(5), c.lng.toFixed(5), map.getZoom()].join(",");
 });
 if (navigator.geolocation) {

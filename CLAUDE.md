@@ -22,7 +22,8 @@ reports are **`reports.py`** (saved on the phone, emailed in a batch; `read_repo
 a pasted email back). The generated `.html` files are committed: they *are* the site.
 
 The maps work as one: **`SITE_MAPS`** in trailmap.py lists them (a new area goes there),
-and each build adds its area (outline, parking) to **`areas.json`** and rewrites
+and each build adds its area (outline, in patches where its trails are apart; parking) to
+**`areas.json`** and rewrites
 **`overview.html`** (`areas.py`). Every map's Maps menu is titled with it and lists the
 others and the Overview; walking into another area's outline switches to its map (a map
 you picked stays put until you walk into a different one); and an installed app, opened
@@ -39,7 +40,9 @@ Holliston's official site eventually; it isn't a personal project, and when a se
 gates access by who's asking (an API, data), the committee and its partners are asking.
 
 Upper Charles is being signed: we're designing the signs and their numbering. "Vietnam" is
-the riders' old name for it; the site keeps one line saying so.
+the riders' old name for it; the site keeps one line saying so. The same map also has
+three of Holliston's other trail systems as proposed zones (H, M, W: NOTES item 11), apart
+from the forest (W reaches into Medway); the map opens on the forest (`openBounds`).
 
 ## Setup and building
 
@@ -72,11 +75,15 @@ there's no test suite yet (NOTES.md).
   `closed` (impassable, and why: rose dashes from close in, never routed; take it off
   when it's passable again).
 - **`intersections_zoned.geojson`**: signs and junctions. Each has a permanent data
-  `number`; `zone` A-F. Unsigned ones are `no_sign`: junctions (`J#`, routing only),
-  posts (`P#`), landmarks.
+  `number`; `zone`, a letter (`ZONE_NAMES` in build_map.py: each stands for its place, A
+  for Adams, R for Rocky Woods). Unsigned ones are `no_sign`: junctions (`J#`, routing
+  only), posts (`P#`), landmarks.
 - **Labels (A7, B11) are not stored: every build renumbers** (`RENUMBER = True` in
   build_map.py) each zone outward from its 1, so labels move when trails change. Each
-  zone's 1 is fixed by data number (`ZONE_ONES`). Things keyed by label
+  zone's 1 is fixed by data number (`ZONE_ONES`). Distances are the map's own routing
+  (every junction, `route_cost`, no `closed` trail), so the way the map sends you from
+  any sign to its zone's 1 passes only lower numbers (F's `F_G_GROUP` excepted, numbered
+  last on purpose); a trail break shows up as a sign that breaks this. Things keyed by label
   (`sign_logos.csv`, `tshirt_signs.md` outside backticks) are carried along by
   `renumber()`. Once signs are up, set RENUMBER off.
 - **`POSTED_SIGNS`** (build_map.py): zone A's temporary signs, already on the ground with an

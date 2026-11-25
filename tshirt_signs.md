@@ -11,19 +11,19 @@ full-size sign from that zone. Sales help pay for the signs. Three shirts, one p
 |---|---|---|---|---|---|
 | A, Adams Town Forest | red, `#e74c3c` | **A7** | Holliston | Town of Holliston | Campfire Trail, Holliston Highway, Humpback Rock, SI Connector, Sudden Impact |
 | C, College Rock Park | green, `#2ecc71` | **C2** | Hopkinton | Town of Hopkinton | College Rock, Walker Trail |
-| E, NEMBA Land | purple, `#9b59b6` | **E1** | Milford | NEMBA | Gintro, Nemba Way, One Ledges, The Main Trail, Three Ledges |
+| N, NEMBA Land | purple, `#9b59b6` | **N1** | Milford | NEMBA | Gintro, Nemba Way, One Ledges, The Main Trail, Three Ledges |
 
 ## How the signs were picked
 
-Each is on public land (E1 on NEMBA's own land, on purpose) and is a hub where several
+Each is on public land (N1 on NEMBA's own land, on purpose) and is a hub where several
 trails meet. Each has a clean, single-digit number: nothing that calls something else to
 mind, like `A1` (steak sauce), `A5` (Wagyu), `A4` and `B4` (paper sizes), `F5` (the
 refresh key). No number repeats across the three.
 
 - **A7:** chosen earlier for the site icon. Five trails meet there, more than at any
   other A sign.
-- **C2:** Hopkinton's only public signs are C1 and C2. E1 takes the 1, so C2.
-- **E1:** on NEMBA's land. The biggest hub of the three: nine ways in from five trails,
+- **C2:** Hopkinton's only public signs are C1 and C2. N1 takes the 1, so C2.
+- **N1:** on NEMBA's land. The biggest hub of the three: nine ways in from five trails,
   and the third-most central sign in the network.
 
 None of the three is on CR land, so no CR holder's logo comes into it.
@@ -55,6 +55,6 @@ Town Clerk would be better.
 
 ## Earlier: one shirt per zone (2026-10-13 to 2026-11-18)
 
-Six shirts, A7 B3 C2 D5 E1 F4 (one Hopkinton, two Milford, three Holliston), with
-B3 (Beaver Brook Woods, blue), D5 (Rocky Woods, orange) and F4 (Fairbanks, teal) besides
-the three above. D5 and F4 are on the Fairbanks CR.
+Six shirts, A7 B3 C2 R5 N1 F4 (one Hopkinton, two Milford, three Holliston), with
+B3 (Beaver Brook Woods, blue), R5 (Rocky Woods, orange) and F4 (Fairbanks, teal) besides
+the three above. R5 and F4 are on the Fairbanks CR.

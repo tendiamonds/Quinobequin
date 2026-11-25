@@ -1,6 +1,6 @@
 """
-Download the town boundaries around the Upper Charles Forest (Holliston, Hopkinton and
-Milford) from OpenStreetMap into uc_data/towns.json, for the map's "Welcome to Milford!"
+Download the town boundaries around the Upper Charles Forest (Holliston, Hopkinton, Medway
+and Milford) from OpenStreetMap into uc_data/towns.json, for the map's "Welcome to Milford!"
 banners (build_map.py reads the file; trailmap.py's REGION.towns):
 
   [{"name": "Milford", "rings": [[[lon, lat], ...], ...]}, ...]
@@ -19,7 +19,7 @@ import urllib.request
 
 PROJ = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(PROJ, "uc_data", "towns.json")
-TOWNS = ("Holliston", "Hopkinton", "Milford")
+TOWNS = ("Holliston", "Hopkinton", "Medway", "Milford")
 QUERY = ('[out:json][timeout:90];relation["boundary"="administrative"]["admin_level"="8"]'
          '["name"~"^(%s)$"](42.10,-71.60,42.26,-71.38);out geom;' % "|".join(TOWNS))
 

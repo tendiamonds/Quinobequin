@@ -2,8 +2,8 @@
 Print-quality art of the T-shirt signs (tshirt_signs.md), after DCR's trail signs (the
 Charles River Reservation's D4 in Medfield): the trail-sign brown, the town and zone on
 top, the number big below, and small marks along the bottom: the town seal at the left,
-the CR holders' or landowner's logos at the right. One PNG each, 12 inches wide at
-300 dpi with a clear background around the sign, written to tshirt_art/.
+the CR holders' or landowner's logos at the right. One PNG each, full size (9 inches
+square) at 300 dpi with a clear background around the sign, written to tshirt_art/.
 
 The marks are white images with clear backgrounds in tshirt_art/logos/ (holliston_seal.png,
 milford_seal.png, hopkinton_seal.png, dcr.png, trustees.png, nemba.png); a mark that
@@ -25,8 +25,8 @@ PROJ = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(PROJ, "tshirt_art")
 LOGOS = os.path.join(OUT, "logos")
 BROWN = (122, 49, 34)          # the sign brown (DCR's is close to this)
-WIDTH = 3600                   # 12 in at 300 dpi
-RATIO = 0.94                   # height to width, as the Medfield sign
+WIDTH = 2700                   # 9 in at 300 dpi: the trail signs are 9 x 9 in, as DCR's
+RATIO = 1.0                    # height to width: square, as the Medfield sign
 FONT = r"C:\Windows\Fonts\seguisb.ttf"     # Segoe UI Semibold: close to DCR's type
 FONT_BOLD = r"C:\Windows\Fonts\segoeuib.ttf"
 
@@ -38,12 +38,12 @@ SAMPLE_SIGNS = [
     ("A7", "Holliston", "Adams Town Forest", []),
     ("B3", "Milford", "Beaver Brook Woods", []),
     ("C2", "Hopkinton", "College Rock Park", []),
-    ("D5", "Holliston", "Rocky Woods", []),   # on the Fairbanks CR
-    ("E1", "Milford", "NEMBA Land", ["nemba"]),                # NEMBA's own land
+    ("R5", "Holliston", "Rocky Woods", []),   # on the Fairbanks CR
+    ("N1", "Milford", "NEMBA Land", ["nemba"]),                # NEMBA's own land
     ("F4", "Holliston", "Fairbanks", []),     # on the Fairbanks CR
 ]
 # The shirts: one per town (2026-11-18), none on CR land
-SHIRT_SIGNS = ("A7", "C2", "E1")
+SHIRT_SIGNS = ("A7", "C2", "N1")
 SIGNS = [s for s in SAMPLE_SIGNS if s[0] in SHIRT_SIGNS]
 
 # The layout, as shares of the sign's width (W) and height (H), from the Medfield sign
@@ -54,6 +54,11 @@ MARK_Y, MARK_H = 0.905, 0.11   # center y and height of the marks along the bott
 MARK_X = 0.075                 # the seal's left edge, and the logos' right edge, in from the side
 TEXT_MAX_W = 0.88
 BIG_MAX_W = 0.86
+
+
+def inches(px):
+    """Pixels at 300 dpi as inches, for a caption: 9, or 11.3"""
+    return ("%.1f" % (px / 300)).rstrip("0").rstrip(".")
 
 
 def cap_height(path, size):
@@ -123,11 +128,11 @@ def draw(label, town, zone, logos, path):
 
 # The trail signs themselves carry every logo their land calls for: DCR's (its 2026 logo)
 # with The Trustees' on the Fairbanks CR. These go on the About page as sample signs.
-TRAIL_LOGOS = {"D5": ["dcr_2026", "trustees"], "F4": ["dcr_2026", "trustees"]}   # (DCR first: its wide logo beside the "t" reads better)
+TRAIL_LOGOS = {"R5": ["dcr_2026", "trustees"], "F4": ["dcr_2026", "trustees"]}   # (DCR first: its wide logo beside the "t" reads better)
 SAMPLES = os.path.join(PROJ, "sign_samples")
 SHIRTS = os.path.join(PROJ, "shirts")      # the page to show people (published, linked from nowhere)
 SHIRT_COLORS = {"A": ("red", "#e74c3c"), "B": ("blue", "#3498db"), "C": ("green", "#2ecc71"),
-                "D": ("orange", "#f39c12"), "E": ("purple", "#9b59b6"), "F": ("teal", "#1abc9c")}
+                "R": ("orange", "#f39c12"), "N": ("purple", "#9b59b6"), "F": ("teal", "#1abc9c")}
 TEE = ("M105 12 C120 40 180 40 195 12 L245 26 L292 74 L258 116 L232 98 L232 322 L68 322 "
        "L68 98 L42 116 L8 74 L55 26 Z")
 
@@ -169,8 +174,9 @@ def write_page():
             '<path d="%s" fill="#fff" filter="url(#heather)"/></svg>\n'
             '    <img src="%s.png" alt="Sign %s: %s, %s"></div>\n'
             '  <figcaption><b>%s</b> &middot; %s, %s<br><span>Heather %s shirt &middot; <a href="%s_print.png" download>print file</a> '
-            '(12 &times; 11.3 in, 300 dpi)</span></figcaption>\n</figure>' % (TEE, heathered(color), TEE, label, label, town, zone,
-                                                                            label, town, zone, name, label))
+            '(%s &times; %s in, 300 dpi)</span></figcaption>\n</figure>' % (TEE, heathered(color), TEE, label, label, town, zone,
+                                                                          label, town, zone, name, label,
+                                                                          inches(WIDTH), inches(round(WIDTH * RATIO))))
     page = """<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -229,8 +235,8 @@ def main():
         p = os.path.join(OUT, label + ".png")
         W, H, missing = draw(label, town, zone, logos, p)
         sheet.append(Image.open(p))
-        print("Wrote %s (%d x %d px, %.0f x %.1f in at 300 dpi)%s" % (
-            p, W, H, W / 300, H / 300, "; still without " + ", ".join(missing) if missing else ""))
+        print("Wrote %s (%d x %d px, %s x %s in at 300 dpi)%s" % (
+            p, W, H, inches(W), inches(H), "; still without " + ", ".join(missing) if missing else ""))
     # a sheet of them all, to look over
     tw = 600
     th = round(tw * RATIO)

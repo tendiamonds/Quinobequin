@@ -10,8 +10,8 @@ date as things change; dates are when something was learned or decided.
    from the shirt art. We're asking the towns for permission before the site is made more
    public; don't publicize it further until they've said yes. Color seals would just
    replace the three files (only Milford's color one is on hand, inside its website logo).
-2. **Around D2** the map has a bigger problem than the bypass that was reported. GPX
-   recordings covering everything around D2 are coming: bring them in with `import_gpx.py`,
+2. **Around R2** the map has a bigger problem than the bypass that was reported. GPX
+   recordings covering everything around R2 are coming: bring them in with `import_gpx.py`,
    compare against OSM, then redraw.
 3. **A bypass around Challenger** exists; we asked the trail stewards whether to add it.
    If it's added, rerun `add_junctions.py`.
@@ -40,7 +40,7 @@ date as things change; dates are when something was learned or decided.
    check one off there (`[x]`) once reported or found to have none. **`bridges_todo.html`**
    is its field page (linked from nowhere, noindex): its unchecked items, nearest first,
    with a tick kept on the phone; it reads the .md and NOTES each time, so nothing to build.
-   Reported so far (2026-11-15): at C29, 33 ft, 42.186392,-71.495415 to
+   Reported so far (2026-11-15): at C17, 33 ft, 42.186392,-71.495415 to
    42.186412,-71.495300; College Rock Run C3–C6, 43 ft, 42.189325,-71.496319 to
    42.189417,-71.496424. 2026-11-17 (zone F): The Main Trail F2–F1, the long boardwalk,
    walked both ways (42.171014,-71.488060 to 42.171077,-71.489099, and
@@ -49,33 +49,41 @@ date as things change; dates are when something was learned or decided.
    (one walk is good to about 4 m an end; worth walking long ones twice); Swampside F11–F2, three: 26 ft
    (42.168486,-71.490564 to 42.168411,-71.490569), 10 ft (42.168103,-71.490512 to
    42.168079,-71.490516) and 39 ft (42.168049,-71.490524 to 42.167946,-71.490565), the
-   last two nearly end to end; Fairbanks Trail F7–F10, 108 ft (42.168310,-71.491705 to
-   42.168602,-71.491784); Fairbanks Trail F9–F5, 30 ft (42.169555,-71.492966 to
+   last two nearly end to end; Fairbanks Trail F7–F9, 108 ft (42.168310,-71.491705 to
+   42.168602,-71.491784); Fairbanks Trail F10–F5, 30 ft (42.169555,-71.492966 to
    42.169638,-71.492961). 2026-11-18 (zone A): New Trail A4–A3, 66 ft (42.179592,-71.486991
-   to 42.179640,-71.487224); New Trail A20–A15, 33 ft (42.180540,-71.492627 to
-   42.180523,-71.492741); Town Forest Trail A22–A18, 69 ft (42.175176,-71.493632 to
+   to 42.179640,-71.487224); New Trail A19–A14, 33 ft (42.180540,-71.492627 to
+   42.180523,-71.492741); Town Forest Trail A21–A17, 69 ft (42.175176,-71.493632 to
    42.175101,-71.493392). 2026-11-21 (zone F): Swamp Bypass F19–F18, one bridge about
    12-15 ft long by eye, walked twice: 3 ft (42.166712,-71.484347 to 42.166705,-71.484339)
    and 7 ft (42.166717,-71.484382 to 42.166704,-71.484359), both short (on a bridge this
    short the GPS, good to about 3 m, can't measure the length: trust the eye); it has a
-   broken slat (a Maintenance report); Fairbanks Trail F7–F10 again, 102 ft
+   broken slat (a Maintenance report); Fairbanks Trail F7–F9 again, 102 ft
    (42.168332,-71.491742 to 42.168607,-71.491786); Toejam F7–F2, 3 ft (42.168973,-71.491265
    to 42.168977,-71.491250), a stone crossing, "more like a bridge than a ford": decide how
    to draw it when bridges go on the map; The Main Trail F2–F1 a third time, 269 ft
    (42.171087,-71.489159 to 42.171069,-71.488167). 2026-11-22: Knee Jerk F12–F14, 13 ft
    (42.168281,-71.493129 to 42.168295,-71.493175); Knee Jerk F15–F12, two where OSM has two
    fords, 10 ft (42.168461,-71.494084 to 42.168459,-71.494125) and 75 ft (42.168471,-71.494200
-   to 42.168440,-71.494475); Charles River Trail by D14, 16 ft (42.174024,-71.503872 to
-   42.174067,-71.503863), flooded and not passable (a Maintenance report).
-9. **Blue in zone F** (2026-11-17; a route since 2026-11-21): Tonto F3–A17, The Main Trail
-   F3–F2 (with the red), Toejam F2–F7, and the Fairbanks Trail F7–F9. Seen on Toejam, and
+   to 42.168440,-71.494475); Charles River Trail by R16, 16 ft (42.174024,-71.503872 to
+   42.174067,-71.503863), flooded and not passable (a Maintenance report). 2026-11-25
+   (zone B; labels as on today's map, the report's A21 is A20): Charles River Tow Road
+   Lower B2–B1, OSM's 30 ft bridge (7 m from OSM's point), but both ends were taken at
+   one spot, 42.179054,-71.505889 to 42.179057,-71.505884, so no length: walk it again;
+   at B2, 3 ft (42.178280,-71.506143 to 42.178289,-71.506138); Jungle Escape Route
+   B2–B3, 7 ft (42.178429,-71.505408 to 42.178426,-71.505379); Holliston Highway B6–A20,
+   52 ft (42.179002,-71.501445 to 42.178886,-71.501332); Krusher B14–B13, two: 3 ft
+   (42.182805,-71.497097 to 42.182812,-71.497098) and 13 ft (42.182982,-71.497769 to
+   42.182981,-71.497816).
+9. **Blue in zone F** (2026-11-17; a route since 2026-11-21): Tonto F3–A16, The Main Trail
+   F3–F2 (with the red), Toejam F2–F7, and the Fairbanks Trail F7–F10. Seen on Toejam, and
    just past F7 heading west (twice); nothing seen for the rest of the way, marked anyway as
-   the route's way through to the "blue turns left" blaze at F9. Where it goes past F9
+   the route's way through to the "blue turns left" blaze at F10. Where it goes past F10
    is still to find.
-   Elsewhere: one white blaze on Deer Way A16–A18 (2026-11-18), alongside its blue, the
+   Elsewhere: one white blaze on Deer Way A15–A17 (2026-11-18), alongside its blue, the
    only white seen anywhere; not marked (Upper Charles has no white). Blue on 7-11
    (2026-11-22, seen facing north from the middle, where a sign was until 2026-11-23):
-   marked on all of it, D15–D20, now that it's one stretch sign to sign.
+   marked on all of it, R18–R13, now that it's one stretch sign to sign.
 10. **Later: Trailforks reports** (parked 2026-11-16; the trail-cleanup lead, a BVNEMBA admin, asked):
     sync our obstruction reports with Trailforks'. Theirs are public (trail, status,
     description, coordinates; the region's list is
@@ -136,6 +144,117 @@ date as things change; dates are when something was learned or decided.
       Maintenance). Fixed issues show for about two
       weeks.
     Nothing to build on our side until his two endpoints are live.
+11. **Signing Holliston's other trails** (raised at the committee meeting, 2026-11-23). From
+    OSM (paths and tracks in Holliston outside the Upper Charles area, grouped where they
+    connect; a local review map, `holliston_review.html`), the three to plan on
+    (2026-11-24). **On the map since 2026-11-24** as zones H, M and W (proposed; the About
+    page says so): every OSM way of each (source "osm ..., added 2026-11-24 (zone ...)"),
+    a candidate sign wherever three or more ways meet (92 in all), the rest routing
+    junctions; each zone's 1 (`ZONE_ONES`) was at first the sign nearest a parking lot OSM
+    has; since 2026-11-25 (Jason) H1 is the Highland Town Forest lot on Highland Street
+    and W1 the rail trail (was W10); every H and W label moved. **Thinned the same day** (a local review map, `cull_review.html`, with a first cut
+    by spacing; Jason's picks went further): 92 down to 37, the 55 taken out made
+    junctions as zone N's were, so routes still use them; one added back (M11 now), so 38.
+    **Entrances** (Jason, same day; street names from OSM): Highland H5 (parking; the
+    lot's name to find), H9 (the unpaved south end of Mellen Street), H11 (Hollis
+    Street), H1 (the Highland Town Forest lot, on Highland Street), H14 (Washington Street); Miller Hill M1
+    (Burnap Road parking), M12 (Highland Street, by a service road the heatmap shows
+    well used), M8 (Gorwin Drive), M9 (Ridge Road), and from the heatmap M10 (the trail
+    end at Pinecrest Road and Fairview Street); Wenakeening W8 and W3 (Summer Street, two
+    lots), W1 and W23 (the rail trail), W14 (Timber Ledge Drive: "may be an access point"),
+    W5 (Cross Street), W19 (Highland Street parking), and W21 (Idylbrook Park parking,
+    Medway; below). Seven of them new signs at trail ends; 50 signs in the three (188 in
+    all). To check on the ground: whether M10
+    (Pinecrest Road) can be reached without crossing a yard; the service road from the end
+    of Beatrice Lane to the trail west of M5 (OSM 8758995: well used; maybe a driveway,
+    likely the service road to the water tank (OSM has a storage tank 20 m from its end); Jason to explore; left off, and the trail
+    north of M5 that meets it stays). W6 (#581) was on this list, whether it's worth
+    keeping (it was in the tightest cluster in the new zones); the heatmap settled it
+    (Jason, 2026-11-25): it stays.
+    The other trail ends at streets (Fairlane Way, Winter Street, Underwood Street, Cross
+    Street and more) look like neighbors' paths, not entrances.
+    **Checked against the Strava heatmap** (2026-11-25; Jason's screenshots, kept local in
+    `strava_review/`, aligned on road intersections; heat measured along each trail):
+    Miller Hill's main loops are all well used. Dropped five OSM trails with little or no
+    heat (the loop west of M4, the cross-trails inside the loop east of the old M4, which
+    went with them, and two stubs east of M11); added the two service roads above and a
+    484 m loop west of M2 that isn't in OSM, traced from the heat (`trace_m2_west`:
+    replace it with a GPS track). Then (Jason: no driveways or backyard paths) took out
+    the Beatrice Lane service road and its entrance, the 144 m past M3 toward the houses
+    on Pinecrest Road, the track south of J239 toward the houses off Underwood Street
+    (its first 96 m, M11 to J239, stays: it closes the loop from J237), and the trail
+    south of it, left unconnected; and put back 60 m of one dropped trail, joining the
+    dead end at J257 to the M3-M6 trail.
+    Wenakeening (labels as they are after the cull below): every trail well used but the
+    77 m from W3 to the Summer Street north lot (kept: the heat goes through the lot).
+    Added OSM's track from the Cross Street end south to the trail toward W6 (98% heat,
+    beside ours) and a 266 m trail east of W6 down to the trail from W4 to W10, traced
+    (`trace_w6_east`: replace with a GPS track). Not added: the tangle of singletrack
+    between W1, W5 and W6 (heavy heat, none of it in OSM; a GPS job). **South into
+    Medway** (Jason: include it, as the forest takes in Hopkinton and Milford): OSM's tracks south of W11 and W9 through Idylbrook Conservation Land to
+    Idylbrook Park, left out at first only because they're over the town line; a second
+    screenshot shows heat on nearly all of them. Added 12 (3.8 km; not the 80 m one OSM
+    marks access=no, nor a low-heat stub toward Diane Drive), closed the 13 m gap where
+    they meet ours (J287 went, the tracks' junction stands), and made nine of the 14 new
+    junctions signs: the four-ways first, none within about 80 m of another but the
+    four-way 60 m from W21, the entrance (where the two paths from the park's lot split).
+    Owners: W21, W22 and W24 the Town of Medway's; **W12, W15, W17, W18 and W20 on a
+    private parcel** (a development company's), one more owner to ask.
+    **Wenakeening thinned again** (2026-11-25, with the new trails; a local review map,
+    `cull_review.html`, with the heatmaps under it; my proposal, Jason's OK): 26 to 24.
+    Dropped four (then W11, W4, W14 and W22): two of the four signs within 140 m (the
+    other two, W4 and W6, stay), one 83 m from W9, and one 60 m from W21; made signs of two junctions the new trails made, where
+    the traced trail meets the trail from W4 to W10 and where the Cross Street track meets
+    the trail to W6. Left as they are: W11-W12 (118 m), W17-W18 (132 m), W22-W24 (135 m),
+    each its own junction. Medway added to `TOWNS`, the owner rules and the town lines
+    (`uc_towns.py`, for "Welcome to Medway").
+    **Numbering now follows the map's directions** (2026-11-25, Jason asked whether lower
+    numbers still lead out): they didn't everywhere (26 signs, most in W, where the walk
+    the map gives you to the zone's 1 climbed before it came down), because renumbering
+    measured only through signed intersections and ignored `route_cost` and `closed`.
+    `build_trail_graph(..., routing=True)` now goes through every junction as the map
+    does; 76 labels moved, in every zone. Every sign now passes only lower numbers on
+    its way to its zone's 1, but for F's old G group (`F_G_GROUP`), numbered after the
+    rest on purpose. The check also turned up a 15 m break the Miller Hill cut made (the
+    trail from M1 to M3 ended at J245; mended).
+    **Highland checked against the heatmap** (2026-11-25; Jason's screenshot; aligned on
+    roads, then fine-tuned to the trails, which moved the fit by about 20 m). The Town
+    Forest parcel and the trail to it from H5 have no heat, as expected: they're new, and
+    to be remade in this project (kept). Everything else is well used but three dead
+    ends, taken out: the 286 m northeast of the old H8 toward the houses on Winter Street
+    (so it was no junction any more, and is a routing junction now; 14 signs in H), a
+    stub east of J270 and one south of the White Trail at J269 (OSM has them). The
+    trail from H13 to H14 (Washington Street) has light heat a little to the north of
+    OSM's line (real, and a real entrance: Jason); the spur from H13 to the edge of the
+    land comes out behind the Holliston Historical Society, a way in of a sort; the White Trail's heat runs on east past our end to Washington Street,
+    about 25 m, maybe the way in meant there. Left for the remaking: the 8 m gap in the
+    Town Forest parcel south of J288.
+    Signs now 150-190 m apart at the median (Upper Charles' zones 70-110 m). Next: check
+    names and blazes (White, Blue and Yellow Trails at Highland), and walk them (Miller
+    Hill east of M6: M11 and M12). Owners from MassGIS parcels (added to
+    `uc_data/parcels.geojson`).
+    - **Miller Hill (M)** (Chamberlain St to Highland St): 7.3 km since the heatmap, 38
+      candidates, 12 signs. All on Town of Holliston land.
+    - **Highland Town Forest (H)**, with Mellen Street, Poitras Memorial Land and the
+      Daniels Property (north of town; White, Blue and Yellow Trails): 8.1 km, 29, 15 (11
+      and four new entrances); 7.7 km and 14 signs after the heatmap. All the Town's but one (a private parcel); Mellen Street
+      has a Mass Audubon CR.
+    - **Wenakeening Woods (W)**: 6.6 km, 25, 17 (15 and two new entrances); 11.0 km and 24
+      signs with the Medway part, after the second thinning. Mostly the Upper Charles Conservation Land Trust's land,
+      some the Town's, a few on private parcels; in Medway, the Town of Medway's and one
+      private parcel.
+    About 23 km: about 50 signs at Upper Charles' 2.2 per km (140 on 62.6 km), 44 after the
+    thinning and the entrances, so 140 to 184 (182 since two in A and C went). New
+    partners to ask, as DCR and The Trustees were: the Upper Charles Conservation Land Trust, and Mass Audubon (the Mellen
+    Street CR). OSM's junction counts run high before thinning. The rest are small enough
+    for an entrance sign, not numbered ones: by Hopping Brook (4.2 km, mostly track), near Prentice St (2.2 km), Pleasure Point,
+    Brentwood, Patoma Park, Factory Pond. Mass Audubon's are left to Mass Audubon (their
+    own trails, maps and markers): Waseeka Wildlife Sanctuary, and Broad Hill Wildlife
+    Sanctuary (off Highland Street; one 1.3 mi Nature Trail), which is very likely the
+    Poitras CRs off Highland Rd (private land, Mass Audubon's CR; OSM has 3.8 km of paths
+    and tracks there, more than the sanctuary's trail, some running north to the Ashland
+    line). Decided: zones on the Upper Charles map (not a map of their own), its outline in
+    patches (`areas.py` `outlines`), opening on the forest itself (`openBounds`).
 
 ## How the field work goes
 
@@ -153,12 +272,19 @@ the day's changes together.
   geometry (`uc_osm_geometry.py`, a one-time conversion). Still ours: Dirty Little
   Secret, The Maine Line, the quarry access road, Armageddon, 495 Run B.
 - **Names are ours.** OSM has Gintro, Giggity and The Gigg wrong. Ours: Gintro runs into
-  D9; "The Gigg" (`tf_56`); "Giggity" (`tf_125`).
+  R9; "The Gigg" (`tf_56`); "Giggity" (`tf_125`).
 - **Signs snap to trails within 10 m** (`trailmap.SIGN_SNAP_M`).
 - **The zones** were drawn by feel by the trail regulars, and a connectivity analysis
   (2026-10-13) backed them: 66-86% of each zone's sign-to-sign links stay inside it, and
   zones and the best clustering agree on 86% of sign pairs. The fuzzy edges (B toward C
-  and A, E32-E34 toward D, D8/D13/F16/F17 toward E) were checked on the ground and kept.
+  and A, N32-N34 toward R, R8/R13/F16/F17 toward N) were checked on the ground and kept.
+- **Zone letters stand for their places (2026-11-24):** A Adams Town Forest, B Beaver Brook
+  Woods, C College Rock Park, F Fairbanks, and now R Rocky Woods (was D) and N NEMBA Land
+  (was E); the numbers didn't change, and these notes, `sign_logos.csv` and
+  `tshirt_signs.md` were relabeled with them (an older note's E14 is today's N14). New
+  areas take their own letter (item 11). Leave D and E unused for a while, so an old D or
+  E label can't be mistaken for a new place. Avoid letters that read as digits (I, O, S,
+  Z, G).
 - **Blue Hills** is built from DCR's own trail data (2026-10-30), replacing a version
   traced from the park's PDF map. `bluehills_osm_fixes.md` lists where OSM is wrong there.
 - **One site, many maps (2026-11-16):** each map stays its own page and its own
@@ -192,14 +318,14 @@ the day's changes together.
   Cascade, Healthy Heart.
 - **Our trails match Trailforks' (2026-11-16).** Compared with Trailforks' lines (from a
   NEMBA chapter contact's app, synced 2026-10-27): 97% of theirs is within 10 m of ours,
-  and none of their trails has 100 m we lack, Zone E included (cleaned up earlier). The
+  and none of their trails has 100 m we lack, Zone N included (cleaned up earlier). The
   differences are ours on purpose: we leave out the short feature and jump lines on top of
-  Rocky Woods Range (207, B-Line and their neighbors, around E6, E8 and E10), and
-  keep Rib Breaker south of E14, Lost Trail by F25, the quarry access road and the rail
+  Rocky Woods Range (207, B-Line and their neighbors, around N6, N8 and N10), and
+  keep Rib Breaker south of N14, Lost Trail by F25, the quarry access road and the rail
   trail, which Trailforks doesn't have. No GPX import needed. **Again 2026-11-23,** finer
   (40 m with nothing within 20 m; a local review map, `trailforks_review.html`): added from
-  OSM the west side of Whaleback Rock (now the Charles River Trail), Link 7 (D21 to D20,
-  north of Three Sisters West) and an unnamed side line off the NEMBA Loop by E10. Left out:
+  OSM the west side of Whaleback Rock (now the Charles River Trail), Link 7 (R21 to R20,
+  north of Three Sisters West) and an unnamed side line off the NEMBA Loop by N10. Left out:
   Trailforks' Connector, a dead end off the White Trail over Beaver Brook toward private
   land, and the archived Down and Up and Rubberstamp. Ours only: Found, Firewall and To
   Firewall by F25, which Trailforks doesn't have.
@@ -218,7 +344,7 @@ the day's changes together.
   and the back-at-start list leaves it out.
 - **Root Canal** is too steep: routes avoid it unless you add it yourself (`route_cost`).
 - **Impassable trails (2026-11-22):** a trail marked `closed` (the Charles River Trail by
-  D14, flooded at its bridge) is drawn in rose dashes from close in (an ordinary trail from
+  R14, flooded at its bridge) is drawn in rose dashes from close in (an ordinary trail from
   farther out), its panel says why, and routes never use it (it can't be added to one, or
   to a loop). Take the mark off once it's passable again. Only the Charles River Trail's
   south part (`tf_29`, J13 to J14) is marked; its north part (`tf_29_n`, J13 to B3) is open.
@@ -229,24 +355,28 @@ the day's changes together.
   the breadcrumbs and hiding them); the breadcrumbs show where you've been. Reverse (and
   Reverse loop) only show until you've set off: partway round, Reverse read as "go back
   the way you came".
+- **Thinning the clusters, third round (2026-11-24):** of the signs 250 ft or less apart
+  by trail (20 pairs in 14 clusters, none in the new zones; N1/R9 and R3/R4 kept as
+  before): out A8 and C19 (labels then; now `J289`, `J290`). 31 labels moved in A, B and
+  C; the open items and bridges_todo carry the new ones. 182 signs.
 - **Thinning the clusters, second round (2026-11-23):** of the signs 200 ft or less
-  apart: out C4, C12, C18, D14, D19 (labels then; now `J129`-`J133`), and a sign added in
-  zone E where NEMBA Loop crosses itself, just south of the D14 that went (it was `J54`;
+  apart: out C4, C12, C18, R14, R19 (labels then; now `J129`-`J133`), and a sign added in
+  zone N where NEMBA Loop crosses itself, just south of the R14 that went (it was `J54`;
   on Town of Milford land, so it may need the town's OK). 140 signs.
 - **Thinning the clusters (2026-11-23):** of the signs 150 ft or less apart by trail, one
-  or two went from each cluster but D3/D4 (kept): A11 (the temporary sign posted as A12
-  comes down), B8, B11, C13, C20, D11, D21, F24, F28, by their labels then; now junctions
+  or two went from each cluster but R3/R4 (kept): A11 (the temporary sign posted as A12
+  comes down), B8, B11, C13, C20, R11, R21, F24, F28, by their labels then; now junctions
   `J120`-`J128`. 144 signs. Every zone but E renumbered (by distance along the trails, so
   C and D shuffled); the notes were carried along, except the dated CR lists and zones
   analysis.
-- **Fewer signs in zone E (2026-11-23):** 29 down to 17. NEMBA's land has its own trail
+- **Fewer signs in zone N (2026-11-23):** 29 down to 17. NEMBA's land has its own trail
   signs, so ours there only need to make it read as part of the whole: hubs, the ways in
-  (E2, the old E3, is one), and the D9/E1 pair kept on purpose, as the line between the
+  (N2, the old N3, is one), and the R9/N1 pair kept on purpose, as the line between the
   areas. Out: the signs on the power line land and the private parcels by Cedar Street,
   where permission isn't likely, and the NEMBA ones in the tight strings. Each is an
-  unsigned junction now (`J108`-`J119`), so routes still use it. Zone E renumbered: E1
-  stays; old E3 is E2, E4 E3, E7 E4, E10 E5, E11 E6, E9 E7, E12 E8, E16 E9, E17 E10,
-  E20 E11, E15 E12, E21 E13, E22 E14, E19 E15, E25 E16, E28 E17.
+  unsigned junction now (`J108`-`J119`), so routes still use it. Zone N renumbered: N1
+  stays; old N3 is N2, N4 N3, N7 N4, N10 N5, N11 N6, N9 N7, N12 N8, N16 N9, N17 N10,
+  N20 N11, N15 N12, N21 N13, N22 N14, N19 N15, N25 N16, N28 N17.
 - **One fewer sign at the Fairbanks Trail cluster (2026-11-21):** three signs stood within
   about 100 ft, 31 m apart; the middle one (data 66, then F9) is now an unsigned junction
   (`J106`), so routing still joins its trails there. The zone F labels past it moved down
@@ -270,8 +400,8 @@ holders' logos (`sign_logos.csv`, `crs.py`). The sign lists below are labels fro
   are protected. Signs on it: A1 A2 A3 A5 A15 A16 B19 C25 (labels as of 2026-10-13).
 - **David Reed Fairbanks conservation area,** about 210 acres south of the Town Forest,
   bought by the town in 2002. Its CR (Bk 40805 Pg 64, state ID 136_CR_20) is held jointly
-  by The Trustees and DCR and covers the whole parcel (Map 1-2-35). Signs: D1-D4 and
-  F1-F19 for certain; A23 A24 E11 D5 D6 D8 depend on which boundary is right (the state's
+  by The Trustees and DCR and covers the whole parcel (Map 1-2-35). Signs: R1-R4 and
+  F1-F19 for certain; A23 A24 N11 R5 R6 R8 depend on which boundary is right (the state's
   open-space polygon and the assessors' parcel disagree; the CR's recorded plan decides).
 - **NEMBA's land ("Vietnam"),** 47 acres next to Fairbanks, owned outright by NEMBA.
 - **Wenakeening Woods,** 100+ acres, owned by the Upper Charles Conservation Land Trust
@@ -285,14 +415,20 @@ holders' logos (`sign_logos.csv`, `crs.py`). The sign lists below are labels fro
   approves the final design. DCR's sign shop doesn't make CR signs; the sign maker DCR
   uses is Voss Signs. DCR's Medfield signs are fine as a model. No DCR logo on shirts.
 - **Sign quotes:** Voss Signs (DCR's sign maker) and Alpine Signs (added 2026-11-18).
+- **Sign size: 9 x 9 in (2026-11-24),** as DCR's Medfield sign (D3 there, measured from a
+  photo with a hand for scale, and the hand against a ruler: 8.5 to 9 in square, so a
+  standard 9 in blank; 81 sq in, well under the 400). What the photo shows: aluminum with
+  rounded corners, two bolts (top and bottom, centered) on a wooden post, white
+  reflective (prismatic) lettering on brown; the number about 4.25 in tall, the two lines
+  of text about 0.75 in. `tshirt_art.py` draws the signs this size, square.
 - **The Trustees** like the shirt idea but asked for their logo off the shirts.
-- **NEMBA:** check before using its land's sign and its logo on the E1 shirt.
+- **NEMBA:** check before using its land's sign and its logo on the N1 shirt.
 - **The towns:** check before using their seals on shirts, and on the map (item 1).
 
 ## T-shirts
 
 One shirt per town (2026-11-18; it was one per zone), in the color of one of its zones,
 each with one full-size sign, to raise money for the signs: **A7** (Holliston, red),
-**C2** (Hopkinton, green), **E1** (Milford, NEMBA's land, purple). The reasoning, the
+**C2** (Hopkinton, green), **N1** (Milford, NEMBA's land, purple). The reasoning, the
 permissions and what's left before printing are in `tshirt_signs.md`; the art is
 `tshirt_art.py`, previewed at `shirts/` (never linked).

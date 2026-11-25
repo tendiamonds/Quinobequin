@@ -350,7 +350,7 @@
 
 <script>
 // The region this map is for: name, zones, starting view, bounds, and so on (trailmap.py)
-var REGION = {"name": "Blue Hills Reservation", "zones": {"1": {"name": "Great Blue Hill", "color": "#1565c0"}, "2": {"name": "Houghton's Pond", "color": "#00897b"}, "3": {"name": "Chickatawbut", "color": "#6d4c41"}, "4": {"name": "Quincy", "color": "#8e24aa"}, "5": {"name": "Ponkapoag", "color": "#2e7d32"}, "6": {"name": "Fowl Meadow", "color": "#ef6c00"}}, "view": {"center": [42.215806993224064, -71.0858958663667], "zoom": 13}, "bounds": [[42.185574828809536, -71.1432391621923], [42.2460391576386, -71.0285525705411]], "storagePrefix": "bh", "report": {"email": "tendiamonds@gmail.com", "name": "Jason Breslau", "signReports": true}, "zonesPage": false, "placeLabels": [], "summits": [], "towns": [], "blazes": {"skyline": {"name": "Skyline Trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes", "terrain": 3}, "yellow_dots": {"name": "Yellow Dot Loop", "marks": "yellow dots", "color": "#fdd835", "style": "dots", "terrain": 0}, "green_dots": {"name": "Green Dot Loop", "marks": "green dots", "color": "#43a047", "style": "dots", "terrain": 1}, "red_dots": {"name": "Red Dot Loop", "marks": "red dots", "color": "#e53935", "style": "dots", "terrain": 2}, "white_arrows": {"name": "Forest Path Loop", "marks": "white triangles", "color": "#ffffff", "style": "arrows", "one_way": true, "terrain": 1}, "yellow_arrows": {"name": "Breakneck Ledge Loop", "marks": "yellow triangles", "color": "#fdd835", "style": "arrows", "one_way": true, "terrain": 2}}, "widths": {"road": "Unpaved road", "paved": "Paved", "wide": "Wide trail", "narrow": "Narrow trail"}, "terrain": ["Easy", "Moderate", "Challenging", "Difficult"], "eleStep": 10, "checks": [], "credit": "Trails: <a href=\"https://www.mass.gov/orgs/department-of-conservation-recreation\">Massachusetts DCR</a>", "area": "bh", "siteRoot": "../", "siteMaps": [{"key": "uc", "short": "Upper Charles", "href": "map.html"}, {"key": "bh", "short": "Blue Hills", "href": "bluehills/map.html"}, {"key": "fells", "short": "Middlesex Fells", "href": "fells/map.html"}, {"key": "sar", "short": "Saratoga Woods", "href": "saratoga/map.html"}]};
+var REGION = {"name": "Blue Hills Reservation", "zones": {"1": {"name": "Great Blue Hill", "color": "#1565c0"}, "2": {"name": "Houghton's Pond", "color": "#00897b"}, "3": {"name": "Chickatawbut", "color": "#6d4c41"}, "4": {"name": "Quincy", "color": "#8e24aa"}, "5": {"name": "Ponkapoag", "color": "#2e7d32"}, "6": {"name": "Fowl Meadow", "color": "#ef6c00"}}, "view": {"center": [42.215806993224064, -71.0858958663667], "zoom": 13}, "bounds": [[42.185574828809536, -71.1432391621923], [42.2460391576386, -71.0285525705411]], "storagePrefix": "bh", "report": {"email": "tendiamonds@gmail.com", "name": "Jason Breslau", "signReports": true}, "zonesPage": false, "openBounds": [[42.185574828809536, -71.1432391621923], [42.2460391576386, -71.0285525705411]], "placeLabels": [], "summits": [], "towns": [], "blazes": {"skyline": {"name": "Skyline Trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes", "terrain": 3}, "yellow_dots": {"name": "Yellow Dot Loop", "marks": "yellow dots", "color": "#fdd835", "style": "dots", "terrain": 0}, "green_dots": {"name": "Green Dot Loop", "marks": "green dots", "color": "#43a047", "style": "dots", "terrain": 1}, "red_dots": {"name": "Red Dot Loop", "marks": "red dots", "color": "#e53935", "style": "dots", "terrain": 2}, "white_arrows": {"name": "Forest Path Loop", "marks": "white triangles", "color": "#ffffff", "style": "arrows", "one_way": true, "terrain": 1}, "yellow_arrows": {"name": "Breakneck Ledge Loop", "marks": "yellow triangles", "color": "#fdd835", "style": "arrows", "one_way": true, "terrain": 2}}, "widths": {"road": "Unpaved road", "paved": "Paved", "wide": "Wide trail", "narrow": "Narrow trail"}, "terrain": ["Easy", "Moderate", "Challenging", "Difficult"], "eleStep": 10, "checks": [], "credit": "Trails: <a href=\"https://www.mass.gov/orgs/department-of-conservation-recreation\">Massachusetts DCR</a>", "area": "bh", "siteRoot": "../", "siteMaps": [{"key": "uc", "short": "Upper Charles", "href": "map.html"}, {"key": "bh", "short": "Blue Hills", "href": "bluehills/map.html"}, {"key": "fells", "short": "Middlesex Fells", "href": "fells/map.html"}, {"key": "sar", "short": "Saratoga Woods", "href": "saratoga/map.html"}]};
 var ZONE_COLORS = {}, ZONE_NAMES = {};
 Object.keys(REGION.zones).forEach(function(z) {
   ZONE_COLORS[z] = REGION.zones[z].color;
@@ -3876,7 +3876,7 @@ if (targetInt && intMarkers[targetInt]) {
 } else if (handedView) {
   map.setView([handedView[0], handedView[1]], handedView[2]);
 } else {
-  map.fitBounds(REGION.bounds);
+  map.fitBounds(REGION.openBounds);
 }
 
 // Zoomed far out (OVERVIEW_ZOOM), the Overview takes over, on the same view (the Overview
@@ -5273,9 +5273,13 @@ fetch(REGION.siteRoot + "areas.json").then(function(r) { return r.json(); }).the
   if (userLatLng) checkArea();
 }).catch(function() {});
 
-// Meters from an area's outline (0 inside it)
+// Meters from an area's outline (0 inside it): the nearest of its patches' rings
 function areaDist(a, ll) {
-  var r = a.outline, inside = false, best = Infinity, n = r.length;
+  return Math.min.apply(null, (a.outlines || [a.outline]).map(function(r) { return ringDist(r, ll); }));
+}
+
+function ringDist(r, ll) {
+  var inside = false, best = Infinity, n = r.length;
   var kx = 111320 * Math.cos(ll.lat * Math.PI / 180), ky = 110540;
   for (var i = 0, j = n - 1; i < n; j = i++) {
     var xi = (r[i][1] - ll.lng) * kx, yi = (r[i][0] - ll.lat) * ky, xj = (r[j][1] - ll.lng) * kx, yj = (r[j][0] - ll.lat) * ky;
