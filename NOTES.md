@@ -237,7 +237,7 @@ date as things change; dates are when something was learned or decided.
       candidates, 12 signs. All on Town of Holliston land.
     - **Highland Town Forest (H)**, with Mellen Street, Poitras Memorial Land and the
       Daniels Property (north of town; White, Blue and Yellow Trails): 8.1 km, 29, 15 (11
-      and four new entrances); 7.7 km and 14 signs after the heatmap. All the Town's but one (a private parcel); Mellen Street
+      and four new entrances); 7.7 km and 14 signs after the heatmap. All the Town's; Mellen Street
       has a Mass Audubon CR.
     - **Wenakeening Woods (W)**: 6.6 km, 25, 17 (15 and two new entrances); 11.0 km and 24
       signs with the Medway part, after the second thinning. Mostly the Upper Charles Conservation Land Trust's land,
@@ -255,6 +255,18 @@ date as things change; dates are when something was learned or decided.
     and tracks there, more than the sanctuary's trail, some running north to the Ashland
     line). Decided: zones on the Upper Charles map (not a map of their own), its outline in
     patches (`areas.py` `outlines`), opening on the forest itself (`openBounds`).
+12. **To do for the new zones** (Jason, 2026-11-25):
+    - **The committee worklist:** add the new private landowners (owners.html has them):
+      the parcel under W2, W5 (the Cross Street entrance) and W6, and the Medway
+      development company's parcel under W12, W15, W17, W18 and W20; and the Upper
+      Charles Conservation Land Trust (11 signs in W; a partner to ask, item 11). (H1 looked private
+      at first: its point is in Highland Street, and the owner lookup took the parcel
+      across the road; it now follows the sign's trail into the land, the Town's.)
+    - **A Medway town seal**, white like the others, as `seals/medway.png`: the "Welcome
+      to Medway" banner shows it once it's there and the map is rebuilt (item 1; ask
+      Medway's permission as for the others).
+    - **A contact in Medway** (Conservation, for the Town of Medway's land at W21, W22
+      and W24, and maybe as a partner).
 
 ## How the field work goes
 

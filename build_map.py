@@ -170,7 +170,8 @@ def point_in_polygon(px, py, coords_ring):
     return inside
 
 
-def find_parcel(lon, lat, parcels):
+def parcel_at(lon, lat, parcels):
+    """The parcel the point is in, or None (a road, or land we have no parcel for)"""
     for feat in parcels["features"]:
         geom = feat["geometry"]
         if geom["type"] == "Polygon":
@@ -180,6 +181,39 @@ def find_parcel(lon, lat, parcels):
             for poly in geom["coordinates"]:
                 if point_in_polygon(lon, lat, poly[0]):
                     return feat
+    return None
+
+
+def into_land(lon, lat, trails, step_m=15, end_m=3):
+    """For a sign at a trail's end: the point step_m along that trail, away from the end.
+    An entrance's point is often in the road (between the parcels on either side), and
+    the land it's the way into is the land its trail goes into. None if no trail ends
+    here."""
+    for trail in trails["features"]:
+        g = trail["geometry"]
+        for line in (g["coordinates"] if g["type"] == "MultiLineString" else [g["coordinates"]]):
+            for path in (line, line[::-1]):
+                if dist_m(lon, lat, path[0][0], path[0][1]) > end_m:
+                    continue
+                walked = 0
+                for a, b in zip(path, path[1:]):
+                    walked += dist_m(a[0], a[1], b[0], b[1])
+                    if walked >= step_m:
+                        return b[0], b[1]
+                return path[-1][0], path[-1][1]
+    return None
+
+
+def find_parcel(lon, lat, parcels, trails=None):
+    """The parcel a sign stands on: the one it's in; else (in a road) the one its trail
+    goes into; else the one with the nearest corner, within 100 m"""
+    here = parcel_at(lon, lat, parcels)
+    if here:
+        return here
+    inland = into_land(lon, lat, trails) if trails else None
+    there = parcel_at(inland[0], inland[1], parcels) if inland else None
+    if there:
+        return there
     best_dist = 100
     best = None
     for feat in parcels["features"]:
@@ -438,7 +472,7 @@ def load_and_process():
     to_check = {c["label"]: c for c in sign_checks()}
     for feat in ints["features"]:
         lon, lat = feat["geometry"]["coordinates"]
-        parcel = find_parcel(lon, lat, parcels)
+        parcel = find_parcel(lon, lat, parcels, trails)
         owner, town, is_public = classify_owner(parcel)
         feat["properties"]["owner"] = owner
         feat["properties"]["town"] = town
