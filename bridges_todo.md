@@ -9,7 +9,7 @@ into Google Maps.
 
 Report every bridge you cross, even ones already done (NOTES.md, Bridges on the map).
 Left out: the rail trail's bridges (not ours), and two fords south of the trails (near
-the quarry, and on Rib Breaker south of N14).
+the quarry, and on Rib Breaker south of N13).
 
 ## Zone F
 
@@ -26,7 +26,7 @@ the quarry, and on Rib Breaker south of N14).
 
 ## Zone N
 
-- [x] Bridge, about 85 ft: Middle Relief, near N14 (OSM's line is 50 m off ours: maybe on a
+- [x] Bridge, about 85 ft: Middle Relief, near N13 (OSM's line is 50 m off ours: maybe on a
       path we don't have), 42.167381,-71.498345: no bridge (11/25)
 
 ## Zone B and R, along the river

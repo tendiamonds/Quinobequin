@@ -163,8 +163,8 @@ date as things change; dates are when something was learned or decided.
     (Burnap Road parking, behind Pinecrest Golf Course: since 2026-11-26 at the lot itself, the trail's end, Jason), M15 (Highland Street, by a service road the heatmap shows
     well used), M10 (Gorwin Drive), M11 (Ridge Road), and from the heatmap M13 (the trail
     end at Pinecrest Road and Fairview Street), M12 (Beatrice Lane, 2026-11-26); Wenakeening W8 and W3 (Summer Street, two
-    lots), W1 and W23 (the rail trail), W14 (Timber Ledge Drive: "may be an access point"),
-    W5 (Cross Street), W19 (Highland Street parking), and W21 (Idylbrook Park parking,
+    lots), W1 and W11 (the rail trail), W14 (Timber Ledge Drive: "may be an access point"),
+    W5 (Cross Street), W16 (Highland Street parking), and W22 (Idylbrook Park parking,
     Medway; below). Seven of them new signs at trail ends; 50 signs in the three (188 in
     all). To check on the ground: whether M13
     (Pinecrest Road) can be reached without crossing a yard. Settled: the service road from
@@ -193,21 +193,21 @@ date as things change; dates are when something was learned or decided.
     beside ours) and a 266 m trail east of W6 down to the trail from W4 to W10, traced
     (`trace_w6_east`: replace with a GPS track). Not added: the tangle of singletrack
     between W1, W5 and W6 (heavy heat, none of it in OSM; a GPS job). **South into
-    Medway** (Jason: include it, as the forest takes in Hopkinton and Milford): OSM's tracks south of W11 and W9 through Idylbrook Conservation Land to
+    Medway** (Jason: include it, as the forest takes in Hopkinton and Milford): OSM's tracks south of W12 and W9 through Idylbrook Conservation Land to
     Idylbrook Park, left out at first only because they're over the town line; a second
     screenshot shows heat on nearly all of them. Added 12 (3.8 km; not the 80 m one OSM
     marks access=no, nor a low-heat stub toward Diane Drive), closed the 13 m gap where
     they meet ours (J287 went, the tracks' junction stands), and made nine of the 14 new
     junctions signs: the four-ways first, none within about 80 m of another but the
-    four-way 60 m from W21, the entrance (where the two paths from the park's lot split).
-    Owners: W21, W22 and W24 the Town of Medway's; **W12, W15, W17, W18 and W20 on a
+    four-way 60 m from W22, the entrance (where the two paths from the park's lot split).
+    Owners: W22, W23 and W24 the Town of Medway's; **W17, W18, W19, W20 and W21 on a
     private parcel** (a development company's), one more owner to ask.
     **Wenakeening thinned again** (2026-11-25, with the new trails; a local review map,
     `cull_review.html`, with the heatmaps under it; my proposal, Jason's OK): 26 to 24.
-    Dropped four (then W11, W4, W14 and W22): two of the four signs within 140 m (the
-    other two, W4 and W6, stay), one 83 m from W9, and one 60 m from W21; made signs of two junctions the new trails made, where
+    Dropped four (then W12, W4, W14 and W23): two of the four signs within 140 m (the
+    other two, W4 and W6, stay), one 83 m from W9, and one 60 m from W22; made signs of two junctions the new trails made, where
     the traced trail meets the trail from W4 to W10 and where the Cross Street track meets
-    the trail to W6. Left as they are: W11-W12 (118 m), W17-W18 (132 m), W22-W24 (135 m),
+    the trail to W6. Left as they are: W12-W17 (118 m), W19-W20 (132 m), W23-W24 (135 m),
     each its own junction. Medway added to `TOWNS`, the owner rules and the town lines
     (`uc_towns.py`, for "Welcome to Medway").
     **Numbering now follows the map's directions** (2026-11-25, Jason asked whether lower
@@ -291,14 +291,14 @@ date as things change; dates are when something was learned or decided.
 12. **To do for the new zones** (Jason, 2026-11-25):
     - **The committee worklist:** add the new private landowners (owners.html has them):
       the parcel under W2, W5 (the Cross Street entrance) and W6, and the Medway
-      development company's parcel under W12, W15, W17, W18 and W20; and the Upper
+      development company's parcel under W17, W18, W19, W20 and W21; and the Upper
       Charles Conservation Land Trust (11 signs in W; a partner to ask, item 11). (H1 looked private
       at first: its point is in Highland Street, and the owner lookup took the parcel
       across the road; it now follows the sign's trail into the land, the Town's.)
     - **A Medway town seal**, white like the others, as `seals/medway.png`: the "Welcome
       to Medway" banner shows it once it's there and the map is rebuilt (item 1; ask
       Medway's permission as for the others).
-    - **A contact in Medway** (Conservation, for the Town of Medway's land at W21, W22
+    - **A contact in Medway** (Conservation, for the Town of Medway's land at W22, W23
       and W24, and maybe as a partner).
 13. **Later: numbering neighbors together** (Jason, 2026-11-26). Numbers go out by
     distance from the zone's 1, so signs at about the same distance get neighboring
@@ -308,6 +308,47 @@ date as things change; dates are when something was learned or decided.
     every zone, but most labels move (18 of A's 22, where temporary signs are up), and it
     still put Beatrice Lane at M8. To look at: a zone at a time, other rules (a branch
     at a time), and whether it's worth it before the signs go up (RENUMBER).
+14. **Jason's Strava tracks** (2026-11-26: his export, 2015-2026; 862 activities in
+    Upper Charles, 700 of them in the forest, 169 W, 75 M, 7 H). Kept local: the tracks
+    in a working folder outside the repo, a review page in `strava_review/` (gitignored:
+    our trails, where the tracks went, off-trail clusters, and stretches drawn off).
+    Findings: our lines are good (7 stretches 6-9 m off, about GPS error: left be); of 28
+    off-trail clusters, 7 are the rail trail (not ours) and one is wandering around on
+    top of College Rock (Jason; by the lot, so it looked like a lot);
+    trails with none of his activities (62, mostly N and H) only say where he goes, not
+    that they're unused. Added (Jason: "those are trails"): seven OSM paths east of
+    College Rock around C8, C11, C13 and C14 (OSM 1380865707, 130500783, 306426101,
+    1380865706, 1380913337, 1380913335, 1380865712), with 13 junctions; C13-C18 moved
+    (Engel's sign is C18 now: the worklist); 130500783 starts 7 m back at J124, where it
+    meets the trails, and ends at the loop west of Teeter Totter, a dead end (the loop
+    isn't worth including: Jason). Also the rest of Kitchen in F, west from J95 to the Powerlines
+    trail (OSM 162500137, three pieces between the trails it crosses; Jason: "a real
+    trail, not worth intersections, but may as well connect": junctions, no signs). And
+    Condo Rock in R, from Middle Sister to the top (72 m, a dead end: OSM 130212058's
+    east end and 1380319243, the top by the lidar at 114 m; Jason: "a trail, at least to
+    the top"; the way around the back, down to Middle Sister again, left off). Its
+    prominence by the lidar is 39 ft, more than College Rock's 33 (Rocky Woods Range 165,
+    the two unnamed hills by the Tow Road and Adams Street 65 and 54). The hill just west
+    of it, on the Charles River Loop by R16 (385 ft, prominence 28 ft, no name found in
+    OSM, Trailforks or the 2012 map), is on the map as an unnamed hilltop; Condo Rock is
+    labeled too (372 ft). The rail trail's Cross Street lot (Jason: on the north side, just east of the rail
+    trail; OSM 1040060989) is L2, a lot like Route 85's L1 (no sign, no zone), with 19 m
+    along Cross Street to the crossing and the rail trail from W1's trail past it to W11
+    (OSM's line): routes can use the rail trail between W1 and W11, and W's labels moved
+    (W23, the rail trail's far end, is W11 now). And Cross Street from the crossing to W5's
+    trails (153 m, OSM's street line; Jason: the lot is good access for W5 too).
+    And W's Medway signs take its highest numbers, W17-W24 (`TOWN_LAST`, Jason): Holliston's
+    are W1-W16, and every route out still passes only lower numbers. The same for every
+    zone across a town line, as the first hand numbering had it (Jason): R's Milford signs
+    after its Holliston ones (R6 and R7 swapped), and N's one Holliston sign last (N18,
+    was N6). Now every zone's towns are one block each: A, H, M Holliston; B Milford then
+    Holliston; C Hopkinton, Holliston, Milford; F Holliston, Milford; N Milford, Holliston;
+    R Holliston, Milford; W Holliston, Medway.
+    Left off: OSM's "Swamp Bypass(Flooded)" (1442933991) beside our Swamp Bypass in F,
+    31 of his activities 2020-2026 ("used to be a trail, but it is deeply underwater").
+    The review is done (Jason, 2026-11-26: no other candidates). Still possible: redraw
+    the traced trails (`trace_m2_west`, `trace_w6_east`) from his tracks, kept for that
+    in the working folder (the export's zip copy deleted).
 
 ## How the field work goes
 

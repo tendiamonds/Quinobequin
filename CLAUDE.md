@@ -84,7 +84,9 @@ there's no test suite yet (NOTES.md).
   (every junction, `route_cost`, no `closed` trail), so the way the map sends you from
   any sign to its zone's 1 passes only lower numbers (F's `F_G_GROUP` excepted, numbered
   last on purpose); a trail break shows up as a sign that breaks this. `HAND_ORDER` reorders a few signs among
-  the numbers they'd get anyway (neighbors together), where that keeps the rule. Things keyed by label
+  the numbers they'd get anyway (neighbors together), where that keeps the rule; `TOWN_LAST`
+  numbers a zone's signs in another town after the rest, so each town's numbers are one
+  block (as the zones were first numbered by hand). Things keyed by label
   (`sign_logos.csv`, `tshirt_signs.md` outside backticks) are carried along by
   `renumber()`. Once signs are up, set RENUMBER off.
 - **`POSTED_SIGNS`** (build_map.py): zone A's temporary signs, already on the ground with an

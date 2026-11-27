@@ -51,12 +51,12 @@ C9,,,,,,42.187918,-71.501565,
 C10,,,,,,42.187715,-71.494895,
 C11,,,,,,42.187759,-71.497633,
 C12,,,,,,42.187739,-71.500725,
-C13,,,,,,42.187016,-71.495134,
-C14,,,,,,42.188031,-71.499082,
-C15,,,,,,42.187535,-71.498405,
-C18,,,,Adams Street Town Forest Additions CR,19 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands,42.186940,-71.498422,2026-10-13: not on CR land
+C14,,,,,,42.187016,-71.495134,
+C15,,,,,,42.188031,-71.499082,
+C13,,,,,,42.187535,-71.498405,
+C16,,,,Adams Street Town Forest Additions CR,19 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands,42.186940,-71.498422,2026-10-13: not on CR land
 C17,,,,Adams Street Town Forest Additions CR,20 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands,42.186376,-71.495548,2026-10-13: not on CR land
-C16,,,,,,42.186513,-71.494662,
+C18,,,,,,42.186513,-71.494662,
 C19,Trustees,Adams Street Town Forest Additions CR,,,,42.186475,-71.497926,
 C20,,,,,,42.185733,-71.496266,
 C21,,,,,,42.185726,-71.500338,
@@ -74,8 +74,8 @@ R2,Trustees + DCR,Fairbanks CR,,,,42.172247,-71.496980,
 R3,Trustees + DCR,Fairbanks CR,,,,42.170924,-71.496792,
 R4,Trustees + DCR,Fairbanks CR,,,,42.170614,-71.496570,
 R5,Trustees + DCR,Fairbanks CR,,Fairbanks CR,11 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map,42.171993,-71.498145,2026-10-21: on CR land
-R6,,,,Fairbanks CR,"2 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map; the town parcel map puts it on Town of Milford land, which would mean no CR",42.172633,-71.498707,2026-10-21: not on CR land
-R7,Trustees + DCR,Fairbanks CR,,Fairbanks CR,"seen on the ground (2026-10-21) as on the Fairbanks land, and the town's parcel map puts it 10 m inside the Fairbanks parcel, but The Trustees' 2013 CR map has it outside; sources disagree here; this follows The Trustees' own CR map",42.170416,-71.498049,2026-10-25: on CR land
+R7,,,,Fairbanks CR,"2 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map; the town parcel map puts it on Town of Milford land, which would mean no CR",42.172633,-71.498707,2026-10-21: not on CR land
+R6,Trustees + DCR,Fairbanks CR,,Fairbanks CR,"seen on the ground (2026-10-21) as on the Fairbanks land, and the town's parcel map puts it 10 m inside the Fairbanks parcel, but The Trustees' 2013 CR map has it outside; sources disagree here; this follows The Trustees' own CR map",42.170416,-71.498049,2026-10-25: on CR land
 R8,,,,,,42.170718,-71.500378,
 R10,,,,,,42.171205,-71.500693,
 R9,,,,,,42.170200,-71.500091,
@@ -95,20 +95,20 @@ N1,,,,,,42.170055,-71.500071,
 N2,,,,,,42.169857,-71.499572,
 N3,,,,,,42.169286,-71.500029,
 N4,,,,,,42.168528,-71.500649,
-N6,,,,Fairbanks CR,15 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map,42.168970,-71.497588,2026-10-21: not on CR land; this little box may be neither NEMBA's nor Fairbanks'
-N9,,,,Fairbanks CR,3 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands,42.168134,-71.497738,"2026-10-21: can't tell; should N19 be here, and should the red line (a path on the background map) be on the map?; 2026-10-25: not on CR land"
-N14,,,,,,42.167025,-71.498846,
-N8,,,,,,42.168274,-71.501620,
-N11,,,,,,42.169516,-71.501889,
-N16,,,,,,42.168815,-71.503956,
-N13,,,,,,42.169078,-71.502758,
-N17,,,,,,42.168455,-71.505822,
+N18,,,,Fairbanks CR,15 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands; sources disagree here; this follows The Trustees' own CR map,42.168970,-71.497588,2026-10-21: not on CR land; this little box may be neither NEMBA's nor Fairbanks'
+N8,,,,Fairbanks CR,3 m outside the CR line on The Trustees' 2013 map; confirm which side the post stands,42.168134,-71.497738,"2026-10-21: can't tell; should N19 be here, and should the red line (a path on the background map) be on the map?; 2026-10-25: not on CR land"
+N13,,,,,,42.167025,-71.498846,
+N7,,,,,,42.168274,-71.501620,
+N10,,,,,,42.169516,-71.501889,
+N15,,,,,,42.168815,-71.503956,
+N12,,,,,,42.169078,-71.502758,
+N16,,,,,,42.168455,-71.505822,
 N5,,,,,,42.168307,-71.499102,
-N10,,,,,,42.167513,-71.501336,
-N7,,,,,,42.170029,-71.502428,
-N12,,,,,,42.167645,-71.502165,
-N15,,,,,,42.167724,-71.503465,
-N18,,,,,,42.167940,-71.505430,
+N9,,,,,,42.167513,-71.501336,
+N6,,,,,,42.170029,-71.502428,
+N11,,,,,,42.167645,-71.502165,
+N14,,,,,,42.167724,-71.503465,
+N17,,,,,,42.167940,-71.505430,
 F1,Trustees + DCR,Fairbanks CR,,Fairbanks CR,9 m inside the CR line on The Trustees' 2013 map; confirm which side the post stands,42.170552,-71.487716,2026-10-21: on CR land
 F2,Trustees + DCR,Fairbanks CR,,,,42.171081,-71.489476,
 F3,Trustees + DCR,Fairbanks CR,,,,42.171182,-71.490243,

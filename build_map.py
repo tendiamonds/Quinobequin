@@ -46,6 +46,10 @@ ZONE_ONES = {"A": 361, "B": 127, "C": 41, "R": 108, "N": 337, "F": 360,
 # anyway, in this order, so neighbors go together where distance from the 1 would split
 # them. The build checks it keeps the routing rule (load_and_process: hand_order).
 HAND_ORDER = {"M": [592, 593, 485]}   # Beatrice Lane, Pinecrest Road, then east of it (Jason, 2026-11-26)
+# A zone's signs in another town, numbered after the rest, so each town's numbers are one
+# block, as the zones were first numbered by hand (Jason, 2026-11-26): W's in Medway, R's
+# in Milford, N's one in Holliston
+TOWN_LAST = {"W": "Medway", "R": "Milford", "N": "Holliston"}
 
 # The temporary signs up in zone A, numbered from an earlier plan: what each reads, by
 # the data number of where it stands (some are at junctions the plan no longer signs), so
@@ -108,13 +112,16 @@ def region():
         "checks": sign_checks(),
         "towns": town_lines(),
         # Hilltops beside the trails (from the lidar, 2026-11-04; trailmap finds each true
-        # top and its height). Names are OpenStreetMap's, where it has one.
+        # top and its height). Names are OpenStreetMap's, where it has one (Condo Rock's is its
+        # trail's).
         "summits": [
             {"name": "Rocky Woods Range", "lat": 42.16791, "lon": -71.50136},   # on Nemba Way: the forest's highest
             {"name": None, "lat": 42.17834, "lon": -71.48936},                  # by A17, just off Right Turn Clyde
             {"name": None, "lat": 42.18358, "lon": -71.50061},                  # on Battle Scar
             {"name": None, "lat": 42.17685, "lon": -71.48523},                  # on the Driveway Access Trail, by Adams Street
             {"name": "College Rock", "lat": 42.194540, "lon": -71.499507},      # College Rock Park (OSM's peak)
+            {"name": None, "lat": 42.17328, "lon": -71.50423},                  # on the Charles River Loop, west of Condo Rock (2026-11-26)
+            {"name": "Condo Rock", "lat": 42.17374, "lon": -71.50189},          # the top of its trail, by Middle Sister (2026-11-26)
         ],
         "zonesPage": True,
         "nav": nav_html("map"),
@@ -439,6 +446,26 @@ def load_and_process():
         by_zone.setdefault(z, []).append(feat)
         feat_by_id[id(feat)] = feat
 
+    town_rings = {t["name"]: t["rings"] for t in town_lines()}
+
+    def town_last(ordered, town, z):
+        # The zone's signs in the town after the rest, each part in its own order, unless
+        # one of the rest has a town sign on its way out (the routing rule): then as built
+        def inside(f):
+            lon, lat = f["geometry"]["coordinates"][:2]
+            return any(point_in_polygon(lon, lat, ring) for ring in town_rings.get(town, []))
+        rest = [f for f in ordered if not inside(f)]
+        last = [f for f in ordered if inside(f)]
+        from_one = dijkstra(graph, [id(ordered[0])])
+        for b in last:
+            d = dijkstra(graph, [id(b)])
+            for a in rest:
+                if id(a) in d and id(a) in from_one and abs(from_one[id(a)] - from_one[id(b)] - d[id(a)]) < 0.5:
+                    print("  WARNING: TOWN_LAST: zone %s's #%d has #%d (%s) on its way out; left as built" % (
+                        z, a["properties"]["number"], b["properties"]["number"], town))
+                    return ordered
+        return rest + last
+
     def hand_order(ordered, nums):
         # The signs in nums take the numbers they'd have anyway, in nums' order, unless one
         # would then come before a sign on its own way out (the routing rule): then as built
@@ -481,6 +508,8 @@ def load_and_process():
             ordered = order_subgroup(main_pts, ex, ey, ZONE_ONES[z]) + order_subgroup(tail_pts, ex, ey)
         else:
             ordered = order_subgroup(pts, ex, ey, ZONE_ONES[z])
+        if z in TOWN_LAST:
+            ordered = town_last(ordered, TOWN_LAST[z], z)
         if z in HAND_ORDER:
             ordered = hand_order(ordered, HAND_ORDER[z])
         if ordered and ordered[0]["properties"]["number"] != ZONE_ONES[z]:
