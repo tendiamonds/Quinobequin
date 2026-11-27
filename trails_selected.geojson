@@ -24500,6 +24500,13 @@
         "source": "osm track, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           130432988
+        ],
+        "blazes": [
+          [
+            "yellow_dots",
+            "start",
+            485
+          ]
         ]
       },
       "geometry": {
@@ -24772,6 +24779,13 @@
         "source": "osm path, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           132708838
+        ],
+        "blazes": [
+          [
+            "yellow",
+            593,
+            488
+          ]
         ]
       },
       "geometry": {
@@ -24840,6 +24854,13 @@
         "source": "osm path, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           132708839
+        ],
+        "blazes": [
+          [
+            "white",
+            489,
+            520
+          ]
         ]
       },
       "geometry": {
@@ -25024,6 +25045,18 @@
         "source": "osm track, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           132827627
+        ],
+        "blazes": [
+          [
+            "blue_triangles",
+            595,
+            503
+          ],
+          [
+            "white",
+            595,
+            516
+          ]
         ]
       },
       "geometry": {
@@ -25112,6 +25145,13 @@
         "source": "osm path, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           132827630
+        ],
+        "blazes": [
+          [
+            "orange",
+            495,
+            496
+          ]
         ]
       },
       "geometry": {
@@ -25216,6 +25256,13 @@
         "source": "osm path, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           132830674
+        ],
+        "blazes": [
+          [
+            "orange_triangles",
+            596,
+            497
+          ]
         ]
       },
       "geometry": {
@@ -25252,6 +25299,13 @@
         "source": "osm track, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           132888490
+        ],
+        "blazes": [
+          [
+            "orange",
+            498,
+            620
+          ]
         ]
       },
       "geometry": {
@@ -25340,6 +25394,13 @@
         "source": "osm path, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           132889430
+        ],
+        "blazes": [
+          [
+            "blue",
+            499,
+            "end"
+          ]
         ]
       },
       "geometry": {
@@ -25524,6 +25585,13 @@
         "source": "osm path, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           132889432
+        ],
+        "blazes": [
+          [
+            "blue",
+            500,
+            501
+          ]
         ]
       },
       "geometry": {
@@ -25612,6 +25680,23 @@
         "source": "osm track, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           132923654
+        ],
+        "blazes": [
+          [
+            "orange",
+            502,
+            496
+          ],
+          [
+            "blue_triangles",
+            496,
+            501
+          ],
+          [
+            "blue",
+            501,
+            494
+          ]
         ]
       },
       "geometry": {
@@ -25916,6 +26001,13 @@
         "source": "osm path, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           132923658
+        ],
+        "blazes": [
+          [
+            "blue_triangles",
+            503,
+            504
+          ]
         ]
       },
       "geometry": {
@@ -26024,6 +26116,13 @@
         "source": "osm path, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           132986270
+        ],
+        "blazes": [
+          [
+            "blue",
+            505,
+            506
+          ]
         ]
       },
       "geometry": {
@@ -26072,6 +26171,23 @@
         "source": "osm track, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           163205303
+        ],
+        "blazes": [
+          [
+            "orange",
+            495,
+            502
+          ],
+          [
+            "blue_triangles",
+            595,
+            495
+          ],
+          [
+            "white",
+            595,
+            519
+          ]
         ]
       },
       "geometry": {
@@ -26136,6 +26252,13 @@
         "source": "osm track, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           183669985
+        ],
+        "blazes": [
+          [
+            "blue",
+            508,
+            509
+          ]
         ]
       },
       "geometry": {
@@ -26248,6 +26371,13 @@
         "source": "osm path, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           384609263
+        ],
+        "blazes": [
+          [
+            "white",
+            516,
+            517
+          ]
         ]
       },
       "geometry": {
@@ -26312,6 +26442,13 @@
         "source": "osm path, added 2026-11-24 (zone M, Miller Hill)",
         "osm_ways": [
           891314840
+        ],
+        "blazes": [
+          [
+            "white",
+            519,
+            520
+          ]
         ]
       },
       "geometry": {
@@ -31613,7 +31750,14 @@
       "properties": {
         "id": "trace_m2_west",
         "name": "",
-        "source": "traced from the Strava heatmap, added 2026-11-25 (zone M, Miller Hill); not in OSM, replace with a GPS track"
+        "source": "traced from the Strava heatmap, added 2026-11-25 (zone M, Miller Hill); not in OSM, replace with a GPS track",
+        "blazes": [
+          [
+            "orange_triangles",
+            596,
+            598
+          ]
+        ]
       },
       "geometry": {
         "type": "LineString",
@@ -31713,6 +31857,13 @@
         "source": "osm path, added 2026-11-24 (zone M, Miller Hill); only its east part, J257 to the M3-M8 trail, since 2026-11-25",
         "osm_ways": [
           165357555
+        ],
+        "blazes": [
+          [
+            "white",
+            600,
+            517
+          ]
         ]
       },
       "geometry": {
@@ -32998,6 +33149,54 @@
           [
             -71.4377136,
             42.1685605
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "osm_8758995",
+        "name": "",
+        "source": "osm service, added 2026-11-25, back 2026-11-26 (zone M; Jason walked it: a way in from Beatrice Lane)",
+        "osm_ways": [
+          8758995
+        ]
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            -71.4597192,
+            42.195435
+          ],
+          [
+            -71.4595329,
+            42.1953357
+          ],
+          [
+            -71.4593568,
+            42.1952345
+          ],
+          [
+            -71.4592013,
+            42.1952517
+          ],
+          [
+            -71.4587803,
+            42.1954433
+          ],
+          [
+            -71.4586413,
+            42.1954768
+          ],
+          [
+            -71.458256,
+            42.195467
+          ],
+          [
+            -71.458067,
+            42.195464
           ]
         ]
       }

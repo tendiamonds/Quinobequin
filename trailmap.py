@@ -2414,7 +2414,7 @@ function pickEntrance(destLabel, roundTrip, all) {
 }
 
 // A planned route (or round trip) from an entrance. It's a plan, not live: you aren't
-// there yet. Once you are, Route here or Round trip follows you from where you stand.
+// there yet. Once you are, it follows you from where you stand (goLiveAtStart).
 function routeFromEntrance(entry, destLabel, roundTrip) {
   var trip = newTrip(entry, roundTrip ? [destLabel] : [], roundTrip ? null : destLabel);
   if (roundTrip) {
@@ -2423,6 +2423,25 @@ function routeFromEntrance(entry, destLabel, roundTrip) {
     trip.homeLabel = entry;
   }
   startTrip(trip, 'No ' + (roundTrip ? 'round trip' : 'route') + ' found from <strong>' + intName(entry) + '</strong> to <strong>' + intName(destLabel) + '</strong>.');
+}
+
+// A route planned from an entrance (at home, say) starts following you when you get there
+// on foot, as if you'd planned it there: the same stops, from where you stand (2026-11-26:
+// the planned line stayed put as Jason walked it). Not from a car going by.
+var LIVE_START_ACC_M = 30;
+function goLiveAtStart(pos) {
+  if (!plan || plan.live || plan.trip.from === null || !intMarkers[plan.trip.from] ||
+      userAccuracy > LIVE_START_ACC_M || driving(pos) ||
+      userLatLng.distanceTo(intMarkers[plan.trip.from].getLatLng()) > ENTRY_NEAR_M) return;
+  var trip = plan.trip, from = trip.from, args;
+  trip.from = null;
+  args = compileTrip(trip);
+  if (args) {
+    renderRoute(args.result, args.userLeg, true, null, args.info);
+    showBanner('You\'re at ' + esc(intName(from)) + ': your route follows you from here.');
+  } else {
+    trip.from = from;   // (no way on from here: it stays a plan)
+  }
 }
 
 // --- Loops: a route of about the length you ask for, out one way and back another
@@ -5055,19 +5074,34 @@ try { crumbs = JSON.parse(sessionStorage.getItem(CRUMB_KEY)) || []; } catch (e) 
 // Each outing starts fresh. The phone stops tracking whenever the screen is off, so a gap
 // alone doesn't mean you left; these are the signs that you did:
 var FIX_KEY = REGION.storagePrefix + "LastFix";   // time and place of the last fix, across reloads
-var FAR_FROM_NETWORK_M = 1000;              // this far outside the network: you drove away
+var FAR_FROM_NETWORK_M = 1000;              // this far from every trail: you drove away
 var EXIT_NEAR_M = 100, EXIT_GAP_MS = 30 * 60 * 1000;   // stopped near an exit, back much later
 var NEW_DAY_GAP_MS = 4 * 3600 * 1000;       // a long break, wherever you were
+// Breadcrumbs are your walk, not the drive there (2026-11-26: a loop's mileage counted the
+// drive): only this close to a trail, and never at driving speed
+var CRUMB_TRAIL_M = 150;
+var DRIVING_MPS = 9;                        // about 20 mph: faster than anyone walks or rides here
 
 function readLastFix() {
   try { return JSON.parse(sessionStorage.getItem(FIX_KEY)); } catch (e) { return null; }
 }
 
+// Meters from the nearest trail. The network's bounds are only a rectangle (a map with
+// zones apart, like Upper Charles, takes in a town's worth of streets), so they only
+// rule out the far away, before the trails are measured.
+var netDistAt = null, netDist = 0;   // the last one asked (each fix asks twice)
 function distFromNetwork(ll) {
-  var sw = NETWORK_BOUNDS.getSouthWest(), ne = NETWORK_BOUNDS.getNorthEast();
-  return ll.distanceTo(L.latLng(Math.max(sw.lat, Math.min(ne.lat, ll.lat)),
-                                Math.max(sw.lng, Math.min(ne.lng, ll.lng))));
+  if (!netDistAt || !netDistAt.equals(ll)) {
+    var sw = NETWORK_BOUNDS.getSouthWest(), ne = NETWORK_BOUNDS.getNorthEast();
+    var box = ll.distanceTo(L.latLng(Math.max(sw.lat, Math.min(ne.lat, ll.lat)),
+                                     Math.max(sw.lng, Math.min(ne.lng, ll.lng))));
+    netDistAt = ll;
+    netDist = box > FAR_FROM_NETWORK_M ? box : snapToTrail(ll).d;
+  }
+  return netDist;
 }
+
+function driving(pos) { return pos && pos.coords.speed !== null && pos.coords.speed > DRIVING_MPS; }
 
 function nearEntry(ll, m) {
   return entryLabels().some(function(label) { return ll.distanceTo(intMarkers[label].getLatLng()) <= m; });
@@ -5206,11 +5240,11 @@ function drawCrumbs(latlngs) {
   crumbLine.setLatLngs(latlngs);
 }
 
-function addCrumb(ll, acc) {
+function addCrumb(ll, acc, pos) {
   // (a crumb is [lat, lng, time] or, after a quiet spell, [lat, lng, time, 1]: Leaflet takes
   // the first but not the second as a point, so the two numbers go in on their own)
   var prev = crumbs[crumbs.length - 1], last = prev ? L.latLng(prev[0], prev[1]) : null;
-  if (acc <= 40 && (!last || last.distanceTo(ll) >= 5) && distFromNetwork(ll) <= FAR_FROM_NETWORK_M) {
+  if (acc <= 40 && (!last || last.distanceTo(ll) >= 5) && !driving(pos) && distFromNetwork(ll) <= CRUMB_TRAIL_M) {
     var crumb = [+ll.lat.toFixed(6), +ll.lng.toFixed(6), Date.now()];
     if (prev && crumb[2] - prev[2] >= CRUMB_QUIET_MS) crumb.push(1);
     crumbs.push(crumb);
@@ -5705,7 +5739,8 @@ function onLocation(pos) {
   userLatLng = L.latLng(pos.coords.latitude, pos.coords.longitude);
   userAccuracy = pos.coords.accuracy;
   checkFreshStart(userLatLng, userAccuracy);
-  addCrumb(userLatLng, userAccuracy);
+  addCrumb(userLatLng, userAccuracy, pos);
+  goLiveAtStart(pos);
   checkTown(userLatLng, userAccuracy);
   checkMarks(userLatLng, userAccuracy);
   updateMoveHeading(pos, userLatLng);

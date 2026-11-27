@@ -34,14 +34,18 @@ EXIT_POINTS = {
     "F": (-71.485, 42.170),
     # Holliston's other trails (2026-11-24, NOTES item 11), at their 1s
     "H": (-71.450144, 42.215056),
-    "M": (-71.454826, 42.201881),
+    "M": (-71.4549046, 42.2015405),
     "W": (-71.441916, 42.182352),
 }
 F_G_GROUP = {36, 178, 213, 214, 176, 4, 129, 1, 245, 135, 9, 175, 10, 248, 130}
 # Each zone's 1, by data number: the entrance (or hub) everything else in the zone counts
 # out from, so renumbering never moves it (Jason, 2026-10-23)
 ZONE_ONES = {"A": 361, "B": 127, "C": 41, "R": 108, "N": 337, "F": 360,
-             "H": 589, "M": 498, "W": 562}   # H the Highland Town Forest lot, W the rail trail (Jason, 2026-11-25)
+             "H": 589, "M": 620, "W": 562}   # H the Highland Town Forest lot, M the Burnap Road lot, W the rail trail (Jason, 2026-11-25, 26)
+# Signs numbered in an order of our own, by data number: they take the numbers they'd get
+# anyway, in this order, so neighbors go together where distance from the 1 would split
+# them. The build checks it keeps the routing rule (load_and_process: hand_order).
+HAND_ORDER = {"M": [592, 593, 485]}   # Beatrice Lane, Pinecrest Road, then east of it (Jason, 2026-11-26)
 
 # The temporary signs up in zone A, numbered from an earlier plan: what each reads, by
 # the data number of where it stands (some are at junctions the plan no longer signs), so
@@ -115,14 +119,22 @@ def region():
         "zonesPage": True,
         "nav": nav_html("map"),
         # Blazed trails, from NEMBA's 2012 map (uc_blazes.py), corrected from the ground;
-        # which stretches each marks is in trails_selected.geojson ("blazes", sign to sign:
-        # see blazes_to_meters)
+        # which stretches each marks is in trails_selected.geojson ("blazes", intersection to
+        # intersection: see blazes_to_meters). Junction to junction since 2026-11-26: Miller
+        # Hill's blazes turn off at junctions with no sign
+        "blazeStops": "junctions",
         "blazes": {
             "red": {"name": "Red-blazed trail", "marks": "red blazes", "color": "#e53935", "style": "blazes"},
             "green": {"name": "Green-blazed trail", "marks": "green blazes", "color": "#43a047", "style": "blazes"},
             "orange": {"name": "Orange-blazed trail", "marks": "orange blazes", "color": "#fb8c00", "style": "blazes"},
             "blue": {"name": "Blue-blazed trail", "marks": "blue blazes", "color": "#1e88e5", "style": "blazes"},
             "yellow": {"name": "Yellow-blazed trail", "marks": "yellow blazes", "color": "#fdd835", "style": "blazes"},
+            # Miller Hill's (2026-11-26, from the walk and its kiosk map): its long trail is
+            # yellow dots, beside a yellow-striped one; and triangles, apart from the rectangles
+            "yellow_dots": {"name": "Yellow Dot trail", "marks": "yellow dots", "color": "#fdd835", "style": "dots"},
+            "white": {"name": "White-blazed trail", "marks": "white blazes", "color": "#ffffff", "style": "blazes"},
+            "orange_triangles": {"name": "Orange Triangle trail", "marks": "orange triangles", "color": "#fb8c00", "style": "arrows"},
+            "blue_triangles": {"name": "Blue Triangle trail", "marks": "blue triangles", "color": "#29b6f6", "style": "arrows"},
         },
         # Double or single track, also from the 2012 map (trails_selected.geojson "widths");
         # the map app calls double track easy going and single track moderate
@@ -427,6 +439,25 @@ def load_and_process():
         by_zone.setdefault(z, []).append(feat)
         feat_by_id[id(feat)] = feat
 
+    def hand_order(ordered, nums):
+        # The signs in nums take the numbers they'd have anyway, in nums' order, unless one
+        # would then come before a sign on its own way out (the routing rule): then as built
+        by_num = {f["properties"]["number"]: f for f in ordered}
+        want = [by_num[n] for n in nums if n in by_num]
+        from_one = dijkstra(graph, [id(ordered[0])])
+        for i, a in enumerate(want):
+            d = dijkstra(graph, [id(a)])
+            for b in want[i + 1:]:
+                if id(b) in d and abs(from_one[id(a)] - from_one[id(b)] - d[id(b)]) < 0.5:
+                    print("  WARNING: HAND_ORDER puts #%d before #%d, on its way out; left as built" % (
+                        a["properties"]["number"], b["properties"]["number"]))
+                    return ordered
+        slots = sorted(i for i, f in enumerate(ordered) if f in want)
+        ordered = list(ordered)
+        for i, f in zip(slots, want):
+            ordered[i] = f
+        return ordered
+
     def order_subgroup(pts, ex, ey, one=None):
         # counted out from the zone's 1 (ZONE_ONES), or else the sign nearest its exit
         anchored = [f for f in pts if f["properties"]["number"] == one]
@@ -450,6 +481,8 @@ def load_and_process():
             ordered = order_subgroup(main_pts, ex, ey, ZONE_ONES[z]) + order_subgroup(tail_pts, ex, ey)
         else:
             ordered = order_subgroup(pts, ex, ey, ZONE_ONES[z])
+        if z in HAND_ORDER:
+            ordered = hand_order(ordered, HAND_ORDER[z])
         if ordered and ordered[0]["properties"]["number"] != ZONE_ONES[z]:
             print("  WARNING: zone %s's 1 (data #%d) isn't in the data any more" % (z, ZONE_ONES[z]))
 
@@ -1008,10 +1041,11 @@ def write_qr(url, path):
 
 
 def blazes_to_meters(ints, trails):
-    """trails_selected.geojson keeps each trail's blazes as runs from sign to sign along it,
-    by the intersections' data numbers ("start" or "end" for a trail end with none):
-    [color, from, to], and a direction if it's marked one way. So extending or trimming a
-    trail, or renumbering, leaves them be. The app wants meters along the trail."""
+    """trails_selected.geojson keeps each trail's blazes as runs from intersection to
+    intersection along it, by the intersections' data numbers ("start" or "end" for a
+    trail end with none): [color, from, to], and a direction if it's marked one way. So
+    extending or trimming a trail, or renumbering, leaves them be. The app wants meters
+    along the trail."""
     tim = build_trail_int_map(ints, trails)
     label_of = {f["properties"]["number"]: f["properties"]["label"] for f in ints["features"] if "number" in f["properties"]}
     for ti, f in enumerate(trails["features"]):

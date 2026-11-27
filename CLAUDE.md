@@ -70,7 +70,7 @@ there's no test suite yet (NOTES.md).
 
 - **`trails_selected.geojson`**: the trails. Lines are OpenStreetMap's where `osm_ways` is
   set (`uc_osm_geometry.py` did that, one time). Properties: `name`, `blazes`
-  `[[color, from number, to number], ...]` (sign to sign), `widths`, `route_cost` (routes
+  `[[color, from number, to number], ...]` (intersection to intersection, by data number), `widths`, `route_cost` (routes
   avoid a trail: Root Canal is 10, too steep; the driveway trail 1.5), `route_note`,
   `closed` (impassable, and why: rose dashes from close in, never routed; take it off
   when it's passable again).
@@ -83,7 +83,8 @@ there's no test suite yet (NOTES.md).
   zone's 1 is fixed by data number (`ZONE_ONES`). Distances are the map's own routing
   (every junction, `route_cost`, no `closed` trail), so the way the map sends you from
   any sign to its zone's 1 passes only lower numbers (F's `F_G_GROUP` excepted, numbered
-  last on purpose); a trail break shows up as a sign that breaks this. Things keyed by label
+  last on purpose); a trail break shows up as a sign that breaks this. `HAND_ORDER` reorders a few signs among
+  the numbers they'd get anyway (neighbors together), where that keeps the rule. Things keyed by label
   (`sign_logos.csv`, `tshirt_signs.md` outside backticks) are carried along by
   `renumber()`. Once signs are up, set RENUMBER off.
 - **`POSTED_SIGNS`** (build_map.py): zone A's temporary signs, already on the ground with an

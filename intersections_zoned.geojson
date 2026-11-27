@@ -4448,7 +4448,7 @@
         "number": 485,
         "degree": 3,
         "zone": "M",
-        "sign": "M11"
+        "sign": "M14"
       },
       "geometry": {
         "type": "Point",
@@ -4464,7 +4464,7 @@
         "number": 486,
         "degree": 3,
         "zone": "M",
-        "sign": "M12",
+        "sign": "M15",
         "entry": true,
         "drive_to": [
           -71.442167,
@@ -4522,7 +4522,7 @@
         "number": 489,
         "degree": 3,
         "zone": "M",
-        "sign": "M6"
+        "sign": "M7"
       },
       "geometry": {
         "type": "Point",
@@ -4628,9 +4628,7 @@
         "number": 496,
         "degree": 3,
         "zone": "M",
-        "no_sign": true,
-        "junction": true,
-        "code": "J243"
+        "sign": "M5"
       },
       "geometry": {
         "type": "Point",
@@ -4646,7 +4644,7 @@
         "number": 497,
         "degree": 3,
         "zone": "M",
-        "sign": "M2"
+        "sign": "M3"
       },
       "geometry": {
         "type": "Point",
@@ -4662,14 +4660,7 @@
         "number": 498,
         "degree": 3,
         "zone": "M",
-        "entry": true,
-        "parking": true,
-        "drive_to": [
-          -71.454826,
-          42.201881
-        ],
-        "parking_name": "Burnap Road parking",
-        "sign": "M1"
+        "sign": "M2"
       },
       "geometry": {
         "type": "Point",
@@ -4685,7 +4676,7 @@
         "number": 499,
         "degree": 3,
         "zone": "M",
-        "sign": "M8",
+        "sign": "M10",
         "entry": true,
         "drive_to": [
           -71.458703,
@@ -4707,7 +4698,7 @@
         "number": 500,
         "degree": 3,
         "zone": "M",
-        "sign": "M9",
+        "sign": "M11",
         "entry": true,
         "drive_to": [
           -71.460504,
@@ -4729,9 +4720,7 @@
         "number": 501,
         "degree": 3,
         "zone": "M",
-        "no_sign": true,
-        "junction": true,
-        "code": "J244"
+        "sign": "M8"
       },
       "geometry": {
         "type": "Point",
@@ -4783,7 +4772,9 @@
         "number": 504,
         "degree": 3,
         "zone": "M",
-        "sign": "M5"
+        "no_sign": true,
+        "junction": true,
+        "code": "J321"
       },
       "geometry": {
         "type": "Point",
@@ -4853,7 +4844,7 @@
         "number": 509,
         "degree": 3,
         "zone": "M",
-        "sign": "M7"
+        "sign": "M9"
       },
       "geometry": {
         "type": "Point",
@@ -4887,7 +4878,9 @@
         "number": 511,
         "degree": 3,
         "zone": "M",
-        "sign": "M4"
+        "no_sign": true,
+        "junction": true,
+        "code": "J322"
       },
       "geometry": {
         "type": "Point",
@@ -4939,9 +4932,7 @@
         "number": 516,
         "degree": 3,
         "zone": "M",
-        "no_sign": true,
-        "junction": true,
-        "code": "J256"
+        "sign": "M6"
       },
       "geometry": {
         "type": "Point",
@@ -4975,7 +4966,7 @@
         "number": 519,
         "degree": 2,
         "zone": "M",
-        "sign": "M3"
+        "sign": "M4"
       },
       "geometry": {
         "type": "Point",
@@ -6224,7 +6215,7 @@
           42.197833
         ],
         "connects": "Pinecrest Road",
-        "sign": "M10"
+        "sign": "M13"
       },
       "geometry": {
         "type": "Point",
@@ -6274,7 +6265,7 @@
       "type": "Feature",
       "properties": {
         "number": 597,
-        "degree": 3,
+        "degree": 2,
         "zone": "M",
         "no_sign": true,
         "junction": true,
@@ -6668,6 +6659,51 @@
         "coordinates": [
           -71.4377136,
           42.1685605
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 592,
+        "degree": 1,
+        "zone": "M",
+        "entry": true,
+        "drive_to": [
+          -71.4597192,
+          42.195435
+        ],
+        "connects": "Beatrice Lane",
+        "sign": "M12"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4597192,
+          42.195435
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "number": 620,
+        "degree": 1,
+        "zone": "M",
+        "entry": true,
+        "parking": true,
+        "drive_to": [
+          -71.454826,
+          42.201881
+        ],
+        "parking_name": "Parking behind Pinecrest Golf Course",
+        "sign": "M1"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -71.4549046,
+          42.2015405
         ]
       }
     }
